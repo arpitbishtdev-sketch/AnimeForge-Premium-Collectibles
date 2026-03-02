@@ -1103,4 +1103,26 @@
   .hero-character-wrap {
     bottom: 240px;
   }
+
+  .hero-character-wrap {
+    position: absolute;
+    right: 50%;
+    bottom: 400px;
+    transform: translateX(50%);
+    z-index: 6;
+  }
+  .hero-character-img {
+    height: 80vh;
+    max-height: 600px;
+    filter: drop-shadow(0 0 50px var(--char-glow, rgba(255, 140, 0, 0.5)))
+      drop-shadow(0 0 100px var(--char-glow, rgba(255, 140, 0, 0.25)));
+  }
+  .ring-outer {
+    width: 200px;
+    height: 40px;
+  }
+  .ring-mid {
+    width: 140px;
+    height: 28px;
+  }
 }

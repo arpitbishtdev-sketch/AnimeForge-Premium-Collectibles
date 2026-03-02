@@ -540,7 +540,7 @@ kbd {
   .search-overlay {
     padding-top: 0;
     align-items: flex-end;
-    margin-bottom: 160px;
+    margin-bottom: 120px;
   }
 
   .search-modal {
@@ -574,5 +574,30 @@ kbd {
 
   .search-footer-hint {
     display: none;
+  }
+}
+
+/* ── Small Mobile (iPhone 13 Mini, 375px) ── */
+@media (max-width: 400px) {
+  .search-overlay {
+    margin-bottom: 100px;
+  }
+
+  .search-modal {
+    padding: 20px 16px 32px;
+    border-radius: 20px 20px 0 0;
+  }
+
+  .search-input {
+    font-size: 18px;
+    padding: 14px 0;
+  }
+
+  .search-input::placeholder {
+    font-size: 17px;
+  }
+
+  .search-result-label {
+    font-size: 15px;
   }
 }
