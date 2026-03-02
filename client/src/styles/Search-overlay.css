@@ -580,7 +580,7 @@ kbd {
 /* ── Small Mobile (iPhone 13 Mini, 375px) ── */
 @media (max-width: 400px) {
   .search-overlay {
-    margin-bottom: 70px;
+    margin-bottom: 0px;
   }
 
   .search-modal {
