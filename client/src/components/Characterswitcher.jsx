@@ -1,4 +1,4 @@
-import "../styles/characterswitcher.css";
+import "../styles/Characterswitcher.css";
 
 export default function CharacterSwitcher({ characters, activeId, onSelect }) {
   return (
