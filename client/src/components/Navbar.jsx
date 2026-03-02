@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import SearchOverlay from "./SearchOverlay";
+import SearchOverlay from "./Searchoverlay";
 import "../styles/navbar.css";
 
 /* ── Icon Components ── */
