@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import "../styles/loader.css";
+import "../styles/Loader.css";
 
 // ── Character roster with per-character identity ──────────────────────────
 const CHARACTERS = [
