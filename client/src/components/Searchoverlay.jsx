@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import "../styles/search-overlay.css";
+import "../styles/Search-overlay.css";
 
 const TRENDING = [
   { label: "Naruto Sage Mode", tag: "Bestseller" },
