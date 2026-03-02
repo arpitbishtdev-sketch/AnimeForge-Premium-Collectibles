@@ -1,0 +1,136 @@
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap");
+
+.character-switcher {
+  position: absolute;
+  bottom: 36px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  z-index: 20;
+  padding: 10px 20px;
+  border-radius: 60px;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.switcher-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+  position: relative;
+}
+
+.switcher-avatar {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  transition:
+    border-color 0.3s ease,
+    transform 0.3s ease,
+    box-shadow 0.3s ease;
+  background: rgba(0, 0, 0, 0.4);
+}
+
+.switcher-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: top center;
+  filter: saturate(0.8);
+  transition:
+    filter 0.3s ease,
+    transform 0.3s ease;
+}
+
+.switcher-btn:hover .switcher-avatar img,
+.switcher-btn.active .switcher-avatar img {
+  filter: saturate(1.2);
+  transform: scale(1.1);
+}
+
+.switcher-btn.active .switcher-avatar {
+  border-color: var(--btn-accent);
+  box-shadow:
+    0 0 16px var(--btn-glow),
+    0 0 4px var(--btn-accent);
+  transform: scale(1.08);
+}
+
+.switcher-btn:hover:not(.active) .switcher-avatar {
+  border-color: rgba(255, 255, 255, 0.4);
+  transform: scale(1.05) translateY(-2px);
+}
+
+.switcher-label {
+  font-family: "Rajdhani", sans-serif;
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.4);
+  transition: color 0.3s ease;
+  white-space: nowrap;
+}
+
+.switcher-btn.active .switcher-label {
+  color: var(--btn-accent);
+}
+
+.switcher-btn:hover .switcher-label {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.switcher-dot {
+  position: absolute;
+  bottom: 22px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--btn-accent);
+  box-shadow: 0 0 8px var(--btn-accent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.switcher-btn.active .switcher-dot {
+  opacity: 1;
+}
+
+.switcher-divider {
+  width: 1px;
+  height: 30px;
+  background: rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .character-switcher {
+    bottom: 310px;
+    gap: 10px;
+    padding: 8px 14px;
+  }
+
+  .switcher-avatar {
+    width: 38px;
+    height: 38px;
+  }
+
+  .switcher-label {
+    font-size: 8px;
+    letter-spacing: 1.5px;
+  }
+}

@@ -1,0 +1,46 @@
+/* ─────────────────────────────
+   GLOBAL RESET
+───────────────────────────── */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  width: 100%;
+  min-height: 100%;
+  background: #000;
+  color: #fff;
+  overflow-x: hidden;
+  font-family: "Rajdhani", sans-serif;
+}
+
+/* IMPORTANT: REMOVE VITE TEMPLATE CONSTRAINTS */
+#root {
+  width: 100%;
+  min-height: 100%;
+}
+
+/* Remove default image spacing */
+img {
+  display: block;
+  max-width: 100%;
+}
+
+/* Remove default button styles */
+button {
+  font: inherit;
+  border: none;
+  outline: none;
+  background: none;
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
