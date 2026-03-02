@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
-import CharacterSwitcher from "./components/CharacterSwitcher";
+import CharacterSwitcher from "./components/Characterswitcher";
 import Loader from "./components/Loader";
 import Store from "./components/Store";
 import { CHARACTERS } from "./data/characters";
