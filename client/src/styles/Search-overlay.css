@@ -540,7 +540,7 @@ kbd {
   .search-overlay {
     padding-top: 0;
     align-items: flex-end;
-    margin-bottom: 120px;
+    margin-bottom: 80px;
   }
 
   .search-modal {
@@ -580,7 +580,7 @@ kbd {
 /* ── Small Mobile (iPhone 13 Mini, 375px) ── */
 @media (max-width: 400px) {
   .search-overlay {
-    margin-bottom: 100px;
+    margin-bottom: 70px;
   }
 
   .search-modal {

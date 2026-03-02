@@ -856,7 +856,7 @@
   .hero-character-wrap {
     position: absolute;
     right: 50%;
-    bottom: 460px;
+    bottom: 400px;
     transform: translateX(50%);
     z-index: 6;
   }
@@ -1107,7 +1107,7 @@
   .hero-character-wrap {
     position: absolute;
     right: 50%;
-    bottom: 400px;
+    bottom: 300px;
     transform: translateX(50%);
     z-index: 6;
   }
