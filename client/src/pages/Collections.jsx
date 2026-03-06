@@ -7,7 +7,7 @@ import ProductCard from "../components/collection/ProductCard";
 import FilterSidebar from "../components/collection/FilterSidebar";
 import { ProductCardSkeleton } from "../components/shared/Skeleton";
 import { prefersReducedMotion } from "../utils/helpers";
-import "../styles/CollectionPage.css";
+import "../styles/Collectionpage.css";
 
 import { useTheme } from "../context/ThemeContext";
 
