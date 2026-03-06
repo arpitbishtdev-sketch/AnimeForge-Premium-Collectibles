@@ -10,7 +10,7 @@ import YouMayAlsoLike from "../components/product/YouMayAlsoLike";
 import StatusBadge from "../components/shared/StatusBadge";
 import StarRating from "../components/shared/StarRating";
 import { ProductDetailSkeleton } from "../components/shared/Skeleton";
-import "../styles/ProductDetailPage.css";
+import "../styles/Productdetailpage.css";
 
 import { useTheme } from "../context/ThemeContext";
 
