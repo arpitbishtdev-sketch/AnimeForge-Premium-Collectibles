@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useProductForm } from "../hooks/useProductForm";
-import "../styles/AddProductForm.css";
+import "../styles/Addproductform.css";
 
 const CATEGORIES = [
   "Figurines",

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import "../styles/DashboardHome.css";
+import "../styles/Dashboardhome.css";
 
 const STATS = [
   {

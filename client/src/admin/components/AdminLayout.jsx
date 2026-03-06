@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Sidebar from "./Sidebar";
 import "../styles/Admin.css";
-import "../styles/AdminLayout.css";
+import "../styles/Adminlayout.css";
 
 const BREADCRUMB_MAP = {
   "/admin": ["Dashboard"],

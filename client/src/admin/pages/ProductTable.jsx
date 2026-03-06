@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useProducts } from "../hooks/useProducts";
-import "../styles/ProductTable.css";
+import "../styles/Producttable.css";
 
 const STATUS_OPTIONS = [
   "all",
