@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { formatPrice } from "../../utils/helpers";
 import StatusBadge from "../shared/StatusBadge";
 import StarRating from "../shared/StarRating";
-import "./YouMayAlsoLike.css";
+import "./Youmayalsolike.css";
 
 function RelatedCard({ product, index }) {
   return (
