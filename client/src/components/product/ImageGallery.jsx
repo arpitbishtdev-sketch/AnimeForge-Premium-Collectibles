@@ -1,6 +1,6 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState, useCallback, useEffect, useRef } from "react";
-import "./imageGallery.css";
+import "./ImageGallery.css";
 
 const imgVariants = {
   enter: (d) => ({
