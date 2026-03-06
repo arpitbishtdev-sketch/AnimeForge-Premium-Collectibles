@@ -74,18 +74,19 @@ mongoose
   .then(async () => {
     console.log("MongoDB Connected");
 
-    try {
-      await seedStatus();
-      console.log("Status seeded successfully");
-    } catch (err) {
-      console.error("Seed error:", err.message);
-    }
-
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });
+
+    try {
+      await seedStatus();
+      console.log("Status seeded successfully");
+    } catch (err) {
+      console.error("Seed error:", err);
+    }
   })
   .catch((error) => {
     console.error("MongoDB connection failed:", error);
+    process.exit(1);
   });
