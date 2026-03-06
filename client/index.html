@@ -3,12 +3,36 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>AnimeForge — Premium Collectibles</title>
+
     <meta
       name="description"
       content="Ultra-premium anime action figure collectibles. Limited editions, cinematic quality."
     />
+
+    <!--   Performance: Preconnect to Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!--   Optimized Google Fonts (display=swap prevents render blocking) -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!--   Preload LCP Hero Image (Default character = Naruto) -->
+    <link
+      rel="preload"
+      as="image"
+      href="/characters/naruto-hero.webp"
+      fetchpriority="high"
+    />
+
+    <!-- Optional: Theme color for mobile address bar -->
+    <meta name="theme-color" content="#0f0f14" />
   </head>
+
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>

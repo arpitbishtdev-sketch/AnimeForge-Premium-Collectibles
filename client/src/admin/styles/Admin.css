@@ -1,0 +1,185 @@
+/* ============================================
+   ADMIN PANEL — GLOBAL STYLES
+   Theme: Dark Glassmorphism / Anime Luxury
+   ============================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap");
+
+/* ---- CSS Variables ---- */
+:root {
+  /* Core Palette */
+  --admin-bg: #07080f;
+  --admin-surface: #0d0f1c;
+  --admin-surface-2: #12152a;
+  --admin-border: rgba(120, 100, 255, 0.12);
+  --admin-border-hover: rgba(120, 100, 255, 0.35);
+
+  /* Accent System */
+  --accent-primary: #7c5cfc;
+  --accent-secondary: #e040fb;
+  --accent-cyan: #00e5ff;
+  --accent-glow: rgba(124, 92, 252, 0.4);
+  --accent-glow-strong: rgba(124, 92, 252, 0.7);
+
+  /* Glass */
+  --glass-bg: rgba(13, 15, 28, 0.72);
+  --glass-bg-light: rgba(255, 255, 255, 0.03);
+  --glass-blur: blur(24px);
+
+  /* Text */
+  --text-primary: #f0eeff;
+  --text-secondary: #8b83c0;
+  --text-muted: #4a4570;
+  --text-accent: #a78bfa;
+
+  /* Status Colors */
+  --status-new: #22d3ee;
+  --status-popular: #f59e0b;
+  --status-rare: #a78bfa;
+  --status-featured: #34d399;
+  --status-bestseller: #f97316;
+  --status-ultra-rare: #e040fb;
+
+  /* Spacing */
+  --sidebar-width: 260px;
+  --header-height: 68px;
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+
+  /* Shadows */
+  --shadow-glow: 0 0 40px rgba(124, 92, 252, 0.18);
+  --shadow-card: 0 8px 40px rgba(0, 0, 0, 0.5);
+  --shadow-input: 0 0 0 2px rgba(124, 92, 252, 0.5);
+
+  /* Fonts */
+  --font-display: "Syne", sans-serif;
+  --font-body: "DM Sans", sans-serif;
+
+  /* Transitions */
+  --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-med: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  --transition-slow: 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ---- Reset ---- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-root {
+  font-family: var(--font-body);
+  background: var(--admin-bg);
+  color: var(--text-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ---- Scrollbar ---- */
+.admin-root ::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+.admin-root ::-webkit-scrollbar-track {
+  background: var(--admin-bg);
+}
+.admin-root ::-webkit-scrollbar-thumb {
+  background: var(--accent-primary);
+  border-radius: 99px;
+}
+
+/* ---- Glass Card ---- */
+.glass-card {
+  background: var(--glass-bg);
+  border: 1px solid var(--admin-border);
+  border-radius: var(--radius-lg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  box-shadow: var(--shadow-card);
+}
+
+/* ---- Glow Divider ---- */
+.glow-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--accent-primary),
+    transparent
+  );
+  opacity: 0.3;
+  margin: 0;
+}
+
+/* ---- Animated background mesh ---- */
+.admin-mesh {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+.admin-mesh::before {
+  content: "";
+  position: absolute;
+  width: 600px;
+  height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(124, 92, 252, 0.07) 0%,
+    transparent 70%
+  );
+  top: -200px;
+  left: -100px;
+  animation: meshFloat1 12s ease-in-out infinite alternate;
+}
+.admin-mesh::after {
+  content: "";
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    rgba(224, 64, 251, 0.05) 0%,
+    transparent 70%
+  );
+  bottom: -150px;
+  right: -100px;
+  animation: meshFloat2 15s ease-in-out infinite alternate;
+}
+
+@keyframes meshFloat1 {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(80px, 60px) scale(1.15);
+  }
+}
+@keyframes meshFloat2 {
+  from {
+    transform: translate(0, 0) scale(1);
+  }
+  to {
+    transform: translate(-60px, -80px) scale(1.1);
+  }
+}
+
+/* ---- Utility ---- */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}

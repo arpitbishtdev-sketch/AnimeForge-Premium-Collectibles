@@ -261,6 +261,13 @@
   }
 }
 
+.pc-price-original {
+  font-size: 12px;
+  margin-left: 8px;
+  text-decoration: line-through;
+  opacity: 0.45;
+}
+
 /* Name */
 .pc-name {
   font-family: "Bebas Neue", cursive;

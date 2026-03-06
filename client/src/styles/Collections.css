@@ -1,0 +1,1030 @@
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;1,700&display=swap");
+
+/* ═══════════════════════════════════════════════
+   COLLECTIONS SECTION
+═══════════════════════════════════════════════ */
+.collections {
+  position: relative;
+  width: 100%;
+  padding: 130px 7% 150px;
+  overflow: hidden;
+  isolation: isolate;
+  background: #05050e;
+  --col-accent: #ff8c00;
+  --col-glow: rgba(255, 140, 0, 0.3);
+}
+
+/* ── Background ────────────────────────────────── */
+.col-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.col-bg-radial {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    ellipse 90% 60% at 50% 0%,
+    color-mix(in srgb, var(--col-accent) 6%, transparent),
+    transparent 70%
+  );
+  transition: background 0.7s ease;
+}
+
+.col-bg-grid {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.022) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: radial-gradient(ellipse at 50% 30%, transparent 10%, black 75%);
+}
+
+.col-bg-scanlines {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.022) 2px,
+    rgba(0, 0, 0, 0.022) 4px
+  );
+}
+
+.col-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(140px);
+  pointer-events: none;
+  will-change: transform;
+}
+.col-orb--1 {
+  width: 700px;
+  height: 700px;
+  top: -200px;
+  left: -100px;
+  background: var(--col-accent);
+  opacity: 0.06;
+  transition: background 0.8s ease;
+}
+.col-orb--2 {
+  width: 500px;
+  height: 500px;
+  bottom: -100px;
+  right: -80px;
+  background: var(--col-accent);
+  opacity: 0.05;
+  transition: background 0.8s ease;
+}
+
+.col-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse at 50% 0%,
+      transparent 30%,
+      rgba(0, 0, 0, 0.5) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.4) 0%,
+      transparent 10%,
+      transparent 90%,
+      rgba(0, 0, 0, 0.4) 100%
+    );
+}
+
+/* ── Deco lines ── */
+.col-deco-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  z-index: 1;
+  pointer-events: none;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(255, 255, 255, 0.04) 20%,
+    rgba(255, 255, 255, 0.04) 80%,
+    transparent
+  );
+}
+.col-deco-line--left {
+  left: 6%;
+}
+.col-deco-line--right {
+  right: 6%;
+}
+
+/* ── Section Header ── */
+.col-header {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  margin-bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.col-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Rajdhani", sans-serif;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--col-accent);
+  margin-bottom: 22px;
+  padding: 6px 18px 6px 12px;
+  border-radius: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-left: 2px solid var(--col-accent);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  transition:
+    color 0.6s ease,
+    border-color 0.6s ease;
+}
+
+.col-eyebrow-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--col-accent);
+  box-shadow: 0 0 8px var(--col-accent);
+  animation: col-pulse-dot 2s ease-in-out infinite;
+  flex-shrink: 0;
+  transition:
+    background 0.6s ease,
+    box-shadow 0.6s ease;
+}
+@keyframes col-pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(0.6);
+  }
+}
+
+.col-title {
+  font-family: "Bebas Neue", cursive;
+  font-size: clamp(70px, 10vw, 140px);
+  line-height: 0.88;
+  color: #fff;
+  letter-spacing: 6px;
+  margin: 0;
+  text-shadow:
+    0 0 80px var(--col-glow),
+    0 0 200px var(--col-glow),
+    0 4px 8px rgba(0, 0, 0, 0.8);
+  transition: text-shadow 0.7s ease;
+}
+
+.col-title-rule {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 22px 0 26px;
+}
+.col-rule-line {
+  height: 1px;
+  width: 80px;
+  background: linear-gradient(to right, var(--col-accent), transparent);
+  transition: background 0.6s ease;
+}
+.col-rule-line--short {
+  width: 24px;
+  background: linear-gradient(to left, var(--col-accent), transparent);
+}
+.col-rule-diamond {
+  width: 6px;
+  height: 6px;
+  background: var(--col-accent);
+  transform: rotate(45deg);
+  flex-shrink: 0;
+  box-shadow: 0 0 10px var(--col-accent);
+  transition:
+    background 0.6s ease,
+    box-shadow 0.6s ease;
+}
+
+.col-description {
+  font-family: "Rajdhani", sans-serif;
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.8;
+  color: rgba(255, 255, 255, 0.38);
+  max-width: 500px;
+  margin: 0 auto 60px;
+}
+
+/* ══════════════════════════════════════════════════
+   SILK RIBBON MARQUEE
+   ─────────────────────────────────────────────────
+   THE FIX: wrapper and section are background:transparent.
+   The ribbon body is also transparent.
+   Only a ::before pseudo draws the colored stripe,
+   using color-mix with the EXACT section bg (#05050e)
+   so it seamlessly blends — no card, no box, no blur.
+   The glow spreads softly onto the dark bg around it.
+══════════════════════════════════════════════════ */
+
+/* ══════════════════════════════════════════════════
+   SILK RIBBON MARQUEE
+   Wrapper is position:absolute on the section —
+   escapes padding completely. Ribbons are sized
+   to 100vw via JS so they always fill edge-to-edge.
+   No overflow:hidden anywhere near ribbons.
+══════════════════════════════════════════════════ */
+
+.col-silk-marquee-wrap {
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: 100%;
+  /* top is set dynamically via useLayoutEffect */
+  z-index: 2;
+  background: transparent;
+  pointer-events: none;
+}
+
+.silk-marquee-section {
+  position: relative;
+  width: 100%;
+  height: 140px;
+  background: transparent;
+  overflow: visible; /* never clip here */
+}
+
+/* Ribbon itself — width + left set via JS to window.innerWidth */
+.silk-ribbon {
+  height: 46px;
+  background: transparent;
+  display: flex;
+  align-items: center;
+  will-change: transform;
+  overflow: visible; /* rotation must not clip */
+}
+
+/*
+  The actual tape is drawn here as a pseudo-element.
+  Background is color-mixed with #05050e (the section bg)
+  so it merges seamlessly — not a separate box on top.
+  Box-shadow creates the edge lines and soft glow halo.
+*/
+.silk-ribbon::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ribbon-color) 3%, #05050e) 0%,
+    color-mix(in srgb, var(--ribbon-color) 12%, #05050e) 25%,
+    color-mix(in srgb, var(--ribbon-color) 18%, #05050e) 50%,
+    color-mix(in srgb, var(--ribbon-color) 10%, #05050e) 75%,
+    color-mix(in srgb, var(--ribbon-color) 3%, #05050e) 100%
+  );
+  /* Edge lines give the silk tape its definition */
+  box-shadow:
+    0 -1px 0 color-mix(in srgb, var(--ribbon-color) 50%, transparent),
+    0 1px 0 color-mix(in srgb, var(--ribbon-color) 22%, transparent),
+    /* diffuse glow that bleeds softly onto surrounding bg — no hard edge */ 0 0
+      40px color-mix(in srgb, var(--ribbon-color) 12%, transparent),
+    0 0 100px color-mix(in srgb, var(--ribbon-color) 6%, transparent);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Sheen layers for silk texture */
+.silk-ribbon-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Top edge specular — thin bright line along top */
+.silk-ribbon-sheen--1 {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--ribbon-color) 25%, rgba(255, 255, 255, 0.06)) 0%,
+    transparent 45%
+  );
+}
+
+/* Diagonal slow shimmer sweep */
+.silk-ribbon-sheen--2 {
+  background: linear-gradient(
+    108deg,
+    transparent 20%,
+    color-mix(in srgb, var(--ribbon-color) 20%, rgba(255, 255, 255, 0.05)) 50%,
+    transparent 80%
+  );
+  animation: silk-sheen 7s ease-in-out infinite;
+}
+@keyframes silk-sheen {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+/* Scrolling track */
+.silk-ribbon-track {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  will-change: transform;
+  position: relative;
+  z-index: 2;
+}
+
+/* Text */
+.silk-ribbon-item {
+  font-family: "Bebas Neue", cursive;
+  font-size: 14px;
+  letter-spacing: 6px;
+  color: color-mix(in srgb, var(--ribbon-color) 75%, rgba(255, 255, 255, 0.5));
+  padding: 0 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  text-shadow:
+    0 0 10px var(--ribbon-glow),
+    0 0 22px color-mix(in srgb, var(--ribbon-glow) 40%, transparent);
+  -webkit-font-smoothing: antialiased;
+}
+
+.silk-ribbon-star {
+  font-size: 7px;
+  color: var(--ribbon-color);
+  opacity: 0.65;
+  filter: drop-shadow(0 0 4px var(--ribbon-color));
+  flex-shrink: 0;
+}
+
+/* Spacer pushes grid down the same height as the absolute ribbon block */
+.col-silk-spacer {
+  height: 180px; /* matches silk-marquee-section height + gap */
+  width: 100%;
+}
+.col-grid {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+/* ══════════════════════════════════════════════════
+   COLLECTION CARD
+══════════════════════════════════════════════════ */
+.col-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 4px;
+  padding: 28px 24px 24px;
+  cursor: pointer;
+  overflow: hidden;
+  transition:
+    border-color 0.35s ease,
+    box-shadow 0.35s ease,
+    background 0.35s ease;
+  --mouse-x: 50%;
+  --mouse-y: 50%;
+}
+
+.col-card-spotlight {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    280px circle at var(--mouse-x) var(--mouse-y),
+    color-mix(in srgb, var(--card-accent) 8%, transparent),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+.col-card:hover .col-card-spotlight {
+  opacity: 1;
+}
+
+.col-card:hover {
+  border-color: color-mix(in srgb, var(--card-accent) 40%, transparent);
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--card-accent) 15%, transparent),
+    0 20px 60px rgba(0, 0, 0, 0.5),
+    0 0 40px var(--card-glow);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.col-card-top-border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--card-accent),
+    transparent
+  );
+  opacity: 0;
+  transform: scaleX(0.5);
+  transform-origin: center;
+  transition:
+    opacity 0.4s ease,
+    transform 0.4s ease;
+  z-index: 2;
+}
+.col-card:hover .col-card-top-border {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+.col-card-badge {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  font-family: "Rajdhani", sans-serif;
+  font-weight: 700;
+  font-size: 8px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: #000;
+  background: var(--card-accent);
+  padding: 3px 8px;
+  border-radius: 2px;
+  z-index: 3;
+  box-shadow: 0 0 12px var(--card-glow);
+}
+
+.col-card-number {
+  font-family: "Bebas Neue", cursive;
+  font-size: 11px;
+  letter-spacing: 3px;
+  color: rgba(255, 255, 255, 0.1);
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.col-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.col-card-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: "Rajdhani", sans-serif;
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--card-accent);
+  padding: 4px 10px 4px 8px;
+  border-radius: 2px;
+  border-left: 2px solid var(--card-accent);
+  background: rgba(0, 0, 0, 0.3);
+  transition:
+    color 0.3s ease,
+    border-color 0.3s ease;
+}
+
+.col-card-tag-dot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--card-accent);
+  box-shadow: 0 0 6px var(--card-accent);
+  flex-shrink: 0;
+}
+
+.col-card-subtitle {
+  font-family: "Rajdhani", sans-serif;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.col-card-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.col-card-title {
+  font-family: "Bebas Neue", cursive;
+  font-size: clamp(40px, 4.5vw, 58px);
+  line-height: 0.88;
+  color: #fff;
+  letter-spacing: 3px;
+  margin: 0;
+  white-space: pre-line;
+  transition: text-shadow 0.35s ease;
+  flex: 1;
+}
+.col-card:hover .col-card-title {
+  text-shadow:
+    0 0 40px var(--card-glow),
+    0 0 80px color-mix(in srgb, var(--card-glow) 50%, transparent);
+}
+
+.col-card-logo-wrap {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.col-card-logo {
+  width: 64px;
+  height: 64px;
+  object-fit: contain;
+  object-position: center;
+  filter: drop-shadow(0 0 10px var(--card-glow))
+    drop-shadow(0 0 20px var(--card-glow)) brightness(0.9) saturate(0.7);
+  opacity: 0.55;
+  transition:
+    opacity 0.4s ease,
+    filter 0.4s ease,
+    transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  position: relative;
+  z-index: 1;
+}
+.col-card:hover .col-card-logo {
+  opacity: 0.85;
+  filter: drop-shadow(0 0 14px var(--card-glow))
+    drop-shadow(0 0 30px var(--card-glow)) brightness(1.05) saturate(0.9);
+  transform: scale(1.08) rotate(-3deg);
+}
+
+.col-card-logo-ring {
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--card-accent), transparent 70%);
+  opacity: 0;
+  filter: blur(12px);
+  transition: opacity 0.4s ease;
+  z-index: 0;
+}
+.col-card:hover .col-card-logo-ring {
+  opacity: 0.18;
+}
+
+.col-card-logo-fallback {
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: "Bebas Neue", cursive;
+  font-size: 40px;
+  color: var(--card-accent);
+  opacity: 0.25;
+  letter-spacing: 2px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.02);
+  transition: opacity 0.3s ease;
+}
+.col-card:hover .col-card-logo-fallback {
+  opacity: 0.45;
+}
+
+.col-card-rule {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  position: relative;
+  z-index: 1;
+}
+
+.col-card-desc {
+  font-family: "Rajdhani", sans-serif;
+  font-size: 13px;
+  line-height: 1.7;
+  color: rgba(255, 255, 255, 0.38);
+  margin-bottom: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.col-card-featured {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 20px;
+  position: relative;
+  z-index: 1;
+}
+
+.col-card-featured-item {
+  font-family: "Rajdhani", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.35);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: color 0.25s ease;
+}
+.col-card:hover .col-card-featured-item {
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.col-card-featured-dot {
+  font-size: 7px;
+  color: var(--card-accent);
+  opacity: 0.6;
+  flex-shrink: 0;
+}
+
+.col-card-stats {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  margin-bottom: 18px;
+  position: relative;
+  z-index: 1;
+}
+
+.col-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  align-items: center;
+}
+.col-stat-val {
+  font-family: "Bebas Neue", cursive;
+  font-size: 18px;
+  color: #fff;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+.col-stat-val--sm {
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  line-height: 1.3;
+  text-align: center;
+}
+.col-stat-lbl {
+  font-family: "Rajdhani", sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.25);
+}
+.col-stat-div {
+  width: 1px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.col-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  z-index: 1;
+}
+
+.col-card-price {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.col-card-price-label {
+  font-family: "Rajdhani", sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.25);
+}
+.col-card-price-val {
+  font-family: "Bebas Neue", cursive;
+  font-size: 18px;
+  color: var(--card-accent);
+  letter-spacing: 2px;
+  line-height: 1;
+  transition: color 0.3s ease;
+}
+
+.col-card-cta {
+  font-family: "Bebas Neue", cursive;
+  font-size: 13px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--card-accent);
+  background: color-mix(in srgb, var(--card-accent) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--card-accent) 30%, transparent);
+  padding: 9px 20px;
+  border-radius: 2px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.col-card-cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--card-accent);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+.col-card:hover .col-card-cta {
+  color: #000;
+  border-color: var(--card-accent);
+  box-shadow: 0 0 20px var(--card-glow);
+}
+.col-card:hover .col-card-cta::before {
+  transform: scaleX(1);
+}
+.col-card-cta span {
+  position: relative;
+  z-index: 1;
+}
+.col-card-cta-arrow {
+  transition: transform 0.3s ease;
+}
+.col-card:hover .col-card-cta-arrow {
+  transform: translateX(4px);
+}
+
+.col-card-count {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  font-family: "Rajdhani", sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.15);
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
+  border-radius: 0 3px 0 0;
+  z-index: 1;
+}
+
+.col-card-orb {
+  position: absolute;
+  bottom: -80px;
+  right: -60px;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: var(--card-accent);
+  filter: blur(80px);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+.col-card:hover .col-card-orb {
+  opacity: 0.08;
+}
+
+/* ── Footer CTA ── */
+.col-footer-cta {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  margin-top: 80px;
+}
+
+.col-footer-divider {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  width: 100%;
+  max-width: 400px;
+}
+.col-footer-divider-line {
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.07);
+}
+.col-footer-divider-text {
+  font-family: "Rajdhani", sans-serif;
+  font-weight: 700;
+  font-size: 9px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.2);
+  white-space: nowrap;
+}
+.col-footer-note {
+  font-family: "Rajdhani", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.28);
+  letter-spacing: 0.5px;
+}
+
+.col-footer-link {
+  background: none;
+  border: none;
+  font-family: "Rajdhani", sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--col-accent);
+  cursor: pointer;
+  letter-spacing: 1px;
+  padding: 0;
+  transition:
+    opacity 0.25s ease,
+    text-shadow 0.25s ease;
+}
+.col-footer-link:hover {
+  opacity: 0.8;
+  text-shadow: 0 0 12px var(--col-glow);
+}
+
+/* ── Corner accents ── */
+.col-corner {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  pointer-events: none;
+  z-index: 3;
+}
+.col-corner--tl {
+  top: 24px;
+  left: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-left: 1px solid rgba(255, 255, 255, 0.1);
+}
+.col-corner--br {
+  bottom: 24px;
+  right: 24px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — TABLET
+═══════════════════════════════════════════════ */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .collections {
+    padding: 100px 5% 120px;
+  }
+  .col-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+  }
+  .col-title {
+    font-size: clamp(56px, 9vw, 100px);
+  }
+  .col-card-title {
+    font-size: clamp(36px, 4vw, 50px);
+  }
+  .silk-ribbon {
+    height: 38px;
+  }
+  .silk-ribbon-item {
+    font-size: 13px;
+    padding: 0 28px;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — MOBILE
+═══════════════════════════════════════════════ */
+@media (max-width: 767px) {
+  .collections {
+    padding: 80px 5% 100px;
+  }
+  .col-grid {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+  .col-description {
+    font-size: 14px;
+    margin-bottom: 40px;
+  }
+  .col-title {
+    font-size: clamp(54px, 16vw, 84px);
+  }
+  .col-deco-line {
+    display: none;
+  }
+  .col-card-title {
+    font-size: clamp(38px, 10vw, 54px);
+  }
+  .col-card-spotlight {
+    display: none;
+  }
+  .col-orb--1 {
+    opacity: 0.04;
+  }
+  .col-orb--2 {
+    opacity: 0.03;
+  }
+  .col-silk-marquee-wrap {
+    margin-bottom: 48px;
+  }
+  .silk-marquee-section {
+    height: 100px;
+  }
+  .silk-ribbon {
+    height: 34px;
+  }
+  .silk-ribbon-item {
+    font-size: 12px;
+    letter-spacing: 4px;
+    padding: 0 20px;
+  }
+  .silk-ribbon-star {
+    font-size: 7px;
+  }
+  .col-card-logo-wrap {
+    width: 56px;
+    height: 56px;
+  }
+  .col-card-logo {
+    width: 52px;
+    height: 52px;
+  }
+  .col-card-logo-fallback {
+    width: 52px;
+    height: 52px;
+    font-size: 32px;
+  }
+}
+
+@media (max-width: 380px) {
+  .collections {
+    padding: 60px 4% 80px;
+  }
+  .col-card {
+    padding: 22px 18px 20px;
+  }
+  .col-card-stats {
+    gap: 10px;
+  }
+  .col-card-logo-wrap {
+    width: 48px;
+    height: 48px;
+  }
+  .col-card-logo {
+    width: 44px;
+    height: 44px;
+  }
+}

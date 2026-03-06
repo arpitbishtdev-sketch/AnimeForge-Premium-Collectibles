@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useCart } from "../context/CartContext";
 import SearchOverlay from "./Searchoverlay";
+import CartDrawer from "./cart/CartDrawer";
 import "../styles/navbar.css";
 
 /* ── Icon Components ── */
@@ -97,10 +100,30 @@ export default function Navbar({ accentColor, accentGlow }) {
   // 0 = fully transparent, 1 = fully glass
   const [glassAlpha, setGlassAlpha] = useState(0);
   const [scrollProgress, setScrollProgress] = useState(0);
-  const [cartCount] = useState(3);
+  const { cartCount } = useCart();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeLink, setActiveLink] = useState("home");
   const [searchOpen, setSearchOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
+
+  const navigate = useNavigate();
+
+  const handleCartClick = () => {
+    if (cartCount === 0) {
+      const btn = document.querySelector(".navbar-icon-btn[aria-label='Cart']");
+      if (!btn) return;
+
+      btn.classList.add("cart-empty-shake");
+
+      setTimeout(() => {
+        btn.classList.remove("cart-empty-shake");
+      }, 400);
+
+      return;
+    }
+
+    setCartOpen(true);
+  };
 
   const rafId = useRef(null);
 
@@ -150,11 +173,22 @@ export default function Navbar({ accentColor, accentGlow }) {
     };
   }, [mobileOpen]);
 
+  const location = useLocation();
+
   const handleNavClick = (href) => {
     setActiveLink(href);
     setMobileOpen(false);
-    const el = document.getElementById(href);
-    if (el) el.scrollIntoView({ behavior: "smooth" });
+
+    if (location.pathname !== "/") {
+      navigate("/");
+      setTimeout(() => {
+        const el = document.getElementById(href);
+        if (el) el.scrollIntoView({ behavior: "smooth" });
+      }, 100);
+    } else {
+      const el = document.getElementById(href);
+      if (el) el.scrollIntoView({ behavior: "smooth" });
+    }
   };
 
   const scrolled = glassAlpha > 0;
@@ -234,7 +268,11 @@ export default function Navbar({ accentColor, accentGlow }) {
             <SearchIcon />
           </button>
 
-          <button className="navbar-icon-btn" aria-label="Cart">
+          <button
+            className="navbar-icon-btn"
+            aria-label="Cart"
+            onClick={handleCartClick}
+          >
             <CartIcon />
             {cartCount > 0 && (
               <span className="cart-badge">
@@ -246,6 +284,7 @@ export default function Navbar({ accentColor, accentGlow }) {
           <button
             className="navbar-icon-btn navbar-icon-btn--user"
             aria-label="Profile"
+            onClick={() => navigate("/user")}
           >
             <UserIcon />
             <span className="user-status-dot" />
@@ -304,6 +343,7 @@ export default function Navbar({ accentColor, accentGlow }) {
         accentColor={accentColor}
         accentGlow={accentGlow}
       />
+      <CartDrawer open={cartOpen} onClose={() => setCartOpen(false)} />
     </>
   );
 }

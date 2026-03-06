@@ -1,15 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import "../styles/Search-overlay.css";
 
-const TRENDING = [
-  { label: "Naruto Sage Mode", tag: "Bestseller" },
-  { label: "Gojo Satoru Infinity", tag: "New Drop" },
-  { label: "Luffy Gear 5", tag: "Hot" },
-  { label: "Spider-Man No Way Home", tag: "Limited" },
-  { label: "Demon Slayer Tanjiro", tag: "Trending" },
-  { label: "Attack on Titan Eren", tag: "Popular" },
-  { label: "Dragon Ball Goku Ultra", tag: "Fan Pick" },
-];
+import { useNavigate } from "react-router-dom";
+import { api } from "../utils/api";
 
 const SearchIcon = () => (
   <svg
@@ -65,10 +58,13 @@ export default function SearchOverlay({
   accentGlow,
 }) {
   const inputRef = useRef(null);
+  const navigate = useNavigate();
   const overlayRef = useRef(null);
   const [query, setQuery] = useState("");
   const [focused, setFocused] = useState(false);
   const [visible, setVisible] = useState(false);
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   // Handle open/close with animation timing
   useEffect(() => {
@@ -85,6 +81,32 @@ export default function SearchOverlay({
       return () => clearTimeout(t);
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (!query.trim()) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      try {
+        setLoading(true);
+        const trimmed = query.trim();
+        const data = await api.getCollections({
+          search: trimmed,
+        });
+        setResults(data);
+      } catch (err) {
+        console.error("Search failed:", err);
+        setResults([]);
+      } finally {
+        setLoading(false);
+      }
+    }, 350);
+
+    return () => clearTimeout(timeout);
+  }, [query]);
 
   // ESC key close
   useEffect(() => {
@@ -111,13 +133,6 @@ export default function SearchOverlay({
   const handleOverlayClick = (e) => {
     if (e.target === overlayRef.current) onClose();
   };
-
-  const filtered =
-    query.length > 0
-      ? TRENDING.filter((t) =>
-          t.label.toLowerCase().includes(query.toLowerCase()),
-        )
-      : TRENDING;
 
   return (
     <div
@@ -156,6 +171,12 @@ export default function SearchOverlay({
             onChange={(e) => setQuery(e.target.value)}
             onFocus={() => setFocused(true)}
             onBlur={() => setFocused(false)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && query.trim()) {
+                navigate(`/collections?search=${query.trim()}`);
+                onClose();
+              }
+            }}
             autoComplete="off"
             spellCheck={false}
           />
@@ -177,38 +198,59 @@ export default function SearchOverlay({
         <div className="search-divider">
           <div className="search-divider-line" />
           <span className="search-divider-label">
-            {query.length > 0 ? `${filtered.length} results` : "Top Searches"}
+            {query.length > 0
+              ? loading
+                ? "Searching..."
+                : `${results.length} results`
+              : "Start typing to search"}
           </span>
           <div className="search-divider-line search-divider-line--short" />
         </div>
 
         {/* Trending / results list */}
         <ul className="search-results-list">
-          {filtered.length > 0 ? (
-            filtered.map((item, i) => (
-              <li key={item.label}>
+          {loading ? (
+            <li className="search-no-results">Searching...</li>
+          ) : results.length > 0 ? (
+            results.map((product, i) => (
+              <li key={product._id}>
                 <button
                   className="search-result-item"
                   style={{ animationDelay: `${i * 0.045}s` }}
-                  onClick={onClose}
+                  onClick={() => {
+                    navigate(`/product/${product.slug}`);
+                    onClose();
+                  }}
                 >
                   <span className="search-result-index">
                     {String(i + 1).padStart(2, "0")}
                   </span>
-                  <span className="search-result-label">{item.label}</span>
-                  <span className="search-result-tag">{item.tag}</span>
+
+                  <img
+                    src={product.images?.[0]?.url || "/placeholder.webp"}
+                    alt={product.name}
+                    style={{
+                      width: 40,
+                      height: 40,
+                      objectFit: "cover",
+                      borderRadius: 6,
+                      marginRight: 10,
+                    }}
+                  />
+
+                  <span className="search-result-label">{product.name}</span>
+
                   <span className="search-result-arrow">
                     <ArrowIcon />
                   </span>
                 </button>
               </li>
             ))
-          ) : (
+          ) : query ? (
             <li className="search-no-results">
-              <span>No results for </span>
-              <strong>"{query}"</strong>
+              No results for <strong>"{query}"</strong>
             </li>
-          )}
+          ) : null}
         </ul>
 
         {/* Footer */}
@@ -216,9 +258,7 @@ export default function SearchOverlay({
           <span className="search-footer-hint">
             <kbd>ESC</kbd> to close · <kbd>↵</kbd> to search
           </span>
-          <span className="search-footer-count">
-            {TRENDING.length} items in catalog
-          </span>
+          <span className="search-footer-count">{results.length} results</span>
         </div>
       </div>
     </div>

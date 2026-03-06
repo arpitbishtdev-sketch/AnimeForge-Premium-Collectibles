@@ -1,0 +1,576 @@
+/* .ss-page {
+  padding: 40px;
+  background: #0a0a14;
+  min-height: 100vh;
+  color: white;
+}
+
+.ss-title {
+  font-size: 28px;
+  margin-bottom: 40px;
+  font-weight: 600;
+}
+
+.ss-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.ss-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 24px;
+  border-radius: 14px;
+  transition: 0.3s ease;
+}
+
+.ss-card:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.ss-badge-preview {
+  padding: 10px 18px;
+  font-size: 12px;
+  font-weight: 700;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  display: inline-block;
+}
+
+.ss-controls {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.ss-controls input[type="text"] {
+  background: #111;
+  border: 1px solid #333;
+  color: white;
+  padding: 6px 8px;
+  border-radius: 6px;
+  width: 90px;
+}
+
+.ss-save-btn {
+  background: #7c5cff;
+  border: none;
+  color: white;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s ease;
+}
+
+.ss-save-btn:hover {
+  background: #9a7cff;
+}
+
+.ss-loading {
+  padding: 40px;
+  color: white;
+} */
+
+/* ═══════════════════════════════════════════════════════════════
+   StatusColors.css — AnimeForge Admin Panel
+   Matches EditProduct dark editorial theme
+   ═══════════════════════════════════════════════════════════════ */
+
+.sc-page {
+  min-height: 100vh;
+  background: #07070f;
+  padding: 36px 40px 80px;
+  font-family: var(--font-ui, "DM Sans", system-ui, sans-serif);
+  color: rgba(255, 255, 255, 0.82);
+  position: relative;
+}
+
+.sc-page::before {
+  content: "";
+  position: fixed;
+  top: -10vh;
+  right: -5vw;
+  width: 45vw;
+  height: 45vh;
+  background: radial-gradient(
+    ellipse at 60% 30%,
+    rgba(124, 92, 255, 0.055) 0%,
+    transparent 65%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Loading ── */
+.sc-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  min-height: 60vh;
+}
+
+.sc-loading__spinner {
+  display: block;
+  width: 32px;
+  height: 32px;
+  border: 2.5px solid rgba(255, 255, 255, 0.07);
+  border-top-color: rgba(124, 92, 255, 0.75);
+  border-radius: 50%;
+  animation: sc-spin 0.7s linear infinite;
+}
+
+.sc-loading__text {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.22);
+}
+
+@keyframes sc-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ── Fetch error ── */
+.sc-fetch-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  min-height: 60vh;
+  text-align: center;
+  color: rgba(255, 107, 122, 0.85);
+}
+
+/* ── Header ── */
+.sc-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 40px;
+  position: relative;
+  z-index: 1;
+  flex-wrap: wrap;
+}
+
+.sc-header__left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.sc-back-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.35);
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.34, 1.56, 0.64, 1);
+  flex-shrink: 0;
+}
+
+.sc-back-btn:hover {
+  background: rgba(124, 92, 255, 0.08);
+  border-color: rgba(124, 92, 255, 0.3);
+  color: rgba(124, 92, 255, 0.9);
+  transform: translateX(-2px);
+}
+
+.sc-header__eyebrow {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.2);
+  margin: 0 0 5px;
+}
+
+.sc-header__title {
+  font-family: var(--font-display, "Cormorant Garamond", Georgia, serif);
+  font-size: clamp(28px, 3.5vw, 42px);
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  color: rgba(255, 255, 255, 0.92);
+  margin: 0;
+  line-height: 1;
+}
+
+.sc-header__desc {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.25);
+  max-width: 320px;
+  line-height: 1.6;
+  margin: 0;
+  padding-top: 6px;
+}
+
+.sc-header__desc em {
+  color: rgba(124, 92, 255, 0.7);
+  font-style: normal;
+  font-weight: 600;
+}
+
+/* ── Cards grid ── */
+.sc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 36px;
+}
+
+/* ── Card ── */
+.sc-card {
+  background: linear-gradient(
+    155deg,
+    rgba(11, 11, 22, 0.99) 0%,
+    rgba(7, 7, 16, 1) 100%
+  );
+  border: 1px solid rgba(255, 255, 255, 0.062);
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.sc-card:hover {
+  border-color: color-mix(in srgb, var(--status-color) 30%, transparent);
+  box-shadow:
+    0 20px 50px rgba(0, 0, 0, 0.5),
+    0 0 30px color-mix(in srgb, var(--status-color) 10%, transparent);
+}
+
+/* Top color accent bar */
+.sc-card__accent {
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    var(--status-color) 40%,
+    color-mix(in srgb, var(--status-color) 60%, white) 60%,
+    transparent 100%
+  );
+}
+
+.sc-card__top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 22px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.038);
+}
+
+.sc-card__icon {
+  font-size: 22px;
+  color: var(--status-color);
+  line-height: 1;
+  flex-shrink: 0;
+  filter: drop-shadow(0 0 6px var(--status-color));
+  transition:
+    color 0.3s ease,
+    filter 0.3s ease;
+}
+
+.sc-card__label {
+  font-size: 13px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0 0 2px;
+  letter-spacing: 0.3px;
+}
+
+.sc-card__slug {
+  font-family: "DM Mono", "Courier New", monospace;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.2);
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+/* Live badge preview */
+.sc-badge-preview {
+  margin-left: auto;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.sc-card__body {
+  padding: 20px 22px 16px;
+}
+
+/* Color row */
+.sc-color-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sc-color-picker {
+  width: 44px;
+  height: 44px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  background: transparent;
+  padding: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+  outline: none;
+  appearance: none;
+  overflow: hidden;
+  transition: border-color 0.22s ease;
+}
+
+.sc-color-picker:focus {
+  border-color: var(--status-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--status-color) 20%, transparent);
+}
+
+.sc-color-picker::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+.sc-color-picker::-webkit-color-swatch {
+  border: none;
+  border-radius: 7px;
+}
+
+.sc-color-text {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.025);
+  border: 1px solid rgba(255, 255, 255, 0.065);
+  border-radius: 9px;
+  color: rgba(255, 255, 255, 0.84);
+  font-family: "DM Mono", "Courier New", monospace;
+  font-size: 13px;
+  padding: 10px 14px;
+  outline: none;
+  transition:
+    border-color 0.22s ease,
+    box-shadow 0.22s ease;
+}
+
+.sc-color-text:focus {
+  border-color: var(--status-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--status-color) 15%, transparent);
+}
+
+.sc-swatch {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+}
+
+.sc-error {
+  font-size: 11px;
+  color: rgba(255, 107, 122, 0.85);
+  margin: 10px 0 0;
+  padding: 8px 12px;
+  background: rgba(255, 107, 122, 0.055);
+  border: 1px solid rgba(255, 107, 122, 0.15);
+  border-radius: 7px;
+}
+
+/* Card footer */
+.sc-card__footer {
+  padding: 0 22px 20px;
+}
+
+/* ── Buttons ── */
+.sc-btn {
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-ui, "DM Sans", system-ui, sans-serif);
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-radius: 9px;
+  padding: 0 22px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.22s ease;
+  white-space: nowrap;
+}
+
+.sc-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.sc-btn--ghost {
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.38);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.sc-btn--ghost:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.055);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.sc-btn--save {
+  width: 100%;
+  background: color-mix(in srgb, var(--status-color) 18%, rgba(0, 0, 0, 0.5));
+  color: var(--status-color);
+  border: 1px solid color-mix(in srgb, var(--status-color) 35%, transparent);
+  position: relative;
+  overflow: hidden;
+}
+
+.sc-btn--save::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    transparent 55%
+  );
+  pointer-events: none;
+}
+
+.sc-btn--save:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--status-color) 28%, rgba(0, 0, 0, 0.4));
+  border-color: color-mix(in srgb, var(--status-color) 55%, transparent);
+  box-shadow: 0 6px 20px
+    color-mix(in srgb, var(--status-color) 25%, transparent);
+  transform: translateY(-1px);
+}
+
+.sc-btn--saved {
+  background: rgba(34, 197, 94, 0.12) !important;
+  color: rgba(34, 197, 94, 0.85) !important;
+  border-color: rgba(34, 197, 94, 0.3) !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+.sc-btn__spinner {
+  display: block;
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: sc-spin 0.65s linear infinite;
+}
+
+.sc-btn__icon {
+  font-size: 13px;
+  opacity: 0.8;
+}
+
+/* ── Info note ── */
+.sc-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 16px 20px;
+  background: rgba(124, 92, 255, 0.04);
+  border: 1px solid rgba(124, 92, 255, 0.1);
+  border-radius: 10px;
+  position: relative;
+  z-index: 1;
+}
+
+.sc-note__icon {
+  font-size: 14px;
+  color: rgba(124, 92, 255, 0.6);
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.sc-note p {
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.28);
+  line-height: 1.7;
+  margin: 0;
+}
+
+.sc-note strong {
+  color: rgba(255, 255, 255, 0.45);
+  font-weight: 600;
+}
+
+/* ── Also add these to EditProduct.css ── */
+.ep-status-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.ep-status-wrap .ep-select {
+  flex: 1;
+}
+
+.ep-status-badge-preview {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 1px solid;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.25s ease;
+}
+
+.ep-btn--small {
+  height: 34px;
+  font-size: 9px;
+  padding: 0 16px;
+}
+
+.ep-header__right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .sc-page {
+    padding: 24px 20px 60px;
+  }
+
+  .sc-header {
+    flex-direction: column;
+  }
+
+  .sc-grid {
+    grid-template-columns: 1fr;
+  }
+}

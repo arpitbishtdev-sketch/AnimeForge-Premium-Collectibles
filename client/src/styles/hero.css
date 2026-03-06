@@ -227,6 +227,7 @@
   will-change: transform;
   flex-shrink: 0;
   white-space: nowrap;
+  /* NO position:absolute, NO right:12% */
 }
 
 /* KEY: pure transparent — no box, no clip */
@@ -237,9 +238,14 @@
   display: flex;
   align-items: center;
   justify-content: center;
+
   opacity: 0.35;
   transform: scale(0.9);
+  transition:
+    transform 0.3s ease,
+    opacity 0.3s ease;
 }
+
 .hero-carousel-item img {
   width: 100%;
   height: 100%;
@@ -267,7 +273,7 @@
   left: 50%;
   transform: translateX(-50%);
   border-radius: 50%;
-  border: 1px solid var(--content-accent, rgba(255, 140, 0, 0.3));
+  border: 1px solid var(--accent, rgba(255, 140, 0, 0.3));
   animation: ring-pulse 3s ease-in-out infinite;
 }
 .ring-outer {
@@ -316,10 +322,16 @@
   bottom: 60px;
   object-fit: contain;
   object-position: bottom center;
-  filter: drop-shadow(0 0 60px var(--char-glow, rgba(255, 140, 0, 0.4)))
-    drop-shadow(0 0 120px var(--char-glow, rgba(255, 140, 0, 0.2)));
+  filter: drop-shadow(0 0 60px var(--accent-glow, rgba(255, 140, 0, 0.4)))
+    drop-shadow(0 0 120px var(--accent-glow, rgba(255, 140, 0, 0.2)));
   transition: filter 0.5s ease;
   will-change: transform;
+}
+
+model-viewer.hero-character-img {
+  height: 80vh;
+  max-height: 720px;
+  width: auto;
 }
 
 /* ═══════════════════════════════════════════════
@@ -343,12 +355,12 @@
   font-size: 10px;
   letter-spacing: 4px;
   text-transform: uppercase;
-  color: var(--content-accent, #ff8c00);
+  color: var(--accent, #ff8c00);
   margin-bottom: 20px;
   padding: 6px 16px 6px 12px;
   border-radius: 2px;
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-left: 2px solid var(--content-accent, #ff8c00);
+  border-left: 2px solid var(--accent, #ff8c00);
   background: rgba(0, 0, 0, 0.35);
   backdrop-filter: blur(10px);
   width: fit-content;
@@ -358,8 +370,8 @@
   width: 5px;
   height: 5px;
   border-radius: 50%;
-  background: var(--content-accent, #ff8c00);
-  box-shadow: 0 0 8px var(--content-accent, #ff8c00);
+  background: var(--accent, #ff8c00);
+  box-shadow: 0 0 8px var(--accent, #ff8c00);
   animation: pulse-dot 2s ease-in-out infinite;
   flex-shrink: 0;
 }
@@ -393,8 +405,8 @@
   letter-spacing: 3px;
   margin: 0;
   text-shadow:
-    0 0 100px var(--content-glow, rgba(255, 140, 0, 0.25)),
-    0 0 200px var(--content-glow, rgba(255, 140, 0, 0.1)),
+    0 0 100px var(--accent-glow, rgba(255, 140, 0, 0.25)),
+    0 0 200px var(--accent-glow, rgba(255, 140, 0, 0.1)),
     0 4px 8px rgba(0, 0, 0, 0.6);
   transition: text-shadow 0.5s ease;
 }
@@ -408,11 +420,7 @@
 .rule-line {
   height: 1px;
   width: 60px;
-  background: linear-gradient(
-    to right,
-    var(--content-accent, #ff8c00),
-    transparent
-  );
+  background: linear-gradient(to right, var(--accent, #ff8c00), transparent);
 }
 .rule-line--short {
   width: 20px;
@@ -420,10 +428,10 @@
 .rule-diamond {
   width: 6px;
   height: 6px;
-  background: var(--content-accent, #ff8c00);
+  background: var(--accent, #ff8c00);
   transform: rotate(45deg);
   flex-shrink: 0;
-  box-shadow: 0 0 8px var(--content-accent, #ff8c00);
+  box-shadow: 0 0 8px var(--accent, #ff8c00);
 }
 
 .hero-subtitle {
@@ -432,7 +440,7 @@
   font-weight: 700;
   letter-spacing: 4px;
   text-transform: uppercase;
-  color: var(--content-accent, #ff8c00);
+  color: var(--accent, #ff8c00);
   margin-bottom: 16px;
   opacity: 0.85;
 }
@@ -463,7 +471,7 @@
 .hero-price-currency {
   font-family: "Bebas Neue", cursive;
   font-size: 22px;
-  color: var(--content-accent, #ff8c00);
+  color: var(--accent, #ff8c00);
   line-height: 1.4;
 }
 .hero-price {
@@ -491,7 +499,7 @@
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 1px;
-  color: var(--content-accent, #ff8c00);
+  color: var(--accent, #ff8c00);
   opacity: 0.7;
   text-transform: uppercase;
 }
@@ -523,7 +531,7 @@
   transition:
     transform 0.25s ease,
     box-shadow 0.25s ease;
-  box-shadow: 0 6px 30px var(--content-glow, rgba(255, 140, 0, 0.35));
+  box-shadow: 0 6px 30px var(--accent-glow, rgba(255, 140, 0, 0.35));
 }
 .btn-shop-now::before {
   content: "";
@@ -560,7 +568,7 @@
 }
 .btn-shop-now:hover {
   transform: scale(1.04) translateY(-2px);
-  box-shadow: 0 12px 40px var(--content-glow, rgba(255, 140, 0, 0.55));
+  box-shadow: 0 12px 40px var(--accent-glow, rgba(255, 140, 0, 0.55));
 }
 .btn-shop-now:hover .btn-shop-now-icon {
   transform: translateX(4px);
@@ -652,7 +660,7 @@
   left: -100%;
   width: 100%;
   height: 100%;
-  background: var(--content-accent, #ff8c00);
+  background: var(--accent, #ff8c00);
   animation: scroll-line 2.2s ease-in-out infinite;
 }
 @keyframes scroll-line {
@@ -786,11 +794,7 @@
     top: 80px;
     bottom: 0;
     width: 2px;
-    background: linear-gradient(
-      to bottom,
-      var(--content-accent, #ff8c00),
-      transparent
-    );
+    background: linear-gradient(to bottom, var(--accent, #ff8c00), transparent);
     opacity: 0.3;
     border-radius: 2px;
   }
@@ -863,8 +867,8 @@
   .hero-character-img {
     height: 80vh;
     max-height: 600px;
-    filter: drop-shadow(0 0 50px var(--char-glow, rgba(255, 140, 0, 0.5)))
-      drop-shadow(0 0 100px var(--char-glow, rgba(255, 140, 0, 0.25)));
+    filter: drop-shadow(0 0 50px var(--accent-glow, rgba(255, 140, 0, 0.5)))
+      drop-shadow(0 0 100px var(--accent-glow, rgba(255, 140, 0, 0.25)));
   }
   .ring-outer {
     width: 200px;
@@ -888,7 +892,7 @@
     background: rgba(4, 4, 14, 0.82);
     backdrop-filter: blur(30px) saturate(160%);
     -webkit-backdrop-filter: blur(30px) saturate(160%);
-    border-top: 1px solid var(--content-accent, rgba(255, 140, 0, 0.3));
+    border-top: 1px solid var(--accent, rgba(255, 140, 0, 0.3));
     border-radius: 24px 24px 0 0;
     padding: 22px 24px 36px;
     box-shadow:
@@ -912,10 +916,10 @@
     font-size: 9px;
     letter-spacing: 3.5px;
     text-transform: uppercase;
-    color: var(--content-accent, #ff8c00);
+    color: var(--accent, #ff8c00);
     padding: 4px 10px 4px 8px;
     border-radius: 2px;
-    border-left: 2px solid var(--content-accent, #ff8c00);
+    border-left: 2px solid var(--accent, #ff8c00);
     background: rgba(0, 0, 0, 0.3);
   }
 
@@ -936,7 +940,7 @@
     letter-spacing: 3px;
     margin: 0 0 10px;
     text-shadow:
-      0 0 60px var(--content-glow, rgba(255, 140, 0, 0.3)),
+      0 0 60px var(--accent-glow, rgba(255, 140, 0, 0.3)),
       0 2px 6px rgba(0, 0, 0, 0.5);
   }
 
@@ -953,7 +957,7 @@
     font-weight: 700;
     letter-spacing: 3px;
     text-transform: uppercase;
-    color: var(--content-accent, #ff8c00);
+    color: var(--accent, #ff8c00);
     margin-bottom: 14px;
     opacity: 0.85;
   }
@@ -1001,7 +1005,7 @@
     display: flex;
     align-items: center;
     gap: 8px;
-    box-shadow: 0 4px 20px var(--content-glow, rgba(255, 140, 0, 0.4));
+    box-shadow: 0 4px 20px var(--accent-glow, rgba(255, 140, 0, 0.4));
     transition:
       transform 0.2s ease,
       box-shadow 0.2s ease;
@@ -1108,8 +1112,8 @@
     height: 80vh;
     max-height: 600px;
     margin-top: 10px;
-    filter: drop-shadow(0 0 50px var(--char-glow, rgba(255, 140, 0, 0.5)))
-      drop-shadow(0 0 100px var(--char-glow, rgba(255, 140, 0, 0.25)));
+    filter: drop-shadow(0 0 50px var(--accent-glow, rgba(255, 140, 0, 0.5)))
+      drop-shadow(0 0 100px var(--accent-glow, rgba(255, 140, 0, 0.25)));
   }
   .ring-outer {
     width: 200px;

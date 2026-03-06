@@ -1,7 +1,9 @@
 import { useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
+import { useDeviceCapabilities } from "../hooks/useDeviceCapabilities";
 import "../styles/hero.css";
+import "@google/model-viewer";
 
 // ── Gradient fade colours per character ───────────────────────────────────
 const FADE_COLORS = {
@@ -9,19 +11,6 @@ const FADE_COLORS = {
   spiderman: "rgba(10,0,0,1)",
   gojo: "rgba(2,0,12,1)",
   luffy: "rgba(0,4,14,1)",
-};
-
-// ── Animation variants ─────────────────────────────────────────────────────
-const floatVariants = {
-  animate: {
-    y: [0, -20, 0],
-    transition: {
-      duration: 5,
-      ease: "easeInOut",
-      repeat: Infinity,
-      repeatType: "loop",
-    },
-  },
 };
 
 const characterEnterVariants = {
@@ -60,23 +49,37 @@ function CarouselTrack({ images, speed = 0.45 }) {
     if (!track || !images.length) return;
     if (tweenRef.current) tweenRef.current.kill();
 
-    const itemWidth = 160;
-    const setWidth = images.length * itemWidth;
+    // Wait one frame so layout is painted & offsetWidth is real
+    const raf = requestAnimationFrame(() => {
+      const items = Array.from(track.children);
+      if (!items.length) return;
 
-    gsap.set(track, { x: 0 });
-    tweenRef.current = gsap.to(track, {
-      x: -setWidth,
-      duration: setWidth / (speed * 60),
-      ease: "none",
-      repeat: -1,
-      modifiers: { x: gsap.utils.unitize((x) => parseFloat(x) % setWidth) },
+      // Total width of ONE full set (images.length items)
+      const gap = 20; // must match CSS gap
+      const itemW = items[0].offsetWidth + gap;
+      const setWidth = itemW * images.length;
+
+      gsap.set(track, { x: 0 });
+
+      tweenRef.current = gsap.to(track, {
+        x: -setWidth,
+        duration: setWidth / (speed * 60),
+        ease: "none",
+        repeat: -1,
+        // modifiers snaps x back by one full set — seamless loop
+        modifiers: {
+          x: gsap.utils.unitize((x) => parseFloat(x) % setWidth),
+        },
+      });
     });
 
     return () => {
+      cancelAnimationFrame(raf);
       if (tweenRef.current) tweenRef.current.kill();
     };
   }, [images, speed]);
 
+  // Triple so there's always content filling the viewport
   const tripled = [...images, ...images, ...images];
 
   return (
@@ -92,6 +95,8 @@ function CarouselTrack({ images, speed = 0.45 }) {
 
 // ── Main Hero ──────────────────────────────────────────────────────────────
 export default function Hero({ character }) {
+  if (!character) return null;
+
   const heroRef = useRef(null);
   const characterRef = useRef(null);
   const bgRadialRef = useRef(null);
@@ -99,12 +104,46 @@ export default function Hero({ character }) {
   const orb1Ref = useRef(null);
   const orb2Ref = useRef(null);
   const orb3Ref = useRef(null);
+  const { prefersReducedMotion, isLowEnd, isMobile } = useDeviceCapabilities();
+  const gradient = character?.gradient || {};
 
-  const { gradient } = character;
+  const floatVariants = {
+    animate:
+      prefersReducedMotion || isLowEnd
+        ? {}
+        : {
+            y: [0, -20, 0],
+            transition: {
+              duration: 5,
+              ease: "easeInOut",
+              repeat: Infinity,
+              repeatType: "loop",
+            },
+          },
+  };
 
   // Smooth bg transition
   useEffect(() => {
     if (!bgRadialRef.current) return;
+
+    //   PERFORMANCE GUARD
+    if (isLowEnd || prefersReducedMotion) {
+      if (bgRadialRef.current)
+        bgRadialRef.current.style.background = gradient.radial;
+
+      if (bgLinearRef.current)
+        bgLinearRef.current.style.background = gradient.linear;
+
+      if (orb1Ref.current) orb1Ref.current.style.background = gradient.accent;
+
+      if (orb2Ref.current) orb2Ref.current.style.background = gradient.particle;
+
+      if (orb3Ref.current) orb3Ref.current.style.background = gradient.glow;
+
+      return; //   Skip GSAP animation completely
+    }
+
+    //   High-end devices get smooth animation
     const targets = [
       bgRadialRef.current,
       bgLinearRef.current,
@@ -112,45 +151,59 @@ export default function Hero({ character }) {
       orb2Ref.current,
       orb3Ref.current,
     ].filter(Boolean);
-    gsap
-      .timeline()
-      .to(targets, {
-        opacity: 0,
-        duration: 0.3,
-        ease: "power2.in",
-        onComplete: () => {
-          if (bgRadialRef.current)
-            bgRadialRef.current.style.background = gradient.radial;
-          if (bgLinearRef.current)
-            bgLinearRef.current.style.background = gradient.linear;
-          if (orb1Ref.current)
-            orb1Ref.current.style.background = gradient.accent;
-          if (orb2Ref.current)
-            orb2Ref.current.style.background = gradient.particle;
-          if (orb3Ref.current) orb3Ref.current.style.background = gradient.glow;
-        },
-      })
-      .to(targets, { opacity: 1, duration: 0.6, ease: "power2.out" });
-  }, [character.id]);
+
+    const tl = gsap.timeline();
+
+    tl.to(targets, {
+      opacity: 0,
+      duration: 0.3,
+      ease: "power2.in",
+      onComplete: () => {
+        if (bgRadialRef.current)
+          bgRadialRef.current.style.background = gradient.radial;
+        if (bgLinearRef.current)
+          bgLinearRef.current.style.background = gradient.linear;
+        if (orb1Ref.current) orb1Ref.current.style.background = gradient.accent;
+        if (orb2Ref.current)
+          orb2Ref.current.style.background = gradient.particle;
+        if (orb3Ref.current) orb3Ref.current.style.background = gradient.glow;
+      },
+    }).to(targets, {
+      opacity: 1,
+      duration: 0.6,
+      ease: "power2.out",
+    });
+
+    return () => tl.kill(); //   Cleanup
+  }, [character.id, isLowEnd, prefersReducedMotion]);
 
   // Mouse parallax
-  const handleMouseMove = useCallback((e) => {
-    const el = characterRef.current;
-    if (!el) return;
-    const { clientX, clientY, currentTarget } = e;
-    const { width, height, left, top } = currentTarget.getBoundingClientRect();
-    const nx = (clientX - left) / width - 0.5;
-    const ny = (clientY - top) / height - 0.5;
-    gsap.to(el, {
-      rotateY: nx * 10,
-      rotateX: -ny * 6,
-      x: nx * 16,
-      y: ny * 10,
-      duration: 0.8,
-      ease: "power3.out",
-      transformPerspective: 1200,
-    });
-  }, []);
+  const handleMouseMove = useCallback(
+    (e) => {
+      if (isLowEnd || isMobile || prefersReducedMotion) return;
+
+      const el = characterRef.current;
+      if (!el) return;
+
+      const { clientX, clientY, currentTarget } = e;
+      const { width, height, left, top } =
+        currentTarget.getBoundingClientRect();
+
+      const nx = (clientX - left) / width - 0.5;
+      const ny = (clientY - top) / height - 0.5;
+
+      gsap.to(el, {
+        rotateY: nx * 10,
+        rotateX: -ny * 6,
+        x: nx * 16,
+        y: ny * 10,
+        duration: 0.8,
+        ease: "power3.out",
+        transformPerspective: 1200,
+      });
+    },
+    [isLowEnd, isMobile, prefersReducedMotion],
+  );
 
   const handleMouseLeave = useCallback(() => {
     const el = characterRef.current;
@@ -223,7 +276,7 @@ export default function Hero({ character }) {
 
       {/* ── Carousel ── */}
       <div className="hero-carousel-layer">
-        <CarouselTrack images={character.carouselImages} />
+        <CarouselTrack images={character.carouselImages || []} />
       </div>
 
       {/* ── Deco lines (desktop only) ── */}
@@ -248,14 +301,30 @@ export default function Hero({ character }) {
             ref={characterRef}
             style={{ transformStyle: "preserve-3d" }}
           >
-            <motion.img
-              className="hero-character-img"
-              src={character.mainImage}
-              alt={character.name}
-              draggable={false}
-              variants={floatVariants}
-              animate="animate"
-            />
+            {character.model3d ? (
+              <model-viewer
+                src={character.model3d}
+                class="hero-character-img"
+                camera-controls
+                auto-rotate
+                disable-zoom
+                shadow-intensity="1"
+                exposure="1"
+                loading="eager"
+              />
+            ) : (
+              <motion.img
+                className="hero-character-img"
+                src={character.mainImage || "/placeholder.png"}
+                alt={character.name}
+                draggable={false}
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
+                variants={prefersReducedMotion || isLowEnd ? {} : floatVariants}
+                animate="animate"
+              />
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
@@ -278,7 +347,7 @@ export default function Hero({ character }) {
               exit="exit"
             >
               <span className="hero-tag-dot" />
-              {character.tag}
+              {character.status}
             </motion.div>
 
             <motion.p
@@ -437,7 +506,7 @@ export default function Hero({ character }) {
             <div className="mob-card-header">
               <div className="mob-card-tag">
                 <span className="hero-tag-dot" />
-                {character.tag}
+                {character.status}
               </div>
               <span className="mob-card-edition">{character.edition}</span>
             </div>

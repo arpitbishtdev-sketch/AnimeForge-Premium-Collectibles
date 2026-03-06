@@ -15,8 +15,8 @@
   background: #06060f;
 
   /* CSS custom property defaults — overridden by JS */
-  --store-accent: #ff8c00;
-  --store-glow: rgba(255, 140, 0, 0.3);
+  --store-accent: var(--accent);
+  --store-glow: var(--accent-glow);
 }
 
 /* ─── Background ──────────────────────────────────── */

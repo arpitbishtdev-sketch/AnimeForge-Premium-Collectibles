@@ -1,9 +1,14 @@
-import { useRef, useEffect } from "react";
+import { useRef, useEffect, useState } from "react";
 import { motion, useInView } from "framer-motion";
 import { gsap } from "gsap";
-import { PRODUCTS } from "../data/product";
+import { useNavigate } from "react-router-dom";
+import { api } from "../utils/api";
+
 import ProductCard from "./ProductCard";
 import "../styles/Store.css";
+
+import { useDeviceCapabilities } from "../hooks/useDeviceCapabilities";
+import { createAbortableFetch } from "../utils/helpers";
 
 // ── Section heading animation ─────────────────────────────────────────────
 const headingVariants = {
@@ -27,12 +32,46 @@ export default function Store({
   accentColor = "#ff8c00",
   accentGlow = "rgba(255,140,0,0.3)",
 }) {
+  const navigate = useNavigate();
+  const { isLowEnd, prefersReducedMotion } = useDeviceCapabilities();
+
   const sectionRef = useRef(null);
   const orb1Ref = useRef(null);
   const orb2Ref = useRef(null);
   const orb3Ref = useRef(null);
 
   const isInView = useInView(sectionRef, { once: true, margin: "-80px" });
+
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const fetchProducts = async () => {
+      try {
+        const data = await api.getCollections({
+          displaySection: "shop",
+        });
+
+        if (!cancelled) {
+          setProducts(Array.isArray(data) ? data : []);
+          setLoading(false);
+        }
+      } catch (err) {
+        if (!cancelled) {
+          console.error("Products fetch failed:", err);
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchProducts();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // ── Transition accent colour smoothly when character changes ──────────
   useEffect(() => {
@@ -48,36 +87,44 @@ export default function Store({
 
   // ── Ambient orb drift ──────────────────────────────────────────────────
   useEffect(() => {
+    if (isLowEnd || prefersReducedMotion) return;
+
     const ctx = gsap.context(() => {
-      gsap.to(orb1Ref.current, {
-        y: -50,
-        x: 40,
-        duration: 12,
-        ease: "sine.inOut",
-        yoyo: true,
-        repeat: -1,
-      });
-      gsap.to(orb2Ref.current, {
-        y: 60,
-        x: -30,
-        duration: 16,
-        ease: "sine.inOut",
-        yoyo: true,
-        repeat: -1,
-        delay: 3,
-      });
-      gsap.to(orb3Ref.current, {
-        y: -35,
-        x: -20,
-        duration: 10,
-        ease: "sine.inOut",
-        yoyo: true,
-        repeat: -1,
-        delay: 6,
-      });
+      if (orb1Ref.current)
+        gsap.to(orb1Ref.current, {
+          y: -50,
+          x: 40,
+          duration: 12,
+          ease: "sine.inOut",
+          yoyo: true,
+          repeat: -1,
+        });
+
+      if (orb2Ref.current)
+        gsap.to(orb2Ref.current, {
+          y: 60,
+          x: -30,
+          duration: 16,
+          ease: "sine.inOut",
+          yoyo: true,
+          repeat: -1,
+          delay: 3,
+        });
+
+      if (orb3Ref.current)
+        gsap.to(orb3Ref.current, {
+          y: -35,
+          x: -20,
+          duration: 10,
+          ease: "sine.inOut",
+          yoyo: true,
+          repeat: -1,
+          delay: 6,
+        });
     }, sectionRef);
+
     return () => ctx.revert();
-  }, []);
+  }, [isLowEnd]);
 
   return (
     <section
@@ -186,14 +233,18 @@ export default function Store({
         initial="hidden"
         animate={isInView ? "visible" : "hidden"}
       >
-        {PRODUCTS.map((product) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            accentColor={accentColor}
-            accentGlow={accentGlow}
-          />
-        ))}
+        {loading ? (
+          <p style={{ color: "white" }}>Loading products...</p>
+        ) : (
+          products.map((product) => (
+            <ProductCard
+              key={product._id}
+              product={product}
+              accentColor={accentColor}
+              accentGlow={accentGlow}
+            />
+          ))
+        )}
       </motion.div>
 
       {/* ── Footer CTA ── */}
@@ -210,7 +261,10 @@ export default function Store({
           <div className="store-footer-divider-line" />
         </div>
 
-        <button className="store-view-all-btn">
+        <button
+          className="store-view-all-btn"
+          onClick={() => navigate("/collections")}
+        >
           <span className="store-btn-shimmer" />
           <span>View Full Collection</span>
           <span className="store-btn-arrow">→</span>

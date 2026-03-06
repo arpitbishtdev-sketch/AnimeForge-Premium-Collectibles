@@ -1,36 +1,61 @@
+import { useEffect, useState } from "react";
+import { useTheme } from "../context/ThemeContext";
 import "../styles/Characterswitcher.css";
 
-export default function CharacterSwitcher({ characters, activeId, onSelect }) {
+export default function CharacterSwitcher() {
+  const { activeId, setActiveId } = useTheme();
+  const [themes, setThemes] = useState([]);
+
+  useEffect(() => {
+    const fetchThemes = async () => {
+      try {
+        const res = await fetch("/api/themes");
+        const data = await res.json();
+        setThemes(data);
+      } catch (err) {
+        console.error("Failed to load themes:", err);
+      }
+    };
+
+    fetchThemes();
+  }, []);
+
   return (
     <div className="character-switcher">
-      {characters.map((char, index) => (
-        <div
-          key={char.id}
-          style={{ display: "flex", alignItems: "center", gap: "14px" }}
-        >
-          <button
-            className={`switcher-btn ${activeId === char.id ? "active" : ""}`}
-            onClick={() => onSelect(char.id)}
-            aria-label={`Switch to ${char.name}`}
-            style={{
-              "--btn-accent": char.gradient.accent,
-              "--btn-glow": char.gradient.glow,
-            }}
-          >
-            <div className="switcher-avatar">
-              <img src={char.mainImage} alt={char.name} loading="lazy" />
-            </div>
-            <span className="switcher-label">
-              {char.id === "luffy" ? "GEAR 5" : char.id.toUpperCase()}
-            </span>
-            <span className="switcher-dot" />
-          </button>
+      {themes.map((theme, index) => {
+        const isActive = activeId === (theme.slug || theme._id);
 
-          {index < characters.length - 1 && (
-            <div className="switcher-divider" />
-          )}
-        </div>
-      ))}
+        return (
+          <div
+            key={theme._id}
+            style={{ display: "flex", alignItems: "center", gap: "14px" }}
+          >
+            <button
+              className={`switcher-btn ${isActive ? "active" : ""}`}
+              onClick={() => setActiveId(theme._id)}
+              aria-label={`Switch to ${theme.name}`}
+              style={{
+                "--btn-accent": theme.accent,
+                "--btn-glow": theme.glow,
+              }}
+            >
+              <div className="switcher-avatar">
+                {theme.image ? (
+                  <img src={theme.image} alt={theme.name} loading="lazy" />
+                ) : (
+                  <span>{theme.name.slice(0, 2)}</span>
+                )}
+              </div>
+
+              <span className="switcher-label">{theme.name.toUpperCase()}</span>
+
+              <span className="switcher-dot" />
+            </button>
+
+            {index < themes.length - 1 && <div className="switcher-divider" />}
+          </div>
+        );
+      })}
     </div>
   );
 }

@@ -3,16 +3,6 @@ import { motion } from "framer-motion";
 import { gsap } from "gsap";
 import "../styles/ProductCard.css";
 
-// ── Per-tag accent colours ─────────────────────────────────────────────────
-const TAG_COLORS = {
-  Bestseller: "#ff8c00",
-  New: "#00d4ff",
-  Popular: "#a855f7",
-  Rare: "#ef4444",
-  Featured: "#10b981",
-  "Ultra Rare": "#f59e0b",
-};
-
 // ── Card entrance (consumed by parent stagger) ─────────────────────────────
 export const cardVariants = {
   hidden: { opacity: 0, y: 48, scale: 0.95 },
@@ -28,9 +18,9 @@ export default function ProductCard({ product, accentColor, accentGlow }) {
   const cardRef = useRef(null);
   const glowRef = useRef(null);
 
-  // Tag color takes priority; fallback to character accent, then default
-  const tagColor = TAG_COLORS[product.tag] || accentColor || "#ff8c00";
+  const tagColor = product.themeColor || product.color || "#ff8c00";
   const tagGlow = `${tagColor}55`;
+  if (!product.isActive) return null;
 
   /* ── GSAP 3D tilt + magnetic glow ── */
   const handleMouseMove = (e) => {
@@ -92,7 +82,7 @@ export default function ProductCard({ product, accentColor, accentGlow }) {
       {/* ── Image area ── */}
       <div className="pc-image-wrap">
         <img
-          src={product.image}
+          src={product.images?.[0]?.url || "/placeholder.webp"}
           alt={product.name}
           className="pc-image"
           loading="lazy"
@@ -105,12 +95,11 @@ export default function ProductCard({ product, accentColor, accentGlow }) {
         {/* Top gradient — darkens top for badge legibility */}
         <div className="pc-image-top-fade" />
 
-        {/* Edition watermark — top left */}
-        <span className="pc-edition">{product.edition}</span>
-
         {/* Tag badge — top right */}
         <span className="pc-tag" style={{ background: tagColor }}>
-          {product.tag}
+          {product.status && product.status !== "active"
+            ? product.status.toUpperCase()
+            : null}
         </span>
 
         {/* Quick actions — bottom right, slide up on hover */}
@@ -143,7 +132,7 @@ export default function ProductCard({ product, accentColor, accentGlow }) {
         <h3 className="pc-name">{product.name}</h3>
 
         {/* Subtitle */}
-        <p className="pc-subtitle">{product.subtitle}</p>
+        <p className="pc-subtitle">{product.description}</p>
 
         {/* Divider */}
         <div className="pc-rule">
@@ -154,8 +143,16 @@ export default function ProductCard({ product, accentColor, accentGlow }) {
         {/* Price + CTA */}
         <div className="pc-footer">
           <div className="pc-price-wrap">
-            <span className="pc-price-currency">$</span>
-            <span className="pc-price">{product.price.replace("$", "")}</span>
+            <span className="pc-price-currency">₹</span>
+
+            <span className="pc-price">{product.basePrice}</span>
+
+            {product.originalPrice &&
+              product.originalPrice > product.basePrice && (
+                <span className="pc-price-original">
+                  ₹{product.originalPrice}
+                </span>
+              )}
           </div>
           <button
             className="pc-add-btn"

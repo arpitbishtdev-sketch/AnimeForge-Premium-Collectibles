@@ -1,59 +1,114 @@
-import { useState, useEffect } from "react";
-import Navbar from "./components/Navbar";
-import Hero from "./components/Hero";
-import CharacterSwitcher from "./components/Characterswitcher";
-import Loader from "./components/Loader";
-import Store from "./components/Store";
-import { CHARACTERS } from "./data/characters";
+import { BrowserRouter, useRoutes } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import { CartProvider } from "./context/CartContext";
+import { ThemeProvider } from "./context/ThemeContext";
+import { ADMIN_ROUTES } from "./admin/routes";
+import MainLayout from "./layouts/MainLayout";
+import HomeLayout from "./layouts/HomeLayout"; //   NOT lazy (LCP critical)
+
+import { ErrorBoundary } from "./components/shared/ErrorBoundary";
+import {
+  ProductDetailSkeleton,
+  CollectionsSkeleton,
+} from "./components/shared/Skeleton";
+
+//   Lazy-loaded pages (non-critical routes)
+const Cart = lazy(() => import("./pages/Cart"));
+const User = lazy(() => import("./pages/User"));
+const Collections = lazy(() => import("./pages/Collections"));
+const ProductDetail = lazy(() => import("./pages/Productdetailpage"));
+
+// Simple fallback loader
+function PageLoader() {
+  return (
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        background: "var(--bg-0)",
+        color: "var(--accent)",
+      }}
+    >
+      Loading...
+    </div>
+  );
+}
+
+function AppRoutes() {
+  const routes = [
+    {
+      element: <MainLayout />, //   Navbar layout
+      children: [
+        //   Landing Page (NOT lazy)
+        { path: "/", element: <HomeLayout /> },
+
+        //   Cart
+        {
+          path: "/cart",
+          element: (
+            <ErrorBoundary>
+              <Suspense fallback={<PageLoader />}>
+                <Cart />
+              </Suspense>
+            </ErrorBoundary>
+          ),
+        },
+
+        //   User
+        {
+          path: "/user",
+          element: (
+            <ErrorBoundary>
+              <Suspense fallback={<PageLoader />}>
+                <User />
+              </Suspense>
+            </ErrorBoundary>
+          ),
+        },
+
+        //    Product Detail
+        {
+          path: "/product/:slug",
+          element: (
+            <ErrorBoundary>
+              <Suspense fallback={<ProductDetailSkeleton />}>
+                <ProductDetail />
+              </Suspense>
+            </ErrorBoundary>
+          ),
+        },
+
+        //   Collections
+        {
+          path: "/collections",
+          element: (
+            <ErrorBoundary>
+              <Suspense fallback={<CollectionsSkeleton />}>
+                <Collections />
+              </Suspense>
+            </ErrorBoundary>
+          ),
+        },
+      ],
+    },
+
+    //   Admin routes (already structured separately)
+    ...ADMIN_ROUTES,
+  ];
+
+  return useRoutes(routes);
+}
 
 export default function App() {
-  const [activeId, setActiveId] = useState("naruto");
-  const [loaded, setLoaded] = useState(false);
-
-  const activeCharacter =
-    CHARACTERS.find((c) => c.id === activeId) || CHARACTERS[0];
-
-  // Safety fallback in case loader fails
-  useEffect(() => {
-    const fallback = setTimeout(() => setLoaded(true), 6000);
-    return () => clearTimeout(fallback);
-  }, []);
-
   return (
-    <>
-      {!loaded && (
-        <Loader
-          accentColor={activeCharacter.gradient.accent}
-          onComplete={() => setLoaded(true)}
-        />
-      )}
-
-      {loaded && (
-        <div className="app">
-          <Navbar
-            accentColor={activeCharacter.gradient.accent}
-            accentGlow={activeCharacter.gradient.glow}
-          />
-
-          <main>
-            {/* Hero section */}
-            <div style={{ position: "relative" }}>
-              <Hero character={activeCharacter} />
-              <CharacterSwitcher
-                characters={CHARACTERS}
-                activeId={activeId}
-                onSelect={setActiveId}
-              />
-            </div>
-
-            {/* Store — receives same accent as Navbar & Hero */}
-            <Store
-              accentColor={activeCharacter.gradient.accent}
-              accentGlow={activeCharacter.gradient.glow}
-            />
-          </main>
-        </div>
-      )}
-    </>
+    <BrowserRouter>
+      <ThemeProvider>
+        <CartProvider>
+          <AppRoutes />
+        </CartProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }
