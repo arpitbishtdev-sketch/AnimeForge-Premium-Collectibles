@@ -20,7 +20,7 @@ const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: ["http://localhost:5173", "https://your-frontend-url.onrender.com"],
     credentials: true,
   }),
 );
@@ -63,7 +63,12 @@ mongoose
   .then(async () => {
     console.log("MongoDB Connected");
 
-    await seedStatus(); // ✅ SEED AFTER CONNECT
+    try {
+      await seedStatus();
+      console.log("Status seeded successfully");
+    } catch (err) {
+      console.error("Seed error:", err.message);
+    }
 
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => {
