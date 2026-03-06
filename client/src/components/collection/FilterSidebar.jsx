@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { STATUS_LABELS, formatPrice } from "../../utils/helpers";
-import "./FilterSidebar.css";
+import "./Filtersidebar.css";
 
 const STATUSES = Object.keys(STATUS_LABELS);
 

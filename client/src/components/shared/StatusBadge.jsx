@@ -1,5 +1,5 @@
 import { STATUS_LABELS } from "../../utils/helpers";
-import "./StatusBadge.css";
+import "./Statusbadge.css";
 
 export default function StatusBadge({ status, themeColor }) {
   if (!status) return null;
