@@ -11,6 +11,8 @@ import { useNavigate } from "react-router-dom";
 import { useDeviceCapabilities } from "../hooks/useDeviceCapabilities";
 import "../styles/Collections.css";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 const headingVariants = {
   hidden: { opacity: 0, y: 30 },
   visible: {
@@ -204,24 +206,23 @@ function CollectionCard({ collection, index }) {
   return (
     <motion.div
       className={`col-card ${hovered ? "col-card--hovered" : ""}`}
-      ref={cardRef} // ← GSAP lift on hover
+      ref={cardRef}
       custom={index}
-      variants={cardVariants} // ← fade-in animation
+      variants={cardVariants}
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-60px" }}
-      onMouseMove={handleMouseMove} // ← spotlight follows cursor
-      onMouseEnter={handleMouseEnter} // ← hover lift
-      onMouseLeave={handleMouseLeave} // ← bounce back
-      onClick={() => navigate(`/collections/${collection.tag}`)} // ← navigation
+      onMouseMove={handleMouseMove}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      onClick={() => navigate(`/collections/${collection.tag}`)}
       style={{
-        "--card-accent": collection.accentColor || "#7c5cff", // ← ALL COLORS
+        "--card-accent": collection.accentColor || "#7c5cff",
         "--card-glow": collection.glowColor || "rgba(124,92,255,0.4)",
         "--mouse-x": "50%",
         "--mouse-y": "50%",
       }}
     >
-      {/* Background Image & Effects */}
       {collection.bgImage && (
         <div
           className="col-card-bg-img"
@@ -231,7 +232,6 @@ function CollectionCard({ collection, index }) {
       <div className="col-card-spotlight" />
       <div className="col-card-badge">{collection.badge}</div>
 
-      {/* SECTION 1: TOP CONTENT */}
       <div className="col-card-body-top">
         <div className="col-card-number">{collection.label || "01"}</div>
         <div className="col-card-tag">
@@ -246,7 +246,6 @@ function CollectionCard({ collection, index }) {
         <p className="col-card-desc">{collection.description}</p>
       </div>
 
-      {/* SECTION 2: FEATURED ITEMS (Pushed down by margin-top: auto) */}
       <div className="col-card-featured">
         {(collection.points || []).filter(Boolean).map((item, i) => (
           <div key={i} className="col-card-featured-item">
@@ -255,7 +254,6 @@ function CollectionCard({ collection, index }) {
         ))}
       </div>
 
-      {/* SECTION 3: STATS GRID */}
       <div className="col-card-stats">
         <div className="col-stat">
           <span className="col-stat-val">5</span>
@@ -273,7 +271,6 @@ function CollectionCard({ collection, index }) {
         </div>
       </div>
 
-      {/* SECTION 4: FOOTER (CTA & PRICE) */}
       <div className="col-card-footer">
         <div className="col-card-price">
           <span className="col-card-price-label">FROM</span>
@@ -316,7 +313,7 @@ export default function Collections({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/collections")
+    fetch(`${API_URL}/collections`)
       .then((r) => r.json())
       .then((data) => setCollections(Array.isArray(data) ? data : []))
       .catch(() => setCollections([]))
@@ -381,6 +378,15 @@ export default function Collections({
         <div className="col-orb col-orb--1" ref={orb1Ref} />
         <div className="col-orb col-orb--2" ref={orb2Ref} />
         <div className="col-vignette" />
+      </div>
+
+      {/* 🔥 Fire Background Layer */}
+      <div className="col-fire-base" />
+      <div className="col-fire-heat" />
+      <div className="col-fire-embers" aria-hidden="true">
+        {Array.from({ length: 40 }).map((_, i) => (
+          <div key={i} className="col-ember" />
+        ))}
       </div>
 
       <div className="col-deco-line col-deco-line--left" />

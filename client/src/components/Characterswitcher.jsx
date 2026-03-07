@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { useTheme } from "../context/ThemeContext";
 import "../styles/Characterswitcher.css";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
 export default function CharacterSwitcher() {
   const { activeId, setActiveId } = useTheme();
   const [themes, setThemes] = useState([]);
@@ -9,7 +11,7 @@ export default function CharacterSwitcher() {
   useEffect(() => {
     const fetchThemes = async () => {
       try {
-        const res = await fetch("/api/themes");
+        const res = await fetch(`${API_URL}/themes`); // ← FIXED
         const data = await res.json();
         setThemes(data);
       } catch (err) {
