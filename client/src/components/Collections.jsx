@@ -230,28 +230,12 @@ function SilkRibbon({
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
-    const raf = requestAnimationFrame(() => {
-      const totalW = track.scrollWidth / 3;
-      xRef.current = direction === -1 ? 0 : -totalW;
-      let last = performance.now();
-      const tick = (now) => {
-        const dt = (now - last) / 1000;
-        last = now;
-        xRef.current += direction * speed * dt;
-        if (direction === 1 && xRef.current >= 0) xRef.current -= totalW;
-        if (direction === -1 && xRef.current <= -totalW) xRef.current += totalW;
-        track.style.transform = `translateX(${xRef.current}px)`;
-        rafRef.current = requestAnimationFrame(tick);
-      };
-      setTimeout(() => {
-        rafRef.current = requestAnimationFrame(tick);
-      }, delay);
-    });
-    return () => {
-      cancelAnimationFrame(raf);
-      if (rafRef.current) cancelAnimationFrame(rafRef.current);
-    };
-  }, [direction, speed, delay]);
+
+    const totalW = track.scrollWidth / 3;
+    const duration = totalW / (speed * 60);
+
+    track.style.setProperty("--ribbon-duration", `${duration}s`);
+  }, [speed]);
 
   const tripled = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS, ...MARQUEE_ITEMS];
 
@@ -312,7 +296,7 @@ function CollectionCard({ collection, index }) {
   const cardRef = useRef(null);
   const [hovered, setHovered] = useState(false);
   const [showCinematic, setShowCinematic] = useState(false);
-  const { isLowEnd, prefersReducedMotion } = useDeviceCapabilities();
+  const { isLowEnd, prefersReducedMotion, isMobile } = useDeviceCapabilities();
   const navigate = useNavigate();
 
   // low  → skip cinematic entirely, direct navigate (zero Framer overhead)
@@ -500,7 +484,7 @@ export default function Collections({
   const headerRef = useRef(null);
   const wrapRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-80px" });
-  const { isLowEnd, prefersReducedMotion } = useDeviceCapabilities();
+  const { isLowEnd, prefersReducedMotion, isMobile } = useDeviceCapabilities();
 
   const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -576,9 +560,11 @@ export default function Collections({
       <div className="col-fire-base" />
       <div className="col-fire-heat" />
       <div className="col-fire-embers" aria-hidden="true">
-        {Array.from({ length: 40 }).map((_, i) => (
-          <div key={i} className="col-ember" />
-        ))}
+        {Array.from({ length: isLowEnd ? 0 : isMobile ? 15 : 40 }).map(
+          (_, i) => (
+            <div key={i} className={`col-ember col-ember-${i % 15}`} />
+          ),
+        )}
       </div>
 
       <div className="col-deco-line col-deco-line--left" />

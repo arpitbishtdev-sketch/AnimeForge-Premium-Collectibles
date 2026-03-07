@@ -96,7 +96,7 @@ export default function Store({
   onOpenCart, // optional: called after Add to Cart to open CartDrawer
 }) {
   const navigate = useNavigate();
-  const { isLowEnd, prefersReducedMotion } = useDeviceCapabilities();
+  const { isLowEnd, prefersReducedMotion, isMobile } = useDeviceCapabilities();
   const { addToCart } = useCart();
   const { addToWishlist, removeFromWishlist, toggleWishlist, isWishlisted } =
     useWishlist();
@@ -234,16 +234,17 @@ export default function Store({
      * no more disappearing at top.
      * life 0 = just spawned at bottom, life 1 = reached top → reset.
      */
-    const particles = Array.from({ length: 100 }, () => ({
+    const particleCount = isLowEnd ? 0 : isMobile ? 20 : 100;
+
+    const particles = Array.from({ length: particleCount }, () => ({
       x: Math.random() * W,
-      y: H - Math.random() * H, // spread across full height on init
+      y: H - Math.random() * H,
       r: Math.random() * 3.2 + 0.8,
       vx: (Math.random() - 0.5) * 0.55,
       speed: Math.random() * 0.85 + 0.3,
       alpha: Math.random() * 0.65 + 0.3,
       wobble: Math.random() * Math.PI * 2,
-      // opacity envelope: fade in from bottom, fade out near top
-      phase: Math.random(), // 0–1 position along the journey
+      phase: Math.random(),
     }));
 
     const rgb = hexToRgb(accentColor);
