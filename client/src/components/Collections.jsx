@@ -5,132 +5,12 @@ import {
   useState,
   useCallback,
 } from "react";
-import { motion, AnimatePresence, useInView } from "framer-motion";
+import { motion, useInView } from "framer-motion";
 import { gsap } from "gsap";
 import { useNavigate } from "react-router-dom";
 import { useDeviceCapabilities } from "../hooks/useDeviceCapabilities";
 import "../styles/Collections.css";
 
-// ── Collection data ────────────────────────────────────────────────────────
-const COLLECTIONS = [
-  {
-    id: "naruto",
-    label: "01",
-    title: "NARUTO",
-    subtitle: "Shinobi Universe",
-    tag: "Hokage Edition",
-    accent: "#ff6b00",
-    glow: "rgba(255,107,0,0.4)",
-    particle: "#ffcc00",
-    itemCount: 24,
-    priceRange: "$49 – $349",
-    description:
-      "From Shadow Clones to Sage Mode. Every iconic moment forged in premium resin.",
-    badge: "BEST SELLER",
-    bgImage: null,
-    // Public CDN logo — swap to your own asset if you have it
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9b/Naruto_-_Crest_of_the_Hidden_Leaf.svg/512px-Naruto_-_Crest_of_the_Hidden_Leaf.svg.png",
-    featured: ["Naruto Sage Mode", "Kurama Awakening", "Pain God Realm"],
-    stats: { pieces: "24", materials: "ABS+PVC", scale: "1/6" },
-  },
-  {
-    id: "jjk",
-    label: "02",
-    title: "JUJUTSU\nKAISEN",
-    subtitle: "Cursed Energy",
-    tag: "Limitless Edition",
-    accent: "#7c3aed",
-    glow: "rgba(124,58,237,0.4)",
-    particle: "#a78bfa",
-    itemCount: 18,
-    priceRange: "$59 – $399",
-    description:
-      "Infinity. Domain Expansion. Six Eyes. The strongest, immortalised.",
-    badge: "NEW ARRIVAL",
-    bgImage: null,
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/39/Jujutsu_Kaisen_logo.svg/512px-Jujutsu_Kaisen_logo.svg.png",
-    featured: ["Gojo Infinity", "Sukuna King", "Megumi Shikigami"],
-    stats: { pieces: "18", materials: "Premium Resin", scale: "1/7" },
-  },
-  {
-    id: "onepiece",
-    label: "03",
-    title: "ONE\nPIECE",
-    subtitle: "Grand Line",
-    tag: "King of Pirates",
-    accent: "#0ea5e9",
-    glow: "rgba(14,165,233,0.4)",
-    particle: "#38bdf8",
-    itemCount: 31,
-    priceRange: "$39 – $449",
-    description:
-      "From East Blue to the end of the Grand Line. A fleet of legends.",
-    badge: "MOST POPULAR",
-    bgImage: null,
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/90/One_Piece_Logo.svg/512px-One_Piece_Logo.svg.png",
-    featured: ["Luffy Gear 5", "Zoro King", "Shanks Legend"],
-    stats: { pieces: "31", materials: "Mixed Media", scale: "1/6–1/8" },
-  },
-  {
-    id: "aot",
-    label: "04",
-    title: "ATTACK ON\nTITAN",
-    subtitle: "Survey Corps",
-    tag: "Final Season",
-    accent: "#16a34a",
-    glow: "rgba(22,163,74,0.4)",
-    particle: "#4ade80",
-    itemCount: 15,
-    priceRange: "$69 – $499",
-    description:
-      "Rumbling. Titans. The final chapter — captured in breathtaking detail.",
-    badge: "LIMITED",
-    bgImage: null,
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b3/Attack_on_Titan_Logo.svg/512px-Attack_on_Titan_Logo.svg.png",
-    featured: ["Eren Founding", "Levi Captain", "Armored Titan"],
-    stats: { pieces: "15", materials: "High-Grade PVC", scale: "1/6" },
-  },
-  {
-    id: "demonslayer",
-    label: "05",
-    title: "DEMON\nSLAYER",
-    subtitle: "Demon Slayer Corps",
-    tag: "Hashira Edition",
-    accent: "#e11d48",
-    glow: "rgba(225,29,72,0.4)",
-    particle: "#fb7185",
-    itemCount: 20,
-    priceRange: "$55 – $379",
-    description:
-      "Total Concentration Breathing. Nichirin blades forever poised to strike.",
-    badge: "HOT",
-    bgImage: null,
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/bd/Kimetsu_no_Yaiba_Logo.svg/512px-Kimetsu_no_Yaiba_Logo.svg.png",
-    featured: ["Tanjiro Sun Breathing", "Rengoku Flame", "Zenitsu Thunder"],
-    stats: { pieces: "20", materials: "PVC+ABS", scale: "1/7" },
-  },
-  {
-    id: "dragonball",
-    label: "06",
-    title: "DRAGON\nBALL",
-    subtitle: "Z Warriors",
-    tag: "Ultra Edition",
-    accent: "#f59e0b",
-    glow: "rgba(245,158,11,0.4)",
-    particle: "#fcd34d",
-    itemCount: 38,
-    priceRange: "$45 – $599",
-    description:
-      "Power levels that break the scouter. The OG — still unmatched.",
-    badge: "CLASSIC",
-    bgImage: null,
-    logo: "https://upload.wikimedia.org/wikipedia/commons/thumb/3/31/Dragon_Ball_Z_Logo.svg/512px-Dragon_Ball_Z_Logo.svg.png",
-    featured: ["Ultra Instinct", "SSB Vegeta", "Frieza Reborn"],
-    stats: { pieces: "38", materials: "Mixed Media", scale: "Various" },
-  },
-];
-
-// ── Heading animation ──────────────────────────────────────────────────────
 const headingVariants = {
   hidden: { opacity: 0, y: 30 },
   visible: {
@@ -139,25 +19,16 @@ const headingVariants = {
     transition: { duration: 0.7, ease: [0.22, 1, 0.36, 1] },
   },
 };
-
 const cardVariants = {
   hidden: { opacity: 0, y: 50, scale: 0.96 },
   visible: (i) => ({
     opacity: 1,
     y: 0,
     scale: 1,
-    transition: {
-      duration: 0.65,
-      delay: i * 0.1,
-      ease: [0.22, 1, 0.36, 1],
-    },
+    transition: { duration: 0.65, delay: i * 0.1, ease: [0.22, 1, 0.36, 1] },
   }),
 };
 
-// ── Silk Ribbon Marquee ────────────────────────────────────────────────────
-// Two ribbons crossing diagonally like the reference image,
-// but with a premium silk / satin feel (dark bg, accent color fill,
-// subtle shimmer overlay, soft box-shadows)
 const MARQUEE_ITEMS = [
   "NARUTO",
   "JJK",
@@ -182,18 +53,22 @@ function SilkRibbon({
   const rafRef = useRef(null);
   const xRef = useRef(0);
 
-  // Measure true viewport width and size ribbon accordingly
   useEffect(() => {
     const ribbon = ribbonRef.current;
     if (!ribbon) return;
     const setSize = () => {
-      const vw = window.innerWidth;
-      ribbon.style.width = vw + "px";
-      ribbon.style.left = "0px";
+      const section = ribbon.closest(".collections");
+      const sectionLeft = section ? section.getBoundingClientRect().left : 0;
+      ribbon.style.width = window.innerWidth + "px";
+      ribbon.style.left = -sectionLeft + "px";
     };
     setSize();
     window.addEventListener("resize", setSize);
-    return () => window.removeEventListener("resize", setSize);
+    window.addEventListener("scroll", setSize);
+    return () => {
+      window.removeEventListener("resize", setSize);
+      window.removeEventListener("scroll", setSize);
+    };
   }, []);
 
   useEffect(() => {
@@ -232,7 +107,7 @@ function SilkRibbon({
         "--ribbon-color": color,
         "--ribbon-glow": glow,
         position: "absolute",
-        top: top,
+        top,
         transform: `rotate(${direction === 1 ? -4 : 4}deg)`,
         transformOrigin: "center center",
       }}
@@ -260,7 +135,7 @@ function SilkMarqueeSection({ accentColor, accentGlow }) {
         color={accentColor}
         glow={accentGlow}
         delay={0}
-        top="20px"
+        top="47px"
       />
       <SilkRibbon
         direction={1}
@@ -268,18 +143,15 @@ function SilkMarqueeSection({ accentColor, accentGlow }) {
         color={accentColor}
         glow={accentGlow}
         delay={300}
-        top="70px"
+        top="47px"
       />
     </div>
   );
 }
 
-// ── Collection Card ────────────────────────────────────────────────────────
-function CollectionCard({ collection, index, accentColor, accentGlow }) {
+function CollectionCard({ collection, index }) {
   const cardRef = useRef(null);
-  const glowRef = useRef(null);
   const [hovered, setHovered] = useState(false);
-  const [logoError, setLogoError] = useState(false);
   const { isLowEnd, prefersReducedMotion } = useDeviceCapabilities();
   const navigate = useNavigate();
 
@@ -289,10 +161,14 @@ function CollectionCard({ collection, index, accentColor, accentGlow }) {
       const card = cardRef.current;
       if (!card) return;
       const rect = card.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 100;
-      const y = ((e.clientY - rect.top) / rect.height) * 100;
-      card.style.setProperty("--mouse-x", `${x}%`);
-      card.style.setProperty("--mouse-y", `${y}%`);
+      card.style.setProperty(
+        "--mouse-x",
+        `${((e.clientX - rect.left) / rect.width) * 100}%`,
+      );
+      card.style.setProperty(
+        "--mouse-y",
+        `${((e.clientY - rect.top) / rect.height) * 100}%`,
+      );
     },
     [isLowEnd, prefersReducedMotion],
   );
@@ -300,11 +176,7 @@ function CollectionCard({ collection, index, accentColor, accentGlow }) {
   const handleMouseEnter = useCallback(() => {
     setHovered(true);
     if (isLowEnd || prefersReducedMotion || !cardRef.current) return;
-    gsap.to(cardRef.current, {
-      y: -8,
-      duration: 0.4,
-      ease: "power3.out",
-    });
+    gsap.to(cardRef.current, { y: -8, duration: 0.4, ease: "power3.out" });
   }, [isLowEnd, prefersReducedMotion]);
 
   const handleMouseLeave = useCallback(() => {
@@ -319,138 +191,114 @@ function CollectionCard({ collection, index, accentColor, accentGlow }) {
     cardRef.current.style.setProperty("--mouse-y", "50%");
   }, []);
 
+  const priceRange =
+    collection.priceMin != null
+      ? `₹${collection.priceMin} – ₹${collection.priceMax}`
+      : "No products yet";
+
+  const scaleStr =
+    collection.scaleFrom && collection.scaleTo
+      ? `${collection.scaleFrom}–${collection.scaleTo}`
+      : collection.scaleFrom || "Various";
+
   return (
     <motion.div
       className={`col-card ${hovered ? "col-card--hovered" : ""}`}
-      ref={cardRef}
+      ref={cardRef} // ← GSAP lift on hover
       custom={index}
-      variants={cardVariants}
+      variants={cardVariants} // ← fade-in animation
       initial="hidden"
       whileInView="visible"
       viewport={{ once: true, margin: "-60px" }}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onClick={() => navigate(`/collections/${collection.id}`)}
+      onMouseMove={handleMouseMove} // ← spotlight follows cursor
+      onMouseEnter={handleMouseEnter} // ← hover lift
+      onMouseLeave={handleMouseLeave} // ← bounce back
+      onClick={() => navigate(`/collections/${collection.tag}`)} // ← navigation
       style={{
-        "--card-accent": collection.accent,
-        "--card-glow": collection.glow,
-        "--card-particle": collection.particle,
+        "--card-accent": collection.accentColor || "#7c5cff", // ← ALL COLORS
+        "--card-glow": collection.glowColor || "rgba(124,92,255,0.4)",
         "--mouse-x": "50%",
         "--mouse-y": "50%",
       }}
     >
-      {/* Spotlight effect */}
+      {/* Background Image & Effects */}
+      {collection.bgImage && (
+        <div
+          className="col-card-bg-img"
+          style={{ backgroundImage: `url(${collection.bgImage})` }}
+        />
+      )}
       <div className="col-card-spotlight" />
-
-      {/* Top border accent */}
-      <div className="col-card-top-border" />
-
-      {/* Badge */}
       <div className="col-card-badge">{collection.badge}</div>
 
-      {/* Number label */}
-      <div className="col-card-number">{collection.label}</div>
-
-      {/* Header */}
-      <div className="col-card-header">
+      {/* SECTION 1: TOP CONTENT */}
+      <div className="col-card-body-top">
+        <div className="col-card-number">{collection.label || "01"}</div>
         <div className="col-card-tag">
           <span className="col-card-tag-dot" />
-          {collection.tag}
+          {collection.tagLine}
         </div>
-        <div className="col-card-subtitle">{collection.subtitle}</div>
-      </div>
-
-      {/* Title + Anime Logo side by side */}
-      <div className="col-card-title-row">
         <h3 className="col-card-title">{collection.title}</h3>
-
-        {/* Anime logo / icon */}
-        <div className="col-card-logo-wrap">
-          {collection.logo && !logoError ? (
-            <img
-              src={collection.logo}
-              alt={`${collection.title} logo`}
-              className="col-card-logo"
-              draggable={false}
-              loading="lazy"
-              onError={() => setLogoError(true)}
-            />
-          ) : (
-            /* Fallback: stylized initial */
-            <div className="col-card-logo-fallback">
-              {collection.title.charAt(0)}
-            </div>
-          )}
-          {/* Glow ring behind logo */}
-          <div className="col-card-logo-ring" />
+        <div className="col-card-rule">
+          <div className="col-rule-line" />
+          <div className="col-rule-diamond" />
         </div>
+        <p className="col-card-desc">{collection.description}</p>
       </div>
 
-      {/* Rule */}
-      <div className="col-card-rule">
-        <div className="col-rule-line" />
-        <div className="col-rule-diamond" />
-        <div className="col-rule-line col-rule-line--short" />
-      </div>
-
-      {/* Description */}
-      <p className="col-card-desc">{collection.description}</p>
-
-      {/* Featured items */}
+      {/* SECTION 2: FEATURED ITEMS (Pushed down by margin-top: auto) */}
       <div className="col-card-featured">
-        {collection.featured.map((item, i) => (
-          <span key={i} className="col-card-featured-item">
-            <span className="col-card-featured-dot">◆</span>
-            {item}
-          </span>
+        {(collection.points || []).filter(Boolean).map((item, i) => (
+          <div key={i} className="col-card-featured-item">
+            <span className="col-card-featured-dot">◆</span> {item}
+          </div>
         ))}
       </div>
 
-      {/* Stats row */}
+      {/* SECTION 3: STATS GRID */}
       <div className="col-card-stats">
         <div className="col-stat">
-          <span className="col-stat-val">{collection.stats.pieces}</span>
-          <span className="col-stat-lbl">Pieces</span>
+          <span className="col-stat-val">5</span>
+          <span className="col-stat-lbl">PIECES</span>
         </div>
         <div className="col-stat-div" />
         <div className="col-stat">
-          <span className="col-stat-val col-stat-val--sm">
-            {collection.stats.materials}
-          </span>
-          <span className="col-stat-lbl">Material</span>
+          <span className="col-stat-val--sm">PREMIUM STEEL</span>
+          <span className="col-stat-lbl">MATERIAL</span>
         </div>
         <div className="col-stat-div" />
         <div className="col-stat">
-          <span className="col-stat-val">{collection.stats.scale}</span>
-          <span className="col-stat-lbl">Scale</span>
+          <span className="col-stat-val">1/6-1/50</span>
+          <span className="col-stat-lbl">SCALE</span>
         </div>
       </div>
 
-      {/* Footer */}
+      {/* SECTION 4: FOOTER (CTA & PRICE) */}
       <div className="col-card-footer">
         <div className="col-card-price">
-          <span className="col-card-price-label">From</span>
-          <span className="col-card-price-val">{collection.priceRange}</span>
+          <span className="col-card-price-label">FROM</span>
+          <span className="col-card-price-val">{priceRange}</span>
         </div>
         <button className="col-card-cta">
-          <span>Explore</span>
+          <span>EXPLORE</span>
           <span className="col-card-cta-arrow">→</span>
         </button>
       </div>
-
-      {/* Item count ribbon */}
-      <div className="col-card-count">
-        <span>{collection.itemCount} Items</span>
-      </div>
-
-      {/* Glow orb */}
-      <div className="col-card-orb" ref={glowRef} />
     </motion.div>
   );
 }
 
-// ── Main Component ─────────────────────────────────────────────────────────
+function CardSkeleton() {
+  return (
+    <div className="col-card-skeleton">
+      <div className="col-skel-bar" />
+      <div className="col-skel-title" />
+      <div className="col-skel-line" />
+      <div className="col-skel-line col-skel-line--short" />
+    </div>
+  );
+}
+
 export default function Collections({
   accentColor = "#ff8c00",
   accentGlow = "rgba(255,140,0,0.3)",
@@ -464,7 +312,17 @@ export default function Collections({
   const { isLowEnd, prefersReducedMotion } = useDeviceCapabilities();
   const navigate = useNavigate();
 
-  // Position the absolute ribbon wrap right below the header
+  const [collections, setCollections] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch("/api/collections")
+      .then((r) => r.json())
+      .then((data) => setCollections(Array.isArray(data) ? data : []))
+      .catch(() => setCollections([]))
+      .finally(() => setLoading(false));
+  }, []);
+
   useLayoutEffect(() => {
     const position = () => {
       if (!headerRef.current || !wrapRef.current || !sectionRef.current) return;
@@ -477,7 +335,6 @@ export default function Collections({
     return () => window.removeEventListener("resize", position);
   }, []);
 
-  // Ambient orb drift
   useEffect(() => {
     if (isLowEnd || prefersReducedMotion) return;
     const ctx = gsap.context(() => {
@@ -517,7 +374,6 @@ export default function Collections({
       ref={sectionRef}
       style={{ "--col-accent": accentColor, "--col-glow": accentGlow }}
     >
-      {/* ── Background ── */}
       <div className="col-bg">
         <div className="col-bg-radial" />
         <div className="col-bg-grid" />
@@ -527,11 +383,9 @@ export default function Collections({
         <div className="col-vignette" />
       </div>
 
-      {/* Deco lines */}
       <div className="col-deco-line col-deco-line--left" />
       <div className="col-deco-line col-deco-line--right" />
 
-      {/* ── Header ── */}
       <div className="col-header" ref={headerRef}>
         <motion.div
           className="col-eyebrow"
@@ -542,7 +396,6 @@ export default function Collections({
           <span className="col-eyebrow-dot" />
           Universe Catalogue
         </motion.div>
-
         <motion.h2
           className="col-title"
           variants={headingVariants}
@@ -552,7 +405,6 @@ export default function Collections({
         >
           Collections
         </motion.h2>
-
         <motion.div
           className="col-title-rule"
           variants={headingVariants}
@@ -564,7 +416,6 @@ export default function Collections({
           <div className="col-rule-diamond" />
           <div className="col-rule-line col-rule-line--short" />
         </motion.div>
-
         <motion.p
           className="col-description"
           variants={headingVariants}
@@ -577,7 +428,6 @@ export default function Collections({
         </motion.p>
       </div>
 
-      {/* ── Silk Ribbon Marquee — absolute on section, full viewport width ── */}
       <motion.div
         ref={wrapRef}
         className="col-silk-marquee-wrap"
@@ -589,23 +439,22 @@ export default function Collections({
         <SilkMarqueeSection accentColor={accentColor} accentGlow={accentGlow} />
       </motion.div>
 
-      {/* Spacer that matches the ribbon block height so grid doesn't overlap */}
       <div className="col-silk-spacer" />
 
-      {/* ── Grid ── */}
       <div className="col-grid">
-        {COLLECTIONS.map((col, i) => (
-          <CollectionCard
-            key={col.id}
-            collection={col}
-            index={i}
-            accentColor={accentColor}
-            accentGlow={accentGlow}
-          />
-        ))}
+        {loading ? (
+          Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)
+        ) : collections.length === 0 ? (
+          <div className="col-empty">
+            <p>No collections yet. Add them in the admin panel.</p>
+          </div>
+        ) : (
+          collections.map((col, i) => (
+            <CollectionCard key={col._id} collection={col} index={i} />
+          ))
+        )}
       </div>
 
-      {/* ── Footer CTA ── */}
       <motion.div
         className="col-footer-cta"
         variants={headingVariants}
@@ -632,7 +481,6 @@ export default function Collections({
         </p>
       </motion.div>
 
-      {/* Corner accents */}
       <div className="col-corner col-corner--tl" />
       <div className="col-corner col-corner--br" />
     </section>

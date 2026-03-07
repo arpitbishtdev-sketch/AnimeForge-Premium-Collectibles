@@ -14,7 +14,7 @@ const NAV_ITEMS = [
     items: [
       { to: "/admin/products", icon: "🎴", label: "Products" },
       { to: "/admin/products/add", icon: "+", label: "Add Product" },
-      { to: "/admin/categories", icon: "⊞", label: "Categories" },
+      { to: "/admin/collections", icon: "⊞", label: "Collections" }, // ← renamed
     ],
   },
   {

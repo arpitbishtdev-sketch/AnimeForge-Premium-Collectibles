@@ -9,21 +9,16 @@ exports.getAllProducts = async (req, res) => {
     console.log("QUERY:", req.query);
     const filter = {};
 
-    // Filter by section (shop / collection)
     if (displaySection) {
       filter.displaySection = displaySection;
     }
 
-    // Filter by category
     if (category) {
       filter.category = category;
     }
 
-    // Proper production-safe search
-    // STRICT search (no loose partial garbage match)
     if (search && search.trim()) {
       const trimmed = search.trim();
-
       filter.$or = [
         { name: { $regex: trimmed, $options: "i" } },
         { tags: { $regex: trimmed, $options: "i" } },
@@ -32,34 +27,18 @@ exports.getAllProducts = async (req, res) => {
 
     let query = Product.find(filter).sort({ createdAt: -1 });
 
-    // Safe limit handling
     if (limit && !isNaN(parseInt(limit))) {
-      query = query.limit(Math.min(parseInt(limit), 50)); // cap to 50
+      query = query.limit(Math.min(parseInt(limit), 50));
     }
 
     const products = await query;
     const statuses = await StatusConfig.find();
-
-    // const formatted = products.map((p) => {
-    //   const obj = p.toObject ? p.toObject() : p;
-
-    //   const statusConfig = statuses.find(
-    //     (s) => s.status.toLowerCase() === obj.status.toLowerCase(),
-    //   );
-
-    //   return {
-    //     ...obj,
-    //     image: obj.images?.[0]?.url || null,
-    //     themeColor: statusConfig?.color || null,
-    //   };
-    // });
 
     const formatted = products.map((p) => {
       const obj = p.toObject ? p.toObject() : p;
 
       const statusConfig = statuses.find((s) => {
         if (!s.status || !obj.status) return false;
-
         return s.status.toLowerCase() === obj.status.toLowerCase();
       });
 
@@ -97,9 +76,7 @@ exports.createProduct = async (req, res) => {
   let uploadedImages = [];
 
   try {
-    // 🔹 Parse tags (coming as JSON string)
     let tags = [];
-
     if (req.body && req.body.tags) {
       try {
         tags =
@@ -112,12 +89,8 @@ exports.createProduct = async (req, res) => {
       }
     }
 
-    // 🔹 Shop max 6 validation
     if (req.body.displaySection === "shop") {
-      const count = await Product.countDocuments({
-        displaySection: "shop",
-      });
-
+      const count = await Product.countDocuments({ displaySection: "shop" });
       if (count >= 6) {
         return res.status(400).json({
           message: "Shop already has 6 products. Remove one first.",
@@ -128,17 +101,12 @@ exports.createProduct = async (req, res) => {
     console.log("REQ BODY:", req.body);
     console.log("REQ FILES:", req.files);
 
-    // 🔹 Upload multiple images (memory storage)
     if (Array.isArray(req.files) && req.files.length > 0) {
       for (const file of req.files) {
-        const base64 = `data:${file.mimetype};base64,${file.buffer.toString(
-          "base64",
-        )}`;
-
+        const base64 = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
         const result = await cloudinary.uploader.upload(base64, {
           folder: "animeforge_products",
         });
-
         uploadedImages.push({
           url: result.secure_url,
           public_id: result.public_id,
@@ -146,7 +114,6 @@ exports.createProduct = async (req, res) => {
       }
     }
 
-    // 🔹 Create product
     const product = await Product.create({
       ...req.body,
       tags,
@@ -184,9 +151,7 @@ exports.updateProduct = async (req, res) => {
     }
 
     // Parse tags
-    // Parse tags safely
     let tags = [];
-
     if (req.body && req.body.tags) {
       try {
         tags =
@@ -199,7 +164,7 @@ exports.updateProduct = async (req, res) => {
       }
     }
 
-    // Delete selected images
+    // Delete removed images from Cloudinary
     if (
       req.body &&
       req.body.deletedImages &&
@@ -222,17 +187,13 @@ exports.updateProduct = async (req, res) => {
       );
     }
 
-    // Upload new images
+    // ── Upload NEW images to Cloudinary ──
     if (Array.isArray(req.files) && req.files.length > 0) {
       for (const file of req.files) {
-        const base64 = `data:${file.mimetype};base64,${file.buffer.toString(
-          "base64",
-        )}`;
-
+        const base64 = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
         const result = await cloudinary.uploader.upload(base64, {
           folder: "animeforge_products",
         });
-
         newUploadedImages.push({
           url: result.secure_url,
           public_id: result.public_id,
@@ -240,8 +201,11 @@ exports.updateProduct = async (req, res) => {
       }
     }
 
-    // Merge existing + new
-    let mergedImages = [...product.images, ...newUploadedImages];
+    // ── Re-order saved images per imageOrder, then APPEND new uploads ──
+    // imageOrder contains public_ids of SAVED images only (in desired order).
+    // New uploads are always appended AFTER saved images in the order
+    // they appeared in allImages on the frontend.
+    let savedImages = [...product.images];
 
     if (
       req.body &&
@@ -254,18 +218,32 @@ exports.updateProduct = async (req, res) => {
             ? JSON.parse(req.body.imageOrder)
             : req.body.imageOrder;
 
-        mergedImages = order
-          .map((id) => mergedImages.find((img) => img.public_id === id))
+        // Re-order existing saved images according to the frontend order
+        const orderedSaved = order
+          .map((id) => savedImages.find((img) => img.public_id === id))
           .filter(Boolean);
+
+        // Any saved images not in order (safety net) go at the end
+        const unordered = savedImages.filter(
+          (img) => !order.includes(img.public_id),
+        );
+
+        savedImages = [...orderedSaved, ...unordered];
       } catch (err) {
         console.error("Image order parse error:", err);
       }
     }
 
-    product.images = mergedImages;
+    // Final merged list: ordered saved images + newly uploaded images
+    product.images = [...savedImages, ...newUploadedImages];
 
     console.log("REQ BODY:", req.body);
     console.log("REQ FILES:", req.files);
+    console.log(
+      "FINAL IMAGES:",
+      product.images.map((i) => i.public_id),
+    );
+
     // Update fields
     product.name = req.body.name ?? product.name;
     product.slug = req.body.slug ?? product.slug;
@@ -285,12 +263,22 @@ exports.updateProduct = async (req, res) => {
 
     product.description = req.body.description ?? product.description;
     product.status = req.body.status ?? product.status;
-    product.tags = tags ?? product.tags;
+    product.themeColor = req.body.themeColor ?? product.themeColor;
+    product.tags = tags.length > 0 ? tags : product.tags;
+
     await product.save();
 
     res.status(200).json(product);
   } catch (error) {
     console.error("UPDATE PRODUCT ERROR:", error);
+
+    // Cleanup any newly uploaded images if save failed
+    if (newUploadedImages.length > 0) {
+      for (const img of newUploadedImages) {
+        await cloudinary.uploader.destroy(img.public_id).catch(() => {});
+      }
+    }
+
     res.status(500).json({ message: error.message });
   }
 };
@@ -304,7 +292,6 @@ exports.deleteProduct = async (req, res) => {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    // Delete image from Cloudinary
     for (const img of product.images) {
       if (img.public_id) {
         await cloudinary.uploader.destroy(img.public_id);
@@ -322,10 +309,7 @@ exports.deleteProduct = async (req, res) => {
 // GET Shop products
 exports.getShopProducts = async (req, res) => {
   try {
-    const products = await Product.find({
-      displaySection: "collection",
-    });
-
+    const products = await Product.find({ displaySection: "collection" });
     res.status(200).json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -335,10 +319,7 @@ exports.getShopProducts = async (req, res) => {
 // GET Collection products
 exports.getCollectionProducts = async (req, res) => {
   try {
-    const products = await Product.find({
-      displaySection: "collection",
-    });
-
+    const products = await Product.find({ displaySection: "collection" });
     res.status(200).json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });

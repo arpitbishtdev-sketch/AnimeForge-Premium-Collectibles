@@ -7,6 +7,7 @@ import ProtectedAdminRoute from "./ProtectedAdminRoute";
 import ThemeSettings from "./pages/ThemeSetting";
 import EditProduct from "../pages/EditProduct";
 import StatusSettings from "./pages/StatusSettings";
+import AdminCollections from "./pages/AdminCollections";
 
 export const ADMIN_ROUTES = [
   {
@@ -27,6 +28,7 @@ export const ADMIN_ROUTES = [
       { path: "products/edit/:id", element: <EditProduct /> },
       { path: "themes", element: <ThemeSettings /> },
       { path: "status", element: <StatusSettings /> },
+      { path: "collections", element: <AdminCollections /> },
     ],
   },
 ];

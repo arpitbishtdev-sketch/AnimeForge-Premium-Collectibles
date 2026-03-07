@@ -5,7 +5,11 @@ export default function StatusBadge({ status, themeColor }) {
   if (!status) return null;
 
   const style = themeColor
-    ? { "--badge-color": themeColor, "--badge-bg": `${themeColor}12` }
+    ? {
+        "--badge-color": "#000",
+        "--badge-bg": themeColor,
+        "--badge-border": themeColor,
+      }
     : {};
 
   return (

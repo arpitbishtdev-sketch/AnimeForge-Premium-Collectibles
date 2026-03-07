@@ -1,0 +1,747 @@
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&display=swap");
+
+/* ═══════════════════════════════════════════════
+   BACKDROP
+═══════════════════════════════════════════════ */
+.wl-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(6px);
+  z-index: 12000;
+}
+
+/* ═══════════════════════════════════════════════
+   DRAWER
+═══════════════════════════════════════════════ */
+.wl-drawer {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 420px;
+  max-width: 100vw;
+  background: #08080f;
+  border-left: 1px solid rgba(255, 255, 255, 0.07);
+  z-index: 12001;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: -24px 0 80px rgba(0, 0, 0, 0.85);
+}
+
+/* Top glow accent bar */
+.wl-drawer__top-bar {
+  height: 1px;
+  width: 100%;
+  flex-shrink: 0;
+}
+
+/* Noise texture */
+.wl-drawer__noise {
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  opacity: 0.4;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.wl-drawer > *:not(.wl-drawer__noise):not(.wl-drawer__top-bar) {
+  position: relative;
+  z-index: 1;
+}
+
+/* Ambient glow — strictly INSIDE the drawer, clipped by overflow:hidden */
+.wl-drawer::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--glow, rgba(255, 140, 0, 0.07)) 40%, transparent) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.5;
+}
+
+/* ── Header ── */
+.wl-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 24px 24px 20px;
+  flex-shrink: 0;
+}
+
+.wl-header__left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.wl-header__icon {
+  width: 42px;
+  height: 42px;
+  border-radius: 11px;
+  border: 1px solid currentColor;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.85;
+  flex-shrink: 0;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.wl-header__title {
+  font-family: "Bebas Neue", cursive;
+  font-size: 26px;
+  letter-spacing: 4px;
+  color: #fff;
+  line-height: 1;
+}
+
+.wl-header__count {
+  font-family: "Rajdhani", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.28);
+  margin-top: 3px;
+}
+
+.wl-header__right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.wl-header__clear {
+  background: none;
+  border: none;
+  font-family: "Rajdhani", sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255, 100, 100, 0.45);
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
+}
+
+.wl-header__clear:hover {
+  color: rgba(255, 100, 100, 0.8);
+}
+
+.wl-header__close {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.wl-header__close:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Divider */
+.wl-divider {
+  height: 1px;
+  flex-shrink: 0;
+  margin: 0 24px;
+}
+
+/* ── Body / Scrollable list ── */
+.wl-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 24px;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.08) transparent;
+}
+
+.wl-body::-webkit-scrollbar {
+  width: 4px;
+}
+.wl-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+.wl-body::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 4px;
+}
+
+.wl-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ═══════════════════════════════════════════════
+   WISHLIST ITEM
+═══════════════════════════════════════════════ */
+.wl-item {
+  display: flex;
+  gap: 14px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.026);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 13px;
+  position: relative;
+  transition:
+    border-color 0.3s,
+    box-shadow 0.3s;
+  overflow: hidden;
+}
+
+.wl-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: var(--item-acc);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.wl-item:hover {
+  border-color: color-mix(in srgb, var(--item-acc) 25%, transparent);
+  box-shadow: 0 0 24px color-mix(in srgb, var(--item-acc) 8%, transparent);
+}
+
+.wl-item:hover::before {
+  opacity: 1;
+}
+
+/* Image */
+.wl-item__img-wrap {
+  flex-shrink: 0;
+  width: 88px;
+  height: 88px;
+  border-radius: 9px;
+  overflow: hidden;
+  position: relative;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.wl-item__img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.4s ease;
+}
+
+.wl-item:hover .wl-item__img {
+  transform: scale(1.06);
+}
+
+.wl-item__img-shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.06) 0%,
+    transparent 60%
+  );
+  pointer-events: none;
+}
+
+.wl-item__img-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.08);
+}
+
+.wl-item__status {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  font-family: "Rajdhani", sans-serif;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  background: var(--item-acc);
+  color: #000;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+/* Body */
+.wl-item__body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.wl-item__universe {
+  font-family: "Rajdhani", sans-serif;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--item-acc);
+  opacity: 0.7;
+  line-height: 1;
+}
+
+.wl-item__name {
+  font-family: "Bebas Neue", cursive;
+  font-size: 17px;
+  letter-spacing: 2px;
+  color: #fff;
+  line-height: 1.1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin: 0;
+}
+
+.wl-item__price-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 2px;
+}
+
+.wl-item__price {
+  font-family: "Bebas Neue", cursive;
+  font-size: 18px;
+  letter-spacing: 1px;
+  line-height: 1;
+}
+
+.wl-item__price-orig {
+  font-family: "Rajdhani", sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.25);
+  text-decoration: line-through;
+}
+
+.wl-item__discount {
+  font-family: "Rajdhani", sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: #22c55e;
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.25);
+  border-radius: 3px;
+  padding: 1px 5px;
+}
+
+.wl-item__stock {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: "Rajdhani", sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: rgba(255, 255, 255, 0.35);
+  margin-top: 1px;
+}
+
+.wl-item__stock-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Actions */
+.wl-item__actions {
+  display: flex;
+  gap: 7px;
+  margin-top: 6px;
+}
+
+.wl-item__btn {
+  flex: 1;
+  padding: 7px 8px;
+  border-radius: 7px;
+  font-family: "Rajdhani", sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  transition: all 0.25s ease;
+}
+
+.wl-item__btn--cart {
+  background: color-mix(in srgb, var(--b-acc) 10%, transparent);
+  border: 1px solid color-mix(in srgb, var(--b-acc) 28%, transparent);
+  color: var(--b-acc);
+}
+
+.wl-item__btn--cart:hover {
+  background: color-mix(in srgb, var(--b-acc) 20%, transparent);
+  border-color: color-mix(in srgb, var(--b-acc) 55%, transparent);
+  transform: translateY(-1px);
+}
+
+.wl-item__btn--buy {
+  color: #000;
+  font-weight: 800;
+  position: relative;
+  overflow: hidden;
+}
+
+.wl-item__btn--buy::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.15);
+  transform: translateX(-100%);
+  transition: transform 0.35s ease;
+}
+
+.wl-item__btn--buy:hover::before {
+  transform: translateX(0);
+}
+.wl-item__btn--buy:hover {
+  transform: translateY(-1px);
+}
+
+/* Remove button */
+.wl-item__remove {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 100, 100, 0.15);
+  background: rgba(255, 100, 100, 0.05);
+  color: rgba(255, 100, 100, 0.4);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.2s;
+}
+
+.wl-item:hover .wl-item__remove {
+  opacity: 1;
+}
+
+.wl-item__remove:hover {
+  background: rgba(255, 100, 100, 0.15);
+  border-color: rgba(255, 100, 100, 0.4);
+  color: rgba(255, 100, 100, 0.85);
+  transform: scale(1.1);
+}
+
+/* ═══════════════════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════════════════ */
+.wl-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 24px;
+  text-align: center;
+  position: relative;
+}
+
+.wl-empty__orb {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  pointer-events: none;
+  opacity: 0.12;
+  filter: blur(16px);
+}
+
+.wl-empty__icon {
+  position: relative;
+  margin-bottom: 24px;
+  opacity: 0.3;
+}
+
+.wl-empty__icon-ring {
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  border: 1px solid;
+  animation: wl-ring-pulse 3s ease-in-out infinite;
+}
+
+@keyframes wl-ring-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.08;
+  }
+}
+
+.wl-empty__title {
+  font-family: "Bebas Neue", cursive;
+  font-size: 28px;
+  letter-spacing: 4px;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.wl-empty__sub {
+  font-family: "Rajdhani", sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.28);
+  line-height: 1.5;
+  max-width: 230px;
+  margin-bottom: 32px;
+}
+
+.wl-empty__cta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 13px 28px;
+  background: var(--e-acc);
+  border: none;
+  border-radius: 9px;
+  font-family: "Bebas Neue", cursive;
+  font-size: 15px;
+  letter-spacing: 3px;
+  color: #000;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.3s;
+}
+
+.wl-empty__cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.12);
+  transform: translateX(-100%);
+  transition: transform 0.4s ease;
+}
+
+.wl-empty__cta:hover::before {
+  transform: translateX(0);
+}
+.wl-empty__cta:hover {
+  transform: translateY(-2px);
+}
+
+/* ═══════════════════════════════════════════════
+   FOOTER
+═══════════════════════════════════════════════ */
+.wl-footer {
+  padding: 16px 24px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+  background: #08080f;
+}
+
+.wl-footer__summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.wl-footer__label {
+  font-family: "Rajdhani", sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.wl-footer__total {
+  font-family: "Bebas Neue", cursive;
+  font-size: 26px;
+  letter-spacing: 2px;
+  line-height: 1;
+}
+
+.wl-footer__cta {
+  width: 100%;
+  padding: 14px;
+  background: var(--f-acc);
+  border: none;
+  border-radius: 10px;
+  font-family: "Bebas Neue", cursive;
+  font-size: 15px;
+  letter-spacing: 3px;
+  color: #000;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.3s;
+}
+
+.wl-footer__cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateX(-100%);
+  transition: transform 0.4s ease;
+}
+
+.wl-footer__cta:hover::before {
+  transform: translateX(0);
+}
+.wl-footer__cta:hover {
+  transform: translateY(-1px);
+}
+
+/* ═══════════════════════════════════════════════
+   NAVBAR WISHLIST BUTTON
+═══════════════════════════════════════════════ */
+.wl-nav-btn {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.55);
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.wl-nav-btn:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.wl-nav-btn.has-items {
+  border-color: color-mix(in srgb, var(--acc) 40%, transparent);
+  color: var(--acc);
+  box-shadow: 0 0 16px color-mix(in srgb, var(--acc) 20%, transparent);
+}
+
+/* Heart beat animation when items added */
+.wl-nav-btn.has-items svg {
+  animation: wl-heartbeat 0.5s ease;
+}
+
+@keyframes wl-heartbeat {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.3);
+  }
+  60% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Count badge */
+.wl-nav-btn__badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  min-width: 17px;
+  height: 17px;
+  border-radius: 9px;
+  background: var(--acc);
+  color: #000;
+  font-family: "Rajdhani", sans-serif;
+  font-size: 9px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid #05050e;
+  animation: wl-badge-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  line-height: 1;
+}
+
+@keyframes wl-badge-pop {
+  from {
+    transform: scale(0);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .wl-drawer {
+    width: 100vw;
+  }
+  .wl-item__img-wrap {
+    width: 72px;
+    height: 72px;
+  }
+  .wl-item__name {
+    font-size: 15px;
+  }
+}
+
+/* ── Add this to WishlistDrawer.css ── */
+
+/* "Added!" feedback state */
+.wl-item__btn--added {
+  background: rgba(34, 197, 94, 0.15) !important;
+  border-color: rgba(34, 197, 94, 0.4) !important;
+}

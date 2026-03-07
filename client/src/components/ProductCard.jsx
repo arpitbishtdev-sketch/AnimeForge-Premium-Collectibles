@@ -154,14 +154,6 @@ export default function ProductCard({ product, accentColor, accentGlow }) {
                 </span>
               )}
           </div>
-          <button
-            className="pc-add-btn"
-            style={{ "--btn-glow": tagColor, background: tagColor }}
-          >
-            <span className="pc-add-btn-shimmer" />
-            <span className="pc-add-btn-text">Add to Cart</span>
-            <span className="pc-add-btn-icon">→</span>
-          </button>
         </div>
       </div>
 

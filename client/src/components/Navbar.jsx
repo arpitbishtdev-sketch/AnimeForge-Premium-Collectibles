@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import SearchOverlay from "./Searchoverlay";
 import CartDrawer from "./cart/CartDrawer";
+import AuthDropdown from "../components/shared/AuthDropdown";
+import WishlistNavIcon from "../components/shared/WishlistNavIcon";
 import "../styles/navbar.css";
 
 /* ── Icon Components ── */
@@ -280,15 +282,8 @@ export default function Navbar({ accentColor, accentGlow }) {
               </span>
             )}
           </button>
-
-          <button
-            className="navbar-icon-btn navbar-icon-btn--user"
-            aria-label="Profile"
-            onClick={() => navigate("/user")}
-          >
-            <UserIcon />
-            <span className="user-status-dot" />
-          </button>
+          <WishlistNavIcon />
+          <AuthDropdown />
 
           <button
             className="navbar-icon-btn navbar-hamburger"

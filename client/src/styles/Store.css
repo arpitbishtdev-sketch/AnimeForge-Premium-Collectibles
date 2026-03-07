@@ -2,10 +2,7 @@
 
 /* ═══════════════════════════════════════════════
    STORE SECTION
-   --store-accent and --store-glow are injected
-   from App.jsx and change with the character
 ═══════════════════════════════════════════════ */
-
 .store {
   position: relative;
   width: 100%;
@@ -13,8 +10,6 @@
   overflow: hidden;
   isolation: isolate;
   background: #06060f;
-
-  /* CSS custom property defaults — overridden by JS */
   --store-accent: var(--accent);
   --store-glow: var(--accent-glow);
 }
@@ -26,8 +21,6 @@
   z-index: 0;
   pointer-events: none;
 }
-
-/* Radial centre glow — uses accent via JS override on section */
 .store-bg-radial {
   position: absolute;
   inset: 0;
@@ -38,7 +31,6 @@
   );
   transition: background 0.7s ease;
 }
-
 .store-bg-grid {
   position: absolute;
   inset: 0;
@@ -48,7 +40,6 @@
   background-size: 60px 60px;
   mask-image: radial-gradient(ellipse at 50% 20%, transparent 15%, black 80%);
 }
-
 .store-bg-scanlines {
   position: absolute;
   inset: 0;
@@ -61,7 +52,18 @@
   );
 }
 
-/* Ambient orbs — orb 1 & 2 tied to accent, orb 3 is complementary */
+/* ─── Particles — full height, constant visibility ── */
+.store-particles {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 1;
+}
+
+/* Ambient orbs */
 .store-orb {
   position: absolute;
   border-radius: 50%;
@@ -96,7 +98,6 @@
   background: rgba(80, 0, 200, 0.5);
   opacity: 0.04;
 }
-
 .store-vignette {
   position: absolute;
   inset: 0;
@@ -115,7 +116,49 @@
     );
 }
 
-/* ─── Decorative vertical lines ──────────────────── */
+/* ─── Plasma ring ─────────────────────────────────── */
+.store-plasma-ring {
+  position: absolute;
+  top: 50px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(700px, 90vw);
+  height: min(700px, 90vw);
+  pointer-events: none;
+  z-index: 1;
+}
+.store-plasma-ring__inner,
+.store-plasma-ring__outer {
+  position: absolute;
+  border-radius: 50%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.store-plasma-ring__inner {
+  width: 60%;
+  height: 60%;
+  border: 1px solid color-mix(in srgb, var(--store-accent) 14%, transparent);
+  border-top-color: color-mix(in srgb, var(--store-accent) 50%, transparent);
+  animation: store-ring-spin 18s linear infinite;
+}
+.store-plasma-ring__outer {
+  width: 100%;
+  height: 100%;
+  border: 1px solid color-mix(in srgb, var(--store-accent) 8%, transparent);
+  border-bottom-color: color-mix(in srgb, var(--store-accent) 30%, transparent);
+  animation: store-ring-spin 28s linear infinite reverse;
+}
+@keyframes store-ring-spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* ─── Deco lines ─────────────────────────────────── */
 .store-deco-line {
   position: absolute;
   top: 0;
@@ -138,7 +181,7 @@
   right: 6%;
 }
 
-/* ─── Section header ────────────────────────────── */
+/* ─── Header ─────────────────────────────────────── */
 .store-header {
   position: relative;
   z-index: 2;
@@ -148,8 +191,6 @@
   flex-direction: column;
   align-items: center;
 }
-
-/* Eyebrow — matches Hero tag style, uses --store-accent */
 .store-eyebrow {
   display: inline-flex;
   align-items: center;
@@ -171,7 +212,6 @@
     color 0.6s ease,
     border-color 0.6s ease;
 }
-
 .store-eyebrow-dot {
   width: 5px;
   height: 5px;
@@ -195,8 +235,6 @@
     transform: scale(0.6);
   }
 }
-
-/* Title — Bebas Neue large */
 .store-title {
   font-family: "Bebas Neue", cursive;
   font-size: clamp(70px, 10vw, 140px);
@@ -204,14 +242,56 @@
   color: #fff;
   letter-spacing: 6px;
   margin: 0;
+  position: relative;
+  z-index: 2;
   text-shadow:
     0 0 80px var(--store-glow),
     0 0 200px var(--store-glow),
     0 4px 8px rgba(0, 0, 0, 0.8);
   transition: text-shadow 0.7s ease;
 }
-
-/* Rule — matches Hero title-rule */
+.store-title-glitch {
+  font-family: "Bebas Neue", cursive;
+  font-size: clamp(70px, 10vw, 140px);
+  line-height: 0.88;
+  letter-spacing: 6px;
+  color: var(--store-accent);
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0;
+  white-space: nowrap;
+  animation: store-glitch-flicker 6s steps(1) infinite;
+  clip-path: polygon(0 30%, 100% 30%, 100% 50%, 0 50%);
+}
+@keyframes store-glitch-flicker {
+  0%,
+  92%,
+  100% {
+    opacity: 0;
+    transform: translateX(-50%);
+  }
+  93% {
+    opacity: 0.5;
+    transform: translateX(calc(-50% - 4px));
+    clip-path: polygon(0 10%, 100% 10%, 100% 32%, 0 32%);
+  }
+  94% {
+    opacity: 0;
+    transform: translateX(-50%);
+  }
+  96% {
+    opacity: 0.35;
+    transform: translateX(calc(-50% + 3px));
+    clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%);
+  }
+  97% {
+    opacity: 0;
+  }
+}
 .store-title-rule {
   display: flex;
   align-items: center;
@@ -239,8 +319,19 @@
   transition:
     background 0.6s ease,
     box-shadow 0.6s ease;
+  animation: store-diamond-pulse 3s ease-in-out infinite;
 }
-
+@keyframes store-diamond-pulse {
+  0%,
+  100% {
+    box-shadow: 0 0 10px var(--store-accent);
+  }
+  50% {
+    box-shadow:
+      0 0 22px var(--store-accent),
+      0 0 40px var(--store-glow);
+  }
+}
 .store-description {
   font-family: "Rajdhani", sans-serif;
   font-weight: 400;
@@ -292,7 +383,6 @@
   opacity: 0.4;
   transition: background 0.6s ease;
 }
-
 .store-stat {
   display: flex;
   flex-direction: column;
@@ -323,6 +413,34 @@
   flex-shrink: 0;
 }
 
+/* ─── Loading ────────────────────────────────────── */
+.store-loading {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 60px 0;
+  color: rgba(255, 255, 255, 0.5);
+  font-family: "Rajdhani", sans-serif;
+  font-size: 14px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.store-loading-ring {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.07);
+  border-top-color: var(--store-accent);
+  animation: store-spin 0.9s linear infinite;
+}
+@keyframes store-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* ─── Product grid ──────────────────────────────── */
 .store-grid {
   position: relative;
@@ -330,6 +448,273 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 24px;
+  /* All rows same height — tallest card sets the row height,
+     and align-items:stretch makes every card fill it */
+  align-items: stretch;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   CARD WRAPPER
+   — flex column so ProductCard grows to fill space and
+     store-card-footer stays pinned to the bottom.
+   — Fixed min-height so short-description cards don't shrink.
+   — overflow:hidden clips the Buy Now button cleanly.
+════════════════════════════════════════════════════════════════ */
+.store-card-wrapper {
+  display: flex;
+  flex-direction: column;
+  /* Cards in the same row share height via CSS Grid stretch.
+     This wrapper then distributes the height between the
+     ProductCard (flex:1) and the always-visible Buy Now strip. */
+  border-radius: 8px;
+  overflow: hidden;
+  position: relative;
+  cursor: pointer;
+
+  --card-status-bg: #ff8c00;
+  --card-status-glow: rgba(255, 140, 0, 0.45);
+  --card-status-text: #000;
+
+  /* Base shadow */
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35);
+  transition: box-shadow 0.38s ease;
+}
+
+/* Make ProductCard fill remaining height */
+.store-card-wrapper > *:first-child {
+  flex: 1;
+  /* Override any fixed height the ProductCard might have */
+  height: auto !important;
+  min-height: 0;
+}
+
+/* Hover glow — no transform here, Framer Motion handles the lift */
+.store-card-wrapper:hover {
+  box-shadow:
+    0 28px 64px rgba(0, 0, 0, 0.55),
+    0 0 0 1px color-mix(in srgb, var(--card-status-bg) 35%, transparent),
+    0 0 50px color-mix(in srgb, var(--card-status-bg) 14%, transparent);
+  z-index: 10;
+}
+
+/* ════════════════════════════════════════════════════════════════
+   CARD FOOTER — ALWAYS VISIBLE
+   No slide-up. Static at the bottom of every card.
+   Framer Motion lift on hover gives the premium feel instead.
+════════════════════════════════════════════════════════════════ */
+.store-card-footer {
+  flex-shrink: 0;
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: stretch;
+  gap: 6px;
+  padding: 0 0 4px;
+}
+
+/* Buy Now takes up the main width */
+.store-card-footer .store-btn-buy-now {
+  flex: 1;
+}
+
+/* ── Add to Cart + Wishlist icon buttons ── */
+.store-btn-cart,
+.store-btn-wishlist {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 17px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.22s ease;
+}
+
+.store-btn-cart:hover {
+  background: color-mix(
+    in srgb,
+    var(--card-status-bg) 18%,
+    rgba(255, 255, 255, 0.06)
+  );
+  border-color: color-mix(in srgb, var(--card-status-bg) 45%, transparent);
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px var(--card-status-glow);
+}
+
+.store-btn-wishlist {
+  font-size: 19px;
+}
+
+.store-btn-wishlist:hover {
+  background: rgba(255, 60, 100, 0.1);
+  border-color: rgba(255, 80, 100, 0.35);
+  color: #ff4a6a;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 60, 100, 0.25);
+}
+
+.store-btn-wishlist--active {
+  background: rgba(255, 60, 100, 0.12) !important;
+  border-color: rgba(255, 80, 100, 0.4) !important;
+  color: #ff4a6a !important;
+  box-shadow: 0 0 14px rgba(255, 60, 100, 0.3);
+}
+
+/* ════════════════════════════════════════════════════════════════
+   BUY NOW BUTTON
+   Full-width, status-colored, always visible.
+   Hover: shimmer sweep + brightness boost.
+════════════════════════════════════════════════════════════════ */
+.store-btn-buy-now {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 15px 20px;
+
+  background: var(--card-status-bg);
+  color: var(--card-status-text);
+
+  font-family: "Bebas Neue", cursive;
+  font-size: 17px;
+  letter-spacing: 3.5px;
+  text-transform: uppercase;
+  border: none;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+
+  box-shadow:
+    0 -4px 20px var(--card-status-glow),
+    0 2px 0 rgba(255, 255, 255, 0.18) inset;
+
+  transition:
+    filter 0.22s ease,
+    box-shadow 0.22s ease,
+    transform 0.18s ease;
+}
+
+/* Pulse rings — always animating */
+.buy-pulse {
+  position: absolute;
+  inset: 0;
+  border: 1.5px solid var(--card-status-bg);
+  border-radius: inherit;
+  pointer-events: none;
+  animation: buy-pulse-ring 2.4s ease-out infinite;
+  opacity: 0;
+}
+.buy-pulse--1 {
+  animation-delay: 0s;
+}
+.buy-pulse--2 {
+  animation-delay: 0.8s;
+}
+.buy-pulse--3 {
+  animation-delay: 1.6s;
+}
+@keyframes buy-pulse-ring {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.06, 2);
+    opacity: 0;
+  }
+}
+
+/* Diagonal shimmer sheen */
+.buy-shimmer {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.28) 0%,
+    transparent 50%
+  );
+  pointer-events: none;
+}
+
+/* Shimmer sweep on hover */
+.store-btn-buy-now::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -110%;
+  width: 55%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.4),
+    transparent
+  );
+  transition: left 0.5s ease;
+  pointer-events: none;
+}
+.store-card-wrapper:hover .store-btn-buy-now::after {
+  left: 160%;
+}
+
+/* Spark ⚡ */
+.buy-spark {
+  font-size: 16px;
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+  animation: buy-spark-flicker 1.8s ease-in-out infinite;
+}
+@keyframes buy-spark-flicker {
+  0%,
+  100% {
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1);
+  }
+  40% {
+    transform: scale(1.3) rotate(-10deg);
+    filter: brightness(1.6);
+  }
+  60% {
+    transform: scale(0.88) rotate(6deg);
+    filter: brightness(0.9);
+  }
+}
+.buy-label {
+  position: relative;
+  z-index: 1;
+}
+.buy-arrow {
+  font-size: 20px;
+  font-family: sans-serif;
+  font-weight: 400;
+  position: relative;
+  z-index: 1;
+  transition: transform 0.3s ease;
+}
+
+/* Hover state */
+.store-btn-buy-now:hover {
+  filter: brightness(1.14);
+  box-shadow:
+    0 -14px 40px var(--card-status-glow),
+    0 0 60px color-mix(in srgb, var(--card-status-bg) 30%, transparent),
+    0 2px 0 rgba(255, 255, 255, 0.18) inset;
+  transform: scaleY(1.04);
+}
+.store-btn-buy-now:hover .buy-arrow {
+  transform: translateX(6px);
+}
+.store-btn-buy-now:active {
+  filter: brightness(0.9);
+  transform: scaleY(0.97);
 }
 
 /* ─── Footer CTA ────────────────────────────────── */
@@ -342,7 +727,6 @@
   gap: 20px;
   margin-top: 80px;
 }
-
 .store-footer-divider {
   display: flex;
   align-items: center;
@@ -364,8 +748,6 @@
   color: rgba(255, 255, 255, 0.2);
   white-space: nowrap;
 }
-
-/* View all button — accent-colored, shimmer sweep */
 .store-view-all-btn {
   font-family: "Bebas Neue", cursive;
   font-size: 15px;
@@ -390,8 +772,6 @@
     0 6px 32px var(--store-glow),
     0 2px 0 rgba(255, 255, 255, 0.15) inset;
 }
-
-/* Highlight sheen */
 .store-btn-shimmer {
   position: absolute;
   inset: 0;
@@ -402,7 +782,6 @@
   );
   pointer-events: none;
 }
-/* Shimmer sweep animation */
 .store-view-all-btn::after {
   content: "";
   position: absolute;
@@ -431,7 +810,6 @@
 .store-view-all-btn:active {
   transform: scale(0.97);
 }
-
 .store-btn-arrow {
   font-size: 20px;
   transition: transform 0.3s ease;
@@ -441,7 +819,6 @@
 .store-view-all-btn:hover .store-btn-arrow {
   transform: translateX(5px);
 }
-
 .store-footer-note {
   font-family: "Rajdhani", sans-serif;
   font-weight: 600;
@@ -474,7 +851,7 @@
 }
 
 /* ═══════════════════════════════════════════════
-   RESPONSIVE — TABLET (768px – 1024px)
+   RESPONSIVE — TABLET (768px–1024px)
 ═══════════════════════════════════════════════ */
 @media (min-width: 768px) and (max-width: 1024px) {
   .store {
@@ -490,9 +867,20 @@
   .store-title {
     font-size: clamp(56px, 9vw, 100px);
   }
+  .store-title-glitch {
+    font-size: clamp(56px, 9vw, 100px);
+  }
   .store-stats {
     gap: 20px;
     padding: 14px 24px;
+  }
+  .store-btn-buy-now {
+    font-size: 15px;
+    padding: 13px 16px;
+  }
+  .store-plasma-ring {
+    width: min(500px, 85vw);
+    height: min(500px, 85vw);
   }
 }
 
@@ -503,6 +891,8 @@
   .store {
     padding: 80px 5% 100px;
   }
+  /* Single column — each card naturally fills its own row,
+     so equal-height is automatic here */
   .store-grid {
     grid-template-columns: 1fr;
     gap: 18px;
@@ -511,6 +901,9 @@
     margin-bottom: 48px;
   }
   .store-title {
+    font-size: clamp(54px, 16vw, 84px);
+  }
+  .store-title-glitch {
     font-size: clamp(54px, 16vw, 84px);
   }
   .store-description {
@@ -539,6 +932,13 @@
   .store-deco-line {
     display: none;
   }
+  .store-plasma-ring {
+    display: none;
+  }
+  .store-btn-buy-now {
+    font-size: 14px;
+    padding: 13px 14px;
+  }
 }
 
 @media (max-width: 380px) {
@@ -552,5 +952,10 @@
   }
   .store-stat-divider {
     display: none;
+  }
+  .store-btn-buy-now {
+    font-size: 13px;
+    padding: 11px 10px;
+    letter-spacing: 2px;
   }
 }

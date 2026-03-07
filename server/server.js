@@ -9,6 +9,7 @@ const adminAuthRoutes = require("./routes/adminAuthRoutes");
 const themeRoutes = require("./routes/themeRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const statusRoutes = require("./routes/statusRoutes");
+const collectionRoutes = require("./routes/collectionRoutes"); // ← NEW
 
 const seedStatus = require("./config/seedStatus");
 
@@ -25,7 +26,6 @@ app.use(
         "http://localhost:5173",
         "https://animeforge-premium-collectibles.onrender.com",
       ];
-
       if (!origin || allowedOrigins.includes(origin)) {
         callback(null, true);
       } else {
@@ -48,6 +48,7 @@ app.use("/api/themes", themeRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/status", statusRoutes);
 app.use("/api/auth/admin", adminAuthRoutes);
+app.use("/api/collections", collectionRoutes); // ← NEW
 
 app.get("/", (req, res) => {
   res.send("AnimeForge API is running 🚀");
@@ -59,10 +60,7 @@ app.get("/", (req, res) => {
 
 app.use((err, req, res, next) => {
   console.error(err.stack);
-  res.status(500).json({
-    success: false,
-    message: "Something went wrong",
-  });
+  res.status(500).json({ success: false, message: "Something went wrong" });
 });
 
 /* ===============================

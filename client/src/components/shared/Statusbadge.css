@@ -1,8 +1,12 @@
 .status-badge {
-  --badge-color: #e8a838;
-  --badge-bg: rgba(232, 168, 56, 0.12);
+  --badge-color: #fff;
+  --badge-bg: #e8a838;
+  --badge-border: #e8a838;
 
   color: var(--badge-color);
   background: var(--badge-bg);
-  border: 1px solid var(--badge-color);
+  border: 1px solid var(--badge-border);
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 6px;
 }

@@ -1,6 +1,7 @@
 import { useState, useCallback, useEffect, useRef, useMemo, memo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
+import { useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import { useTheme } from "../context/ThemeContext";
 import { useCart } from "../context/CartContext";
@@ -38,7 +39,6 @@ function useAdaptiveAnimation() {
         enableOrbs: false,
         enableGrain: false,
       };
-
     if (mem < 4 || cores <= 4 || sw < 1024)
       return {
         tier: "mid",
@@ -47,7 +47,6 @@ function useAdaptiveAnimation() {
         enableOrbs: true,
         enableGrain: false,
       };
-
     return {
       tier: "high",
       shouldAnimate: true,
@@ -58,9 +57,7 @@ function useAdaptiveAnimation() {
   }, []);
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  RAF NUMBER TWEEN — ease-out-cubic, zero layout thrash
-// ═══════════════════════════════════════════════════════════════
+// ─── RAF number tween ─────────────────────────────────────────────────────
 function useAnimatedNumber(target, ms = 420) {
   const [display, setDisplay] = useState(target);
   const raf = useRef(null);
@@ -89,9 +86,7 @@ function useAnimatedNumber(target, ms = 420) {
   return display;
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  ICONS (memo — never re-render)
-// ═══════════════════════════════════════════════════════════════
+// ─── Icons ────────────────────────────────────────────────────────────────
 const IcoTrash = memo(() => (
   <svg
     width="14"
@@ -199,9 +194,7 @@ const IcoChevron = memo(() => (
   </svg>
 ));
 
-// ═══════════════════════════════════════════════════════════════
-//  MOTION VARIANTS
-// ═══════════════════════════════════════════════════════════════
+// ─── Motion variants ──────────────────────────────────────────────────────
 const listVariants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.07, delayChildren: 0.06 } },
@@ -222,10 +215,7 @@ const rowVariants = {
   },
 };
 
-// ═══════════════════════════════════════════════════════════════
-//  BACKGROUND — mirrors Hero.jsx 1:1
-//  Orbs pushed to very low opacity so content is always readable
-// ═══════════════════════════════════════════════════════════════
+// ─── Background ───────────────────────────────────────────────────────────
 function CartBackground({ character, caps }) {
   const radialRef = useRef(null);
   const linearRef = useRef(null);
@@ -244,13 +234,11 @@ function CartBackground({ character, caps }) {
     if (orb3Ref.current) orb3Ref.current.style.background = g.glow;
   }, []);
 
-  // Initial paint
   useEffect(() => {
     applyGradient(gradient);
     prevId.current = character?.id;
   }, []); // eslint-disable-line
 
-  // GSAP crossfade on switch
   useEffect(() => {
     if (!gradient || !character?.id || prevId.current === character.id) return;
     prevId.current = character.id;
@@ -261,12 +249,10 @@ function CartBackground({ character, caps }) {
       caps.enableOrbs ? orb2Ref.current : null,
       caps.enableOrbs ? orb3Ref.current : null,
     ].filter(Boolean);
-
     if (!caps.shouldAnimate) {
       applyGradient(gradient);
       return;
     }
-
     gsap
       .timeline()
       .to(targets, {
@@ -294,17 +280,14 @@ function CartBackground({ character, caps }) {
         <div className="cbg-scanlines" aria-hidden="true" />
       </div>
       <div className="cbg-vignette" aria-hidden="true" />
-      {/* Extra dark overlay so cart content always readable */}
       <div className="cbg-darkener" aria-hidden="true" />
       {caps.enableGrain && <div className="cbg-grain" aria-hidden="true" />}
     </>
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  EMPTY STATE
-// ═══════════════════════════════════════════════════════════════
-function EmptyState({ gradient, shouldAnimate }) {
+// ─── Empty state ──────────────────────────────────────────────────────────
+function EmptyState({ gradient, shouldAnimate, onBrowse }) {
   const accent = gradient?.accent || "#ff8c00";
   const glow = gradient?.glow || "rgba(255,140,0,0.6)";
   return (
@@ -339,6 +322,7 @@ function EmptyState({ gradient, shouldAnimate }) {
       </p>
       <motion.button
         className="cart-empty-cta"
+        onClick={onBrowse}
         whileHover={shouldAnimate ? { scale: 1.04 } : {}}
         whileTap={{ scale: 0.96 }}
       >
@@ -348,13 +332,9 @@ function EmptyState({ gradient, shouldAnimate }) {
   );
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  CART ROW
-//  Solid dark card — stays legible on ANY character background
-// ═══════════════════════════════════════════════════════════════
+// ─── Cart row ─────────────────────────────────────────────────────────────
 const CartRow = memo(({ item, onUpdate, onRemove, shouldAnimate }) => {
   const lineTotal = useAnimatedNumber(item.price * item.quantity);
-
   return (
     <motion.div
       layout
@@ -369,10 +349,7 @@ const CartRow = memo(({ item, onUpdate, onRemove, shouldAnimate }) => {
           : {}
       }
     >
-      {/* Left accent strip */}
       <div className="crow-strip" aria-hidden="true" />
-
-      {/* Thumbnail */}
       <div className="crow-thumb">
         <motion.img
           src={item.image}
@@ -384,15 +361,11 @@ const CartRow = memo(({ item, onUpdate, onRemove, shouldAnimate }) => {
         />
         <div className="crow-thumb-gloss" aria-hidden="true" />
       </div>
-
-      {/* Info */}
       <div className="crow-info">
         <span className="crow-cat">{item.category}</span>
         <h3 className="crow-name">{item.name}</h3>
         <span className="crow-unit-price">${item.price.toFixed(2)} each</span>
       </div>
-
-      {/* Qty stepper */}
       <div className="crow-stepper">
         <motion.button
           className="stepper-btn"
@@ -404,7 +377,6 @@ const CartRow = memo(({ item, onUpdate, onRemove, shouldAnimate }) => {
         >
           <IcoMinus />
         </motion.button>
-
         <motion.span
           key={item.quantity}
           className="stepper-num"
@@ -414,7 +386,6 @@ const CartRow = memo(({ item, onUpdate, onRemove, shouldAnimate }) => {
         >
           {item.quantity}
         </motion.span>
-
         <motion.button
           className="stepper-btn"
           onClick={() => onUpdate(item.id, item.quantity + 1)}
@@ -426,14 +397,10 @@ const CartRow = memo(({ item, onUpdate, onRemove, shouldAnimate }) => {
           <IcoPlus />
         </motion.button>
       </div>
-
-      {/* Line total */}
       <div className="crow-total-wrap">
         <span className="crow-total-label">Total</span>
         <span className="crow-total">${lineTotal.toFixed(2)}</span>
       </div>
-
-      {/* Delete */}
       <motion.button
         className="crow-del"
         onClick={() => onRemove(item.id)}
@@ -448,11 +415,18 @@ const CartRow = memo(({ item, onUpdate, onRemove, shouldAnimate }) => {
   );
 });
 
-// ═══════════════════════════════════════════════════════════════
-//  ORDER SUMMARY PANEL
-// ═══════════════════════════════════════════════════════════════
+// ─── Order summary panel ──────────────────────────────────────────────────
 const SummaryPanel = memo(
-  ({ subtotal, shipping, tax, total, shouldAnimate, gradient }) => {
+  ({
+    subtotal,
+    shipping,
+    tax,
+    total,
+    shouldAnimate,
+    gradient,
+    onCheckout,
+    hasItems,
+  }) => {
     const aSubtotal = useAnimatedNumber(subtotal);
     const aTax = useAnimatedNumber(tax);
     const aTotal = useAnimatedNumber(total);
@@ -469,12 +443,10 @@ const SummaryPanel = memo(
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, delay: 0.12, ease: [0.22, 1, 0.36, 1] }}
       >
-        {/* Decorative chrome */}
         <div className="sum-top-line" aria-hidden="true" />
         <div className="sum-ring" aria-hidden="true" />
         <div className="sum-corner-bl" aria-hidden="true" />
 
-        {/* Header */}
         <header className="sum-hdr">
           <div className="sum-hdr-left">
             <h2 className="sum-title">Order Summary</h2>
@@ -482,7 +454,6 @@ const SummaryPanel = memo(
           </div>
         </header>
 
-        {/* Line items */}
         <div className="sum-rows">
           <div className="sum-row">
             <span className="sum-lbl">Subtotal</span>
@@ -511,42 +482,44 @@ const SummaryPanel = memo(
 
         <div className="sum-divider" />
 
-        {/* Total */}
         <div className="sum-total-row">
           <span className="sum-total-lbl">Total</span>
           <span className="sum-total-val">${aTotal.toFixed(2)}</span>
         </div>
 
-        {/* Checkout CTA — live character gradient */}
+        {/* ── PROCEED TO CHECKOUT — fires handleCheckout in parent ── */}
         <motion.button
           className="btn-checkout"
           style={{ background: btnBg, boxShadow: `0 4px 32px ${glowClr}` }}
+          onClick={onCheckout}
+          disabled={!hasItems}
           whileHover={
-            shouldAnimate
+            shouldAnimate && hasItems
               ? {
                   scale: 1.025,
                   boxShadow: `0 0 52px ${glowClr}, 0 10px 36px rgba(0,0,0,0.5)`,
                 }
               : {}
           }
-          whileTap={{ scale: 0.975 }}
+          whileTap={hasItems ? { scale: 0.975 } : {}}
           transition={{ type: "spring", stiffness: 380, damping: 20 }}
         >
           <span className="btn-sweep" aria-hidden="true" />
           <span className="btn-label">Proceed to Checkout</span>
           <motion.span
             className="btn-arrow"
-            animate={shouldAnimate ? { x: [0, 5, 0] } : {}}
+            animate={shouldAnimate && hasItems ? { x: [0, 5, 0] } : {}}
             transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
           >
             →
           </motion.span>
         </motion.button>
 
-        {/* Secondary CTA */}
-        <button className="btn-continue">Continue Shopping</button>
+        {/* ── CONTINUE SHOPPING — goes back one page ── */}
+        <button className="btn-continue" onClick={() => window.history.back()}>
+          ← Continue Shopping
+        </button>
 
-        {/* Trust */}
         <div className="sum-trust">
           <span className="trust-icon">
             <IcoShield />
@@ -561,10 +534,9 @@ const SummaryPanel = memo(
   },
 );
 
-// ═══════════════════════════════════════════════════════════════
-//  MAIN CART PAGE
-// ═══════════════════════════════════════════════════════════════
+// ─── Main Cart page ───────────────────────────────────────────────────────
 export default function Cart() {
+  const navigate = useNavigate();
   const { activeCharacter } = useTheme();
 
   const caps = useAdaptiveAnimation();
@@ -573,7 +545,7 @@ export default function Cart() {
   const accentColor = gradient?.accent || "#ff8c00";
   const accentGlow = gradient?.glow || "rgba(255,140,0,0.6)";
 
-  // Scope CSS vars to .cart-page — fires on every character switch
+  // Inject CSS vars
   useEffect(() => {
     const el = pageRef.current;
     if (!el || !gradient) return;
@@ -593,24 +565,52 @@ export default function Cart() {
     total,
   } = useCart();
 
-  const updateQty = (id, qty) => updateQuantity(id, qty);
-  const removeItem = (id) => removeFromCart(id);
-
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
   const freeAt = 200;
   const toFree = Math.max(freeAt - subtotal, 0);
   const pct = Math.min((subtotal / freeAt) * 100, 100);
 
+  // ─────────────────────────────────────────────────────────────────────────
+  //  CHECKOUT HANDLER
+  //  Maps CartContext items → the shape Checkout.jsx expects, then navigates.
+  //
+  //  Checkout.jsx reads:
+  //    location.state.cartItems  → Array  (from Cart page)   ← this path
+  //    location.state.product    → Object (from Buy Now btn) ← already works
+  //
+  //  Each item shape Checkout needs:
+  //    { id, name, universe, price, image, scale, material, qty }
+  // ─────────────────────────────────────────────────────────────────────────
+  const handleCheckout = useCallback(() => {
+    if (items.length === 0) return;
+
+    const checkoutItems = items.map((item) => ({
+      id: item.id,
+      name: item.name,
+      universe: item.universe || item.category || "Limited Edition",
+      price: item.price,
+      image: item.image,
+      scale: item.scale || "1/6",
+      material: item.material || "Premium Resin",
+      qty: item.quantity, // Cart uses .quantity, Checkout uses .qty
+    }));
+
+    navigate("/checkout", {
+      state: {
+        cartItems: checkoutItems, // ← key Checkout.jsx must read
+        accent: accentColor,
+        glow: accentGlow,
+      },
+    });
+  }, [items, accentColor, accentGlow, navigate]);
+
   return (
     <div className="cart-page" ref={pageRef}>
-      {/* Navbar */}
       <Navbar accentColor={accentColor} accentGlow={accentGlow} />
-
-      {/* Background — GSAP crossfades on character switch */}
       <CartBackground character={activeCharacter} caps={caps} />
 
       <main className="cart-main">
-        {/* ── Header ── */}
+        {/* Header */}
         <motion.header
           className="cart-hdr"
           initial={{ opacity: 0, y: -16 }}
@@ -628,11 +628,10 @@ export default function Cart() {
           <div className="cart-title-line" />
         </motion.header>
 
-        {/* ── Two-column layout ── */}
+        {/* Two-column layout */}
         <div className="cart-grid">
-          {/* LEFT — items column */}
+          {/* LEFT — items */}
           <section className="cart-col-items">
-            {/* section header row */}
             <div className="items-hdr">
               <motion.div
                 key={itemCount}
@@ -645,7 +644,6 @@ export default function Cart() {
               </motion.div>
               <h2 className="items-hdr-label">Cart Items</h2>
 
-              {/* Shipping progress inline */}
               {toFree > 0 && subtotal > 0 && (
                 <div className="inline-ship">
                   <span className="inline-ship-txt">
@@ -663,7 +661,6 @@ export default function Cart() {
               )}
             </div>
 
-            {/* Items list */}
             <motion.div
               className="cart-list"
               variants={listVariants}
@@ -675,25 +672,22 @@ export default function Cart() {
                   <EmptyState
                     gradient={gradient}
                     shouldAnimate={caps.shouldAnimate}
+                    onBrowse={() => navigate("/#shop")}
                   />
                 ) : (
                   items.map((item) => (
                     <CartRow
                       key={item.id}
                       item={item}
-                      onUpdate={updateQty}
-                      onRemove={removeItem}
+                      onUpdate={updateQuantity}
+                      onRemove={removeFromCart}
                       shouldAnimate={caps.shouldAnimate}
-                      initial={{ scale: 0.9, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ type: "spring", stiffness: 300 }}
                     />
                   ))
                 )}
               </AnimatePresence>
             </motion.div>
 
-            {/* Shipping banner — shows when under threshold */}
             <AnimatePresence>
               {shipping > 0 && items.length > 0 && (
                 <motion.div
@@ -734,6 +728,8 @@ export default function Cart() {
             total={total}
             shouldAnimate={caps.shouldAnimate}
             gradient={gradient}
+            hasItems={items.length > 0}
+            onCheckout={handleCheckout}
           />
         </div>
       </main>

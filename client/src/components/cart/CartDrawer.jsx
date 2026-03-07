@@ -1,16 +1,29 @@
 import { useCart } from "../../context/CartContext";
+import { useTheme } from "../../context/ThemeContext";
 import { useNavigate } from "react-router-dom";
 import "./cartDrawer.css";
 
 export default function CartDrawer({ open, onClose }) {
   const { items, subtotal } = useCart();
+  const { activeCharacter } = useTheme();
   const navigate = useNavigate();
+
+  const accent = activeCharacter?.gradient?.accent || "#7c5cff";
+  const glow = activeCharacter?.gradient?.glow || "rgba(124,92,255,0.35)";
+  const particle = activeCharacter?.gradient?.particle || "#a078ff";
 
   return (
     <>
       {open && <div className="cart-overlay" onClick={onClose} />}
 
-      <div className={`cart-drawer ${open ? "open" : ""}`}>
+      <div
+        className={`cart-drawer ${open ? "open" : ""}`}
+        style={{
+          "--drawer-accent": accent,
+          "--drawer-glow": glow,
+          "--drawer-particle": particle,
+        }}
+      >
         {/* Header */}
         <div className="cart-drawer-header">
           <div className="cart-drawer-header__left">

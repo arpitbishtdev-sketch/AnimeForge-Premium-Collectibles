@@ -17,6 +17,7 @@ const Cart = lazy(() => import("./pages/Cart"));
 const User = lazy(() => import("./pages/User"));
 const Collections = lazy(() => import("./pages/Collections"));
 const ProductDetail = lazy(() => import("./pages/Productdetailpage"));
+const Checkout = lazy(() => import("./pages/Checkout"));
 
 // Simple fallback loader
 function PageLoader() {
@@ -87,6 +88,17 @@ function AppRoutes() {
             <ErrorBoundary>
               <Suspense fallback={<CollectionsSkeleton />}>
                 <Collections />
+              </Suspense>
+            </ErrorBoundary>
+          ),
+        },
+
+        {
+          path: "/checkout",
+          element: (
+            <ErrorBoundary>
+              <Suspense fallback={<PageLoader />}>
+                <Checkout />
               </Suspense>
             </ErrorBoundary>
           ),

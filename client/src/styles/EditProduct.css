@@ -989,3 +989,76 @@
   );
   color: #fff;
 }
+
+/* ── Add these styles to your EditProduct.css ── */
+
+/* Tag pill container — looks like an input box */
+.ep-tags-wrap {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-height: 42px;
+  padding: 6px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  cursor: text;
+  transition: border-color 0.2s;
+}
+
+.ep-tags-wrap:focus-within {
+  border-color: rgba(124, 92, 255, 0.5);
+  box-shadow: 0 0 0 3px rgba(124, 92, 255, 0.08);
+}
+
+/* Individual tag pill */
+.ep-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px 3px 10px;
+  background: rgba(124, 92, 255, 0.18);
+  border: 1px solid rgba(124, 92, 255, 0.35);
+  border-radius: 999px;
+  color: #c4b5fd;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+}
+
+.ep-tag-pill__remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: none;
+  border: none;
+  color: rgba(196, 181, 253, 0.5);
+  cursor: pointer;
+  font-size: 10px;
+  padding: 0;
+  line-height: 1;
+  transition: color 0.15s;
+}
+
+.ep-tag-pill__remove:hover {
+  color: #f87171;
+}
+
+/* Inline input inside the tag wrap */
+.ep-tags-input {
+  flex: 1;
+  min-width: 120px;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  padding: 2px 0;
+  font-family: inherit;
+}
+
+.ep-tags-input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}

@@ -43,8 +43,6 @@ export default function HomeLayout() {
 
       {loaded && (
         <div className="app">
-          <Navbar accentColor={accentColor} accentGlow={accentGlow} />
-
           <main>
             {/* ── Hero + Character Switcher ── */}
             <div style={{ position: "relative" }}>

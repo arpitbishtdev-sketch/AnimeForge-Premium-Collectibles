@@ -15,10 +15,6 @@ const EMPTY_FORM = {
   status: "new",
 };
 
-// Each item in allImages is either:
-//   { type: "saved", url, public_id }
-// or
-//   { type: "new",   url, file, name }
 export default function EditProduct() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -32,7 +28,9 @@ export default function EditProduct() {
   const [dragOver, setDragOver] = useState(false);
   const [dragOverIdx, setDragOverIdx] = useState(null);
 
-  // ── SINGLE unified image list ──
+  // Tag input state
+  const [tagInput, setTagInput] = useState("");
+
   const [allImages, setAllImages] = useState([]);
 
   const fileInputRef = useRef(null);
@@ -75,7 +73,6 @@ export default function EditProduct() {
           status: p.status ?? "new",
           themeColor: p.themeColor ?? "#7c5cff",
         });
-        // Seed unified list with saved images
         setAllImages(
           (p.images ?? []).map((img) => ({
             type: "saved",
@@ -121,7 +118,41 @@ export default function EditProduct() {
     [statusColors],
   );
 
-  // ── Add new files into unified list ──
+  // ── Tag helpers ──
+  const addTag = useCallback((raw) => {
+    const trimmed = raw.trim().toLowerCase();
+    if (!trimmed) return;
+    setForm((prev) => ({
+      ...prev,
+      tags: prev.tags.includes(trimmed) ? prev.tags : [...prev.tags, trimmed],
+    }));
+    setTagInput("");
+  }, []);
+
+  const removeTag = useCallback((tag) => {
+    setForm((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((t) => t !== tag),
+    }));
+  }, []);
+
+  const handleTagKeyDown = useCallback(
+    (e) => {
+      if (e.key === "Enter" || e.key === ",") {
+        e.preventDefault();
+        addTag(tagInput);
+      } else if (
+        e.key === "Backspace" &&
+        tagInput === "" &&
+        form.tags.length > 0
+      ) {
+        setForm((prev) => ({ ...prev, tags: prev.tags.slice(0, -1) }));
+      }
+    },
+    [tagInput, form.tags, addTag],
+  );
+
+  // ── Image helpers ──
   const addFiles = useCallback((files) => {
     Array.from(files).forEach((file) => {
       const reader = new FileReader();
@@ -144,12 +175,10 @@ export default function EditProduct() {
     [addFiles],
   );
 
-  // ── Remove any image from unified list ──
   const removeImage = useCallback((index) => {
     setAllImages((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
-  // ── Set primary = move to index 0 ──
   const setPrimary = useCallback((index) => {
     setAllImages((prev) => {
       const updated = [...prev];
@@ -159,7 +188,6 @@ export default function EditProduct() {
     });
   }, []);
 
-  // ── Drag-to-reorder within unified list ──
   const handleThumbDragStart = useCallback((e, index) => {
     dragSrcIdx.current = index;
     e.dataTransfer.effectAllowed = "move";
@@ -173,7 +201,7 @@ export default function EditProduct() {
 
   const handleThumbDrop = useCallback((e, index) => {
     e.preventDefault();
-    e.stopPropagation(); // prevent dropzone from firing
+    e.stopPropagation();
     setDragOverIdx(null);
     const from = dragSrcIdx.current;
     if (from === null || from === index) return;
@@ -210,13 +238,13 @@ export default function EditProduct() {
         formData.append("themeColor", form.themeColor);
         formData.append("tags", JSON.stringify(form.tags));
 
-        // Send order of saved images (new ones will be appended by backend)
+        // Send order of saved images
         const savedOrder = allImages
           .filter((img) => img.type === "saved")
           .map((img) => img.public_id);
         formData.append("imageOrder", JSON.stringify(savedOrder));
 
-        // Append new files IN the order they appear in allImages
+        // Append new files in the order they appear in allImages
         allImages
           .filter((img) => img.type === "new")
           .forEach((img) => formData.append("images", img.file));
@@ -349,24 +377,68 @@ export default function EditProduct() {
                 placeholder="e.g. Figures"
               />
             </div>
+
+            {/* ── TAG PILL EDITOR ── */}
             <div className="ep-field">
               <label className="ep-label">Tags</label>
-              <input
-                type="text"
-                className="ep-input"
-                placeholder="Comma separated tags"
-                value={form.tags.join(", ")}
-                onChange={(e) =>
-                  setForm((prev) => ({
-                    ...prev,
-                    tags: e.target.value
-                      .split(",")
-                      .map((t) => t.trim())
-                      .filter(Boolean),
-                  }))
-                }
-              />
+              <div className="ep-tags-wrap">
+                {form.tags.map((tag) => (
+                  <span key={tag} className="ep-tag-pill">
+                    {tag}
+                    <button
+                      type="button"
+                      className="ep-tag-pill__remove"
+                      onClick={() => removeTag(tag)}
+                      aria-label={`Remove tag ${tag}`}
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+                <input
+                  type="text"
+                  className="ep-tags-input"
+                  placeholder={
+                    form.tags.length === 0
+                      ? "Type a tag and press Enter or ,"
+                      : "Add another…"
+                  }
+                  value={tagInput}
+                  onChange={(e) => setTagInput(e.target.value)}
+                  onKeyDown={handleTagKeyDown}
+                  onBlur={() => tagInput.trim() && addTag(tagInput)}
+                />
+              </div>
+              <span
+                className="ep-hint"
+                style={{ marginTop: 4, display: "block" }}
+              >
+                Press{" "}
+                <kbd
+                  style={{
+                    padding: "1px 5px",
+                    borderRadius: 4,
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    fontSize: 10,
+                  }}
+                >
+                  Enter
+                </kbd>{" "}
+                or{" "}
+                <kbd
+                  style={{
+                    padding: "1px 5px",
+                    borderRadius: 4,
+                    border: "1px solid rgba(255,255,255,0.15)",
+                    fontSize: 10,
+                  }}
+                >
+                  ,
+                </kbd>{" "}
+                to add · Backspace to remove last
+              </span>
             </div>
+
             <div className="ep-field">
               <label className="ep-label" htmlFor="ep-status">
                 Product Status
@@ -509,15 +581,12 @@ export default function EditProduct() {
           </div>
         </div>
 
-        {/* ══════════════════════════════════════
-            UNIFIED IMAGE SECTION
-        ══════════════════════════════════════ */}
+        {/* ── Images ── */}
         <div className="ep-section-divider" style={{ marginTop: 32 }}>
           <span className="ep-section-divider__label">Product Images</span>
         </div>
 
         <div className="ep-img-section">
-          {/* Stats bar */}
           <div className="ep-img-stats">
             <span className="ep-img-stat">
               <span className="ep-img-stat__val">{savedCount}</span> saved
@@ -536,7 +605,6 @@ export default function EditProduct() {
             )}
           </div>
 
-          {/* Unified grid */}
           {allImages.length > 0 && (
             <div className="ep-img-grid">
               {allImages.map((img, index) => (
@@ -560,7 +628,6 @@ export default function EditProduct() {
                   onDrop={(e) => handleThumbDrop(e, index)}
                   onDragEnd={handleThumbDragEnd}
                 >
-                  {/* Badges */}
                   {index === 0 && (
                     <span className="ep-img-badge ep-img-badge--primary">
                       ✦ Primary
@@ -581,7 +648,6 @@ export default function EditProduct() {
                     draggable={false}
                   />
 
-                  {/* Hover actions */}
                   <div className="ep-img-thumb__overlay">
                     {index !== 0 && (
                       <button
@@ -609,7 +675,6 @@ export default function EditProduct() {
             </div>
           )}
 
-          {/* Drop zone */}
           <div
             className={`ep-img-dropzone${dragOver ? " ep-img-dropzone--active" : ""}`}
             onDrop={handleDropZone}

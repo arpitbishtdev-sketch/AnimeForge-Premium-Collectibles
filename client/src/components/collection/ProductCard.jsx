@@ -4,9 +4,9 @@ import { useCart } from "../../context/CartContext";
 import StatusBadge from "../shared/StatusBadge";
 import { formatPrice } from "../../utils/helpers";
 import { flyToCart } from "../../utils/flyToCart";
+import { useWishlist } from "../../context/WishlistContext";
 import "./PC.css";
 
-// Heart SVG icon — rendered inline for crisp control
 function HeartIcon() {
   return (
     <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -33,7 +33,7 @@ function StarRating({ rating }) {
 export default function ProductCard({ product, index }) {
   const navigate = useNavigate();
   const { addToCart } = useCart();
-  const [wishlisted, setWishlisted] = useState(false);
+  const { toggleWishlist, isWishlisted } = useWishlist();
   const [added, setAdded] = useState(false);
 
   const {
@@ -56,28 +56,24 @@ export default function ProductCard({ product, index }) {
       ? Math.round(((originalPrice - basePrice) / originalPrice) * 100)
       : null;
 
+  // Format price safely — avoid double ₹ if formatPrice already includes symbol
+  const formatSafePrice = (price) => {
+    if (!price && price !== 0) return "0";
+    const formatted = formatPrice
+      ? formatPrice(price)
+      : price.toLocaleString("en-IN");
+    // Strip any leading ₹ from formatPrice result since we prepend it manually
+    return String(formatted).replace(/^₹/, "");
+  };
+
   const handleCardClick = useCallback(() => {
     navigate(`/product/${slug}`);
-  }, [navigate, _id]);
+  }, [navigate, slug]);
 
-  const handleWishlist = useCallback((e) => {
-    e.stopPropagation();
-    setWishlisted((prev) => !prev);
-  }, []);
-
-  const handleAddToCart = useCallback(
+  const handleWishlist = useCallback(
     (e) => {
       e.stopPropagation();
-
-      const img = e.currentTarget.closest(".product-card").querySelector("img");
-
-      const cart = document.querySelector(
-        ".navbar-icon-btn[aria-label='Cart']",
-      );
-
-      flyToCart(img, cart);
-
-      addToCart({
+      toggleWishlist({
         id: _id,
         name,
         price: basePrice,
@@ -85,16 +81,50 @@ export default function ProductCard({ product, index }) {
         category,
       });
     },
+    [toggleWishlist, _id, name, basePrice, images, category],
+  );
+
+  const handleAddToCart = useCallback(
+    (e) => {
+      e.stopPropagation();
+      const img = e.currentTarget.closest(".product-card").querySelector("img");
+      const cart = document.querySelector(
+        ".navbar-icon-btn[aria-label='Cart']",
+      );
+      flyToCart(img, cart);
+      addToCart({
+        id: _id,
+        name,
+        price: basePrice,
+        image: images?.[0]?.url,
+        category,
+      });
+      setAdded(true);
+      setTimeout(() => setAdded(false), 1800);
+    },
     [addToCart, _id, name, basePrice, images, category],
   );
 
   const handleBuyNow = useCallback(
     (e) => {
       e.stopPropagation();
-
-      navigate(`/checkout?product=${slug}`);
+      navigate("/checkout", {
+        state: {
+          product: {
+            id: _id,
+            name: name,
+            universe: category || "Limited Edition",
+            price: basePrice,
+            image: images?.[0]?.url || null,
+            scale: product.scale || "1/6",
+            material: product.material || "Premium Resin",
+          },
+          accent: product.themeColor || "#ff8c00",
+          glow: `${product.themeColor || "#ff8c00"}66`,
+        },
+      });
     },
-    [navigate, _id],
+    [navigate, _id, name, category, basePrice, images, product],
   );
 
   return (
@@ -112,6 +142,7 @@ export default function ProductCard({ product, index }) {
     >
       {/* Image */}
       <div className="product-card__img-wrap">
+        {/* Status badge only — category badge removed */}
         {status && (
           <StatusBadge status={status} themeColor={product.themeColor} />
         )}
@@ -131,27 +162,27 @@ export default function ProductCard({ product, index }) {
           />
         )}
 
-        {/* Category badge */}
-        {category && <span className="product-card__badge">{category}</span>}
+        {/* Category badge REMOVED — was causing double label with status */}
 
-        {/* Heart wishlist button — ONLY icon, no text */}
         <button
-          className={`product-card__wish${wishlisted ? " product-card__wish--active" : ""}`}
+          className={`product-card__wish${
+            isWishlisted(_id) ? " product-card__wish--active" : ""
+          }`}
           onClick={handleWishlist}
-          aria-label={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
-          title={wishlisted ? "Remove from wishlist" : "Add to wishlist"}
+          aria-label={
+            isWishlisted(_id) ? "Remove from wishlist" : "Add to wishlist"
+          }
+          title={isWishlisted(_id) ? "Remove from wishlist" : "Add to wishlist"}
         >
           <HeartIcon />
         </button>
 
-        {/* Out of stock overlay */}
         {isOOS && (
           <div className="product-card__oos-label">
             <span>Out of Stock</span>
           </div>
         )}
 
-        {/* Stock remaining badge */}
         {!isOOS && stock <= 10 && (
           <span className="product-card__stock-dot">{stock} left</span>
         )}
@@ -159,10 +190,13 @@ export default function ProductCard({ product, index }) {
 
       {/* Body */}
       <div className="product-card__body">
-        {/* Name */}
+        {/* Category shown as subtle text label here instead */}
+        {category && (
+          <span className="product-card__category-label">{category}</span>
+        )}
+
         <h3 className="product-card__name">{name}</h3>
 
-        {/* Rating */}
         {averageRating > 0 && (
           <div className="product-card__meta">
             <StarRating rating={averageRating} />
@@ -175,20 +209,13 @@ export default function ProductCard({ product, index }) {
           </div>
         )}
 
-        {/* Price */}
         <div className="product-card__price-row">
           <span className="product-card__price">
-            ₹
-            {formatPrice
-              ? formatPrice(basePrice)
-              : basePrice.toLocaleString("en-IN")}
+            ₹{formatSafePrice(basePrice)}
           </span>
           {originalPrice && originalPrice > basePrice && (
             <span className="product-card__price-orig">
-              ₹
-              {formatPrice
-                ? formatPrice(originalPrice)
-                : originalPrice.toLocaleString("en-IN")}
+              ₹{formatSafePrice(originalPrice)}
             </span>
           )}
           {discount && (
@@ -196,7 +223,6 @@ export default function ProductCard({ product, index }) {
           )}
         </div>
 
-        {/* Action buttons */}
         <div className="product-card__actions">
           <button
             className={`product-card__btn-cart ${added ? "added" : ""}`}
