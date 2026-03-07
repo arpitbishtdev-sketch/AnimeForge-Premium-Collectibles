@@ -94,6 +94,17 @@ function AppRoutes() {
         },
 
         {
+          path: "/collections/:tag",
+          element: (
+            <ErrorBoundary>
+              <Suspense fallback={<CollectionsSkeleton />}>
+                <Collections />
+              </Suspense>
+            </ErrorBoundary>
+          ),
+        },
+
+        {
           path: "/checkout",
           element: (
             <ErrorBoundary>

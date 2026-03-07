@@ -5,8 +5,8 @@ const StatusConfig = require("../models/StatusConfig");
 // GET all products
 exports.getAllProducts = async (req, res) => {
   try {
-    const { search, category, limit, displaySection } = req.query;
-    console.log("QUERY:", req.query);
+    const { search, category, limit, displaySection, tag } = req.query;
+
     const filter = {};
 
     if (displaySection) {
@@ -15,6 +15,9 @@ exports.getAllProducts = async (req, res) => {
 
     if (category) {
       filter.category = category;
+    }
+    if (tag) {
+      filter.tags = { $in: [tag.toLowerCase()] };
     }
 
     if (search && search.trim()) {

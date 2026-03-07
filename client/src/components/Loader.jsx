@@ -51,7 +51,6 @@ const TOTAL_DURATION = 3200;
 const CHAR_INTERVAL = 700;
 const SEGMENTS = 12;
 
-// ── Framer variants — 100% original, untouched ────────────────────────────
 const characterVariants = {
   initial: { opacity: 0, scale: 0.88, y: 32, filter: "blur(8px)" },
   animate: {
@@ -101,7 +100,9 @@ const loaderExitVariants = {
   },
 };
 
-// ── Particles — stable data, not re-created on render ────────────────────
+// ════════════════════════════════════════════════════════════════
+// PARTICLES - DISABLED ON LOW-END
+// ════════════════════════════════════════════════════════════════
 const PARTICLE_DATA = Array.from({ length: 18 }, (_, i) => ({
   id: i,
   x: Math.random() * 100,
@@ -143,7 +144,9 @@ function Particles({ accent }) {
   );
 }
 
-// ── Energy Bar — CSS transition on segments, no Framer timers ────────────
+// ════════════════════════════════════════════════════════════════
+// ENERGY BAR
+// ════════════════════════════════════════════════════════════════
 function EnergyBar({ progress, accent }) {
   const filled = Math.round((progress / 100) * SEGMENTS);
 
@@ -174,8 +177,12 @@ function EnergyBar({ progress, accent }) {
   );
 }
 
-// ── Corner Accents ────────────────────────────────────────────────────────
-function CornerAccents({ accent }) {
+// ════════════════════════════════════════════════════════════════
+// CORNER ACCENTS
+// ════════════════════════════════════════════════════════════════
+function CornerAccents({ accent, isLow }) {
+  if (isLow) return null; // ← HIDE on low-end
+
   return (
     <>
       <div className="loader-corner top-left" style={{ borderColor: accent }} />
@@ -195,7 +202,9 @@ function CornerAccents({ accent }) {
   );
 }
 
-// ── Main Loader ───────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════
+// MAIN LOADER
+// ════════════════════════════════════════════════════════════════
 export default function Loader({ onComplete, accentColor }) {
   const [charIndex, setCharIndex] = useState(0);
   const [progress, setProgress] = useState(0);
@@ -212,7 +221,9 @@ export default function Loader({ onComplete, accentColor }) {
   const char = CHARACTERS[charIndex];
   const activeAccent = accentColor || char.accent;
 
-  // Preload all 4 images immediately so character switches are instant
+  // ════════════════════════════════════════════════════════════════
+  // PRELOAD IMAGES
+  // ════════════════════════════════════════════════════════════════
   useEffect(() => {
     CHARACTERS.forEach(({ src }) => {
       const img = new Image();
@@ -220,7 +231,9 @@ export default function Loader({ onComplete, accentColor }) {
     });
   }, []);
 
-  // Smooth progress via RAF — no setInterval drift
+  // ════════════════════════════════════════════════════════════════
+  // SMOOTH PROGRESS VIA RAF
+  // ════════════════════════════════════════════════════════════════
   const tickProgress = useCallback(() => {
     const elapsed = Date.now() - startTime.current;
     const raw = Math.min((elapsed / TOTAL_DURATION) * 100, 100);
@@ -236,7 +249,9 @@ export default function Loader({ onComplete, accentColor }) {
     };
   }, [tickProgress]);
 
-  // Character rotation
+  // ════════════════════════════════════════════════════════════════
+  // CHARACTER ROTATION
+  // ════════════════════════════════════════════════════════════════
   useEffect(() => {
     const t = setInterval(
       () => setCharIndex((p) => (p + 1) % CHARACTERS.length),
@@ -245,7 +260,9 @@ export default function Loader({ onComplete, accentColor }) {
     return () => clearInterval(t);
   }, []);
 
-  // Completion
+  // ════════════════════════════════════════════════════════════════
+  // COMPLETION
+  // ════════════════════════════════════════════════════════════════
   useEffect(() => {
     const t = setTimeout(() => {
       setDone(true);
@@ -283,17 +300,16 @@ export default function Loader({ onComplete, accentColor }) {
                 transition={{ duration: 0.6 }}
               />
             </AnimatePresence>
-            <div className="loader-bg-grid" />
-            <div className="loader-bg-scanlines" />
+            {!isLow && <div className="loader-bg-grid" />}
+            {!isLow && <div className="loader-bg-scanlines" />}
             <div className="loader-bg-vignette" />
-            {/* Grain is an animated SVG filter — very heavy, high-end only */}
-            {enableGrain && <div className="loader-bg-grain" />}
+            {enableGrain && !isLow && <div className="loader-bg-grain" />}
           </div>
 
-          {/* Particles — 18 Framer timers, skip on low-end */}
+          {/* Particles — SKIP on low-end */}
           {!isLow && <Particles accent={char.glow} />}
 
-          <CornerAccents accent={char.accent} />
+          <CornerAccents accent={char.accent} isLow={isLow} />
 
           {/* ── Top bar ── */}
           <div className="loader-top-bar">
@@ -312,8 +328,8 @@ export default function Loader({ onComplete, accentColor }) {
 
           {/* ── Character stage ── */}
           <div className="loader-stage">
-            {/* Glow ring behind character — skip on low-end */}
-            {enableOrbs && (
+            {/* Glow ring — SKIP on low-end */}
+            {enableOrbs && !isLow && (
               <AnimatePresence mode="wait">
                 <motion.div
                   key={char.id + "-ring"}
@@ -327,7 +343,7 @@ export default function Loader({ onComplete, accentColor }) {
               </AnimatePresence>
             )}
 
-            {/* Orbit rings — two continuous rotate timers, skip on low-end */}
+            {/* Orbit rings — SKIP on low-end */}
             {!isLow && (
               <>
                 <motion.div
@@ -363,15 +379,17 @@ export default function Loader({ onComplete, accentColor }) {
                   src={char.src}
                   alt={char.name}
                   className="loader-char-img"
-                  // Float loop — extra RAF cost, skip on low-end
                   variants={!isLow ? floatVariants : undefined}
                   animate={!isLow ? "animate" : undefined}
                   style={{
-                    filter: enableOrbs
-                      ? `drop-shadow(0 0 60px ${char.glow}) drop-shadow(0 0 120px ${char.glow})`
-                      : `drop-shadow(0 4px 16px ${char.glow})`,
+                    filter:
+                      enableOrbs && !isLow
+                        ? `drop-shadow(0 0 60px ${char.glow}) drop-shadow(0 0 120px ${char.glow})`
+                        : `drop-shadow(0 4px 16px ${char.glow})`,
                   }}
                   draggable={false}
+                  loading="eager"
+                  decoding="async" // ← DON'T block page
                 />
               </motion.div>
             </AnimatePresence>
@@ -394,7 +412,9 @@ export default function Loader({ onComplete, accentColor }) {
                 </span>
                 <span
                   className="loader-char-name"
-                  style={{ textShadow: `0 0 30px ${char.glow}` }}
+                  style={{
+                    textShadow: enableOrbs ? `0 0 30px ${char.glow}` : "none",
+                  }}
                 >
                   {char.name}
                 </span>

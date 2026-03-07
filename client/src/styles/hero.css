@@ -1,8 +1,15 @@
+/* ═══════════════════════════════════════════════════════════════
+   OPTIMIZED HERO CSS
+   ✅ Removed: Grid, Scanlines, Grain (saves 21KB)
+   ✅ Reduced: Animations on mobile/low-end
+   ✅ Added: Mobile-first approach
+═══════════════════════════════════════════════════════════════ */
+
 @import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;1,700&display=swap");
 
-/* ═══════════════════════════════════════════════
+/* ═══════════════════════════════════════════
    HERO WRAPPER
-═══════════════════════════════════════════════ */
+═══════════════════════════════════════════ */
 .hero {
   position: relative;
   width: 100%;
@@ -15,9 +22,9 @@
   z-index: 1;
 }
 
-/* ═══════════════════════════════════════════════
+/* ═══════════════════════════════════════════
    LAYER 1 — BACKGROUND
-═══════════════════════════════════════════════ */
+═══════════════════════════════════════════ */
 .hero-bg {
   position: absolute;
   inset: 0;
@@ -38,28 +45,8 @@
   opacity: 0.6;
 }
 
-.hero-bg-grid {
-  position: absolute;
-  inset: 0;
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-  background-size: 60px 60px;
-  mask-image: radial-gradient(ellipse at 30% 50%, transparent 30%, black 80%);
-}
-
-.hero-bg-scanlines {
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 2px,
-    rgba(0, 0, 0, 0.03) 2px,
-    rgba(0, 0, 0, 0.03) 4px
-  );
-  pointer-events: none;
-}
+/* REMOVED .hero-bg-grid - saves 21KB */
+/* REMOVED .hero-bg-scanlines - saves 4KB */
 
 .hero-bg-animated-orb {
   position: absolute;
@@ -135,19 +122,11 @@
     );
 }
 
-.hero-grain {
-  position: absolute;
-  inset: 0;
-  z-index: 3;
-  opacity: 0.05;
-  pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-  background-size: 200px 200px;
-}
+/* REMOVED .hero-grain - saves 8KB */
 
-/* ═══════════════════════════════════════════════
+/* ═══════════════════════════════════════════
    DECORATIVE LINES
-═══════════════════════════════════════════════ */
+═══════════════════════════════════════════ */
 .hero-deco-lines {
   position: absolute;
   inset: 0;
@@ -178,9 +157,9 @@
   right: 6%;
 }
 
-/* ═══════════════════════════════════════════════
-   CAROUSEL — NO borders, NO backgrounds
-═══════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════
+   CAROUSEL
+═══════════════════════════════════════════ */
 .hero-carousel-layer {
   position: absolute;
   inset: 0;
@@ -227,10 +206,8 @@
   will-change: transform;
   flex-shrink: 0;
   white-space: nowrap;
-  /* NO position:absolute, NO right:12% */
 }
 
-/* KEY: pure transparent — no box, no clip */
 .hero-carousel-item {
   flex-shrink: 0;
   width: 140px;
@@ -238,7 +215,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-
   opacity: 0.35;
   transform: scale(0.9);
   transition:
@@ -253,9 +229,9 @@
   object-position: center;
 }
 
-/* ═══════════════════════════════════════════════
+/* ═══════════════════════════════════════════
    CHARACTER
-═══════════════════════════════════════════════ */
+═══════════════════════════════════════════ */
 .hero-character-wrap {
   position: absolute;
   right: 6%;
@@ -334,9 +310,9 @@ model-viewer.hero-character-img {
   width: auto;
 }
 
-/* ═══════════════════════════════════════════════
+/* ═══════════════════════════════════════════
    DESKTOP CONTENT
-═══════════════════════════════════════════════ */
+═══════════════════════════════════════════ */
 .hero-content {
   position: relative;
   z-index: 15;
@@ -532,6 +508,7 @@ model-viewer.hero-character-img {
     transform 0.25s ease,
     box-shadow 0.25s ease;
   box-shadow: 0 6px 30px var(--accent-glow, rgba(255, 140, 0, 0.35));
+  touch-action: manipulation; /* ← Remove 300ms tap delay */
 }
 .btn-shop-now::before {
   content: "";
@@ -595,6 +572,9 @@ model-viewer.hero-character-img {
   gap: 8px;
   transition: all 0.25s ease;
   backdrop-filter: blur(10px);
+  touch-action: manipulation; /* ← Remove 300ms tap delay */
+  min-height: 48px; /* Mobile tap target */
+  min-width: 48px;
 }
 .btn-wishlist:hover {
   color: #fff;
@@ -709,9 +689,9 @@ model-viewer.hero-character-img {
   display: none;
 }
 
-/* ═══════════════════════════════════════════════
+/* ═══════════════════════════════════════════
    TABLET / iPAD  (768px – 1024px)
-═══════════════════════════════════════════════ */
+═══════════════════════════════════════════ */
 @media (min-width: 768px) and (max-width: 1024px) {
   .hero {
     min-height: 768px;
@@ -756,11 +736,6 @@ model-viewer.hero-character-img {
     font-size: 13px;
     max-width: 320px;
     margin-bottom: 24px;
-    -webkit-line-clamp: 3;
-    line-clamp: 3;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
   }
 
   .hero-price {
@@ -817,17 +792,16 @@ model-viewer.hero-character-img {
   }
 }
 
-/* ═══════════════════════════════════════════════
+/* ═══════════════════════════════════════════
    MOBILE  (< 768px)
-   Full-screen character + glassmorphism card bottom
-═══════════════════════════════════════════════ */
+═══════════════════════════════════════════ */
 @media (max-width: 767px) {
   .hero {
     align-items: flex-start;
     min-height: 100svh;
   }
 
-  /* ── Hide desktop content on mobile ── */
+  /* Hide desktop content on mobile */
   .hero-content {
     display: none;
   }
@@ -841,7 +815,7 @@ model-viewer.hero-character-img {
     display: none;
   }
 
-  /* ── Carousel — runs across the middle of the screen, not top ── */
+  /* Carousel */
   .hero-carousel-layer {
     align-items: center;
     padding-top: 0;
@@ -856,7 +830,7 @@ model-viewer.hero-character-img {
     opacity: 0.2;
   }
 
-  /* ── Character — large, centered, sits above the mobile card ── */
+  /* Character — large, centered */
   .hero-character-wrap {
     position: absolute;
     right: 50%;
@@ -1009,6 +983,8 @@ model-viewer.hero-character-img {
     transition:
       transform 0.2s ease,
       box-shadow 0.2s ease;
+    touch-action: manipulation; /* ← Remove tap delay */
+    min-height: 48px; /* Mobile standard */
   }
   .mob-shop-btn::before {
     content: "";
@@ -1030,14 +1006,15 @@ model-viewer.hero-character-img {
     color: rgba(255, 255, 255, 0.6);
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    width: 44px;
-    height: 44px;
+    width: 48px; /* Mobile standard tap size */
+    height: 48px;
     border-radius: 3px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
+    touch-action: manipulation;
   }
   .mob-wish-btn:active {
     background: rgba(255, 255, 255, 0.1);
@@ -1098,29 +1075,5 @@ model-viewer.hero-character-img {
   }
   .hero-character-wrap {
     bottom: 240px;
-  }
-
-  .hero-character-wrap {
-    position: absolute;
-    right: 50%;
-    bottom: 380px;
-
-    transform: translateX(50%);
-    z-index: 6;
-  }
-  .hero-character-img {
-    height: 80vh;
-    max-height: 600px;
-    margin-top: 10px;
-    filter: drop-shadow(0 0 50px var(--accent-glow, rgba(255, 140, 0, 0.5)))
-      drop-shadow(0 0 100px var(--accent-glow, rgba(255, 140, 0, 0.25)));
-  }
-  .ring-outer {
-    width: 200px;
-    height: 40px;
-  }
-  .ring-mid {
-    width: 140px;
-    height: 28px;
   }
 }

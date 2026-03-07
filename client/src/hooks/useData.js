@@ -35,7 +35,7 @@ export function useCollections(params = {}) {
     return () => {
       cancelled = true;
     };
-  }, [params.search]);
+  }, [params.search, params.tag]);
 
   return { products, loading, error };
 }

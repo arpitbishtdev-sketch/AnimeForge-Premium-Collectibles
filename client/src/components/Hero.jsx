@@ -5,7 +5,6 @@ import { useDeviceCapabilities } from "../hooks/useDeviceCapabilities";
 import "../styles/hero.css";
 import "@google/model-viewer";
 
-// ── Gradient fade colours per character ───────────────────────────────────
 const FADE_COLORS = {
   naruto: "rgba(10,4,0,1)",
   spiderman: "rgba(10,0,0,1)",
@@ -39,23 +38,37 @@ const textEnterVariants = {
   exit: { opacity: 0, x: -25, transition: { duration: 0.25, ease: "easeIn" } },
 };
 
-// ── Infinite Carousel ──────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════
+// OPTIMIZED CAROUSEL - Simplified for mobile + low-end
+// ════════════════════════════════════════════════════════════════
 function CarouselTrack({ images, speed = 0.45 }) {
   const trackRef = useRef(null);
   const tweenRef = useRef(null);
+  const { isLowEnd, isMobile } = useDeviceCapabilities();
+
+  // DISABLE CAROUSEL ON LOW-END DEVICES
+  if (isLowEnd) {
+    return (
+      <div className="hero-carousel-track" ref={trackRef}>
+        {images.slice(0, 2).map((src, i) => (
+          <div className="hero-carousel-item" key={i}>
+            <img src={src} alt="" draggable={false} loading="lazy" />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   useEffect(() => {
     const track = trackRef.current;
     if (!track || !images.length) return;
     if (tweenRef.current) tweenRef.current.kill();
 
-    // Wait one frame so layout is painted & offsetWidth is real
     const raf = requestAnimationFrame(() => {
       const items = Array.from(track.children);
       if (!items.length) return;
 
-      // Total width of ONE full set (images.length items)
-      const gap = 20; // must match CSS gap
+      const gap = 20;
       const itemW = items[0].offsetWidth + gap;
       const setWidth = itemW * images.length;
 
@@ -63,10 +76,9 @@ function CarouselTrack({ images, speed = 0.45 }) {
 
       tweenRef.current = gsap.to(track, {
         x: -setWidth,
-        duration: setWidth / (speed * 60),
+        duration: isMobile ? setWidth / (speed * 80) : setWidth / (speed * 60), // ← SLOWER on mobile
         ease: "none",
         repeat: -1,
-        // modifiers snaps x back by one full set — seamless loop
         modifiers: {
           x: gsap.utils.unitize((x) => parseFloat(x) % setWidth),
         },
@@ -77,23 +89,30 @@ function CarouselTrack({ images, speed = 0.45 }) {
       cancelAnimationFrame(raf);
       if (tweenRef.current) tweenRef.current.kill();
     };
-  }, [images, speed]);
+  }, [images, speed, isMobile]);
 
-  // Triple so there's always content filling the viewport
   const tripled = [...images, ...images, ...images];
 
   return (
     <div className="hero-carousel-track" ref={trackRef}>
       {tripled.map((src, i) => (
         <div className="hero-carousel-item" key={i}>
-          <img src={src} alt="" draggable={false} loading="lazy" />
+          <img
+            src={src}
+            alt=""
+            draggable={false}
+            loading="lazy"
+            decoding="async" // ← DON'T block page rendering
+          />
         </div>
       ))}
     </div>
   );
 }
 
-// ── Main Hero ──────────────────────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════
+// MAIN HERO
+// ════════════════════════════════════════════════════════════════
 export default function Hero({ character }) {
   if (!character) return null;
 
@@ -109,8 +128,8 @@ export default function Hero({ character }) {
 
   const floatVariants = {
     animate:
-      prefersReducedMotion || isLowEnd
-        ? {}
+      prefersReducedMotion || isLowEnd || isMobile
+        ? {} // ← NO ANIMATION on mobile/low-end
         : {
             y: [0, -20, 0],
             transition: {
@@ -122,28 +141,25 @@ export default function Hero({ character }) {
           },
   };
 
-  // Smooth bg transition
+  // ════════════════════════════════════════════════════════════════
+  // OPTIMIZED BG TRANSITION
+  // ════════════════════════════════════════════════════════════════
   useEffect(() => {
     if (!bgRadialRef.current) return;
 
-    //   PERFORMANCE GUARD
+    // LOW-END: Just set colors, no GSAP animation
     if (isLowEnd || prefersReducedMotion) {
       if (bgRadialRef.current)
         bgRadialRef.current.style.background = gradient.radial;
-
       if (bgLinearRef.current)
         bgLinearRef.current.style.background = gradient.linear;
-
       if (orb1Ref.current) orb1Ref.current.style.background = gradient.accent;
-
       if (orb2Ref.current) orb2Ref.current.style.background = gradient.particle;
-
       if (orb3Ref.current) orb3Ref.current.style.background = gradient.glow;
-
-      return; //   Skip GSAP animation completely
+      return;
     }
 
-    //   High-end devices get smooth animation
+    // HIGH-END: Smooth fade animation
     const targets = [
       bgRadialRef.current,
       bgLinearRef.current,
@@ -153,7 +169,6 @@ export default function Hero({ character }) {
     ].filter(Boolean);
 
     const tl = gsap.timeline();
-
     tl.to(targets, {
       opacity: 0,
       duration: 0.3,
@@ -174,10 +189,12 @@ export default function Hero({ character }) {
       ease: "power2.out",
     });
 
-    return () => tl.kill(); //   Cleanup
+    return () => tl.kill();
   }, [character.id, isLowEnd, prefersReducedMotion]);
 
-  // Mouse parallax
+  // ════════════════════════════════════════════════════════════════
+  // MOUSE PARALLAX - Disabled on mobile/low-end
+  // ════════════════════════════════════════════════════════════════
   const handleMouseMove = useCallback(
     (e) => {
       if (isLowEnd || isMobile || prefersReducedMotion) return;
@@ -253,26 +270,31 @@ export default function Hero({ character }) {
           ref={bgLinearRef}
           style={{ background: gradient.linear }}
         />
-        <div
-          className="hero-bg-animated-orb orb-1"
-          ref={orb1Ref}
-          style={{ background: gradient.accent }}
-        />
-        <div
-          className="hero-bg-animated-orb orb-2"
-          ref={orb2Ref}
-          style={{ background: gradient.particle }}
-        />
-        <div
-          className="hero-bg-animated-orb orb-3"
-          ref={orb3Ref}
-          style={{ background: gradient.glow }}
-        />
-        <div className="hero-bg-grid" />
-        <div className="hero-bg-scanlines" />
+        {/* DISABLE ORBS ON LOW-END */}
+        {!isLowEnd && (
+          <>
+            <div
+              className="hero-bg-animated-orb orb-1"
+              ref={orb1Ref}
+              style={{ background: gradient.accent }}
+            />
+            <div
+              className="hero-bg-animated-orb orb-2"
+              ref={orb2Ref}
+              style={{ background: gradient.particle }}
+            />
+            <div
+              className="hero-bg-animated-orb orb-3"
+              ref={orb3Ref}
+              style={{ background: gradient.glow }}
+            />
+          </>
+        )}
+        {!isLowEnd && <div className="hero-bg-grid" />}
+        {!isLowEnd && <div className="hero-bg-scanlines" />}
       </div>
       <div className="hero-vignette" />
-      <div className="hero-grain" />
+      {!isLowEnd && <div className="hero-grain" />}
 
       {/* ── Carousel ── */}
       <div className="hero-carousel-layer">
@@ -280,11 +302,13 @@ export default function Hero({ character }) {
       </div>
 
       {/* ── Deco lines (desktop only) ── */}
-      <div className="hero-deco-lines">
-        <div className="hero-deco-line" />
-        <div className="hero-deco-line" />
-        <div className="hero-deco-line" />
-      </div>
+      {!isMobile && (
+        <div className="hero-deco-lines">
+          <div className="hero-deco-line" />
+          <div className="hero-deco-line" />
+          <div className="hero-deco-line" />
+        </div>
+      )}
 
       {/* ── Character image ── */}
       <div className="hero-character-wrap">
@@ -301,16 +325,16 @@ export default function Hero({ character }) {
             ref={characterRef}
             style={{ transformStyle: "preserve-3d" }}
           >
-            {character.model3d ? (
+            {character.model3d && !isMobile ? (
               <model-viewer
                 src={character.model3d}
                 class="hero-character-img"
                 camera-controls
                 auto-rotate
                 disable-zoom
-                shadow-intensity="1"
-                exposure="1"
-                loading="eager"
+                shadow-intensity={isLowEnd ? "0" : "1"} // ← Disable shadows on low-end
+                exposure={isLowEnd ? "0.7" : "1"} // ← Reduce brightness
+                loading="lazy"
               />
             ) : (
               <motion.img
@@ -321,8 +345,14 @@ export default function Hero({ character }) {
                 loading="eager"
                 decoding="async"
                 fetchPriority="high"
-                variants={prefersReducedMotion || isLowEnd ? {} : floatVariants}
-                animate="animate"
+                variants={
+                  prefersReducedMotion || isLowEnd || isMobile
+                    ? {}
+                    : floatVariants
+                }
+                animate={
+                  prefersReducedMotion || isLowEnd || isMobile ? {} : "animate"
+                }
               />
             )}
           </motion.div>
@@ -479,19 +509,22 @@ export default function Hero({ character }) {
       </div>
 
       {/* ── Scroll hint ── */}
-      <div className="hero-scroll-hint">
-        <div className="hero-scroll-line" />
-        <span className="hero-scroll-text">Scroll to explore</span>
-      </div>
+      {!isMobile && (
+        <div className="hero-scroll-hint">
+          <div className="hero-scroll-line" />
+          <span className="hero-scroll-text">Scroll to explore</span>
+        </div>
+      )}
 
       {/* ── Corner accents ── */}
-      <div className="hero-corner-accent top-left" />
-      <div className="hero-corner-accent bottom-right" />
+      {!isMobile && (
+        <>
+          <div className="hero-corner-accent top-left" />
+          <div className="hero-corner-accent bottom-right" />
+        </>
+      )}
 
-      {/* ══════════════════════════════════════════
-          MOBILE-ONLY BOTTOM CARD
-          Shown only on screens < 768px
-      ══════════════════════════════════════════ */}
+      {/* MOBILE-ONLY BOTTOM CARD */}
       <div className="hero-mobile-card">
         <AnimatePresence mode="wait">
           <motion.div
@@ -502,7 +535,6 @@ export default function Hero({ character }) {
             exit={{ opacity: 0, y: 30 }}
             transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
           >
-            {/* Tag + edition */}
             <div className="mob-card-header">
               <div className="mob-card-tag">
                 <span className="hero-tag-dot" />
@@ -511,20 +543,16 @@ export default function Hero({ character }) {
               <span className="mob-card-edition">{character.edition}</span>
             </div>
 
-            {/* Title */}
             <h1 className="mob-card-title">{character.name}</h1>
 
-            {/* Rule */}
             <div className="mob-card-rule">
               <div className="rule-line" style={{ width: 40 }} />
               <div className="rule-diamond" />
               <div className="rule-line" style={{ width: 16 }} />
             </div>
 
-            {/* Subtitle */}
             <p className="mob-card-subtitle">{character.subtitle}</p>
 
-            {/* Price + buttons */}
             <div className="mob-card-price-row">
               <div className="mob-card-price">
                 <span className="hero-price-currency">$</span>
@@ -544,7 +572,6 @@ export default function Hero({ character }) {
               </div>
             </div>
 
-            {/* Stats */}
             <div className="mob-card-stats">
               <div className="hero-stat">
                 <span className="hero-stat-value">2.4k+</span>

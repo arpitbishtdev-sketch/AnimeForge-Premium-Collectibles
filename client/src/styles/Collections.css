@@ -1558,3 +1558,267 @@
     height: 44px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   PATCH 1 — server/controllers/productController.js
+   
+   Find line:
+     const { search, category, limit, displaySection } = req.query;
+   
+   Replace with:
+     const { search, category, limit, displaySection, tag } = req.query;
+   
+   Then find the block:
+     if (category) {
+       filter.category = category;
+     }
+   
+   Add AFTER it:
+     if (tag) {
+       filter.tags = { $in: [tag.toLowerCase()] };
+     }
+═══════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   PATCH 2 — client/src/hooks/useData.js
+   
+   Find your useCollections hook signature:
+     export function useCollections({ search = "" } = {}) {
+   
+   Replace with:
+     export function useCollections({ search = "", tag = "" } = {}) {
+   
+   Then find inside the hook where URLSearchParams are built, e.g.:
+     const params = new URLSearchParams();
+     if (search) params.set("search", search);
+     params.set("displaySection", "collection");
+   
+   Add the tag line:
+     const params = new URLSearchParams();
+     if (search) params.set("search", search);
+     if (tag)    params.set("tag", tag);       // ← ADD THIS
+     params.set("displaySection", "collection");
+   
+   Also add tag to the useEffect dependency array:
+     }, [search, tag]);   // ← add tag here
+═══════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   PATCH 3 — App.jsx (or wherever your routes live)
+   
+   Find:
+     <Route path="/collections" element={<CollectionsPage />} />
+   
+   Add a second route below it:
+     <Route path="/collections/:tag" element={<CollectionsPage />} />
+   
+   That's it. Both routes use the same page component.
+   The page reads `useParams().tag` — if no tag, shows all products.
+═══════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════
+   PATCH 4 — client/src/styles/Collections.css
+   
+   APPEND the CSS below to the very bottom of the file.
+   Do not replace anything — just paste at the end.
+═══════════════════════════════════════════════════════════════════ */
+
+/* ──────────────────────────────────────────────────────────────────
+   CINEMATIC ENTER OVERLAY
+────────────────────────────────────────────────────────────────── */
+
+.cin-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9998;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #04040e;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.cin-burst {
+  position: absolute;
+  width: 320px;
+  height: 320px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle,
+    color-mix(in srgb, var(--cin-accent) 38%, transparent) 0%,
+    color-mix(in srgb, var(--cin-accent) 12%, transparent) 45%,
+    transparent 70%
+  );
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cin-bg-img {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center top;
+  z-index: 1;
+  pointer-events: none;
+}
+
+.cin-scanlines {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.07) 2px,
+    rgba(0, 0, 0, 0.07) 4px
+  );
+}
+
+.cin-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background:
+    radial-gradient(
+      ellipse at center,
+      transparent 15%,
+      rgba(0, 0, 0, 0.9) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.6) 0%,
+      transparent 20%,
+      transparent 70%,
+      rgba(0, 0, 0, 0.6) 100%
+    );
+}
+
+/* Tag line */
+.cin-tag {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: "Rajdhani", sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  letter-spacing: 6px;
+  text-transform: uppercase;
+  color: var(--cin-accent);
+  margin-bottom: 18px;
+}
+
+.cin-tag-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--cin-accent);
+  box-shadow: 0 0 10px var(--cin-accent);
+  flex-shrink: 0;
+  animation: cin-dot-pulse 0.9s ease-in-out infinite;
+}
+
+@keyframes cin-dot-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(0.45);
+  }
+}
+
+/* Title slam */
+.cin-title-wrap {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  perspective: 700px;
+}
+
+.cin-title-char {
+  font-family: "Bebas Neue", cursive;
+  font-size: clamp(72px, 13vw, 170px);
+  line-height: 0.88;
+  color: #fff;
+  letter-spacing: 5px;
+  display: inline-block;
+  transform-style: preserve-3d;
+  text-shadow:
+    0 0 60px var(--cin-glow),
+    0 0 120px var(--cin-glow),
+    0 6px 20px rgba(0, 0, 0, 0.95);
+}
+
+/* Rule */
+.cin-rule {
+  position: relative;
+  z-index: 5;
+  width: min(480px, 58vw);
+  height: 1px;
+  margin: 22px auto 0;
+  background: linear-gradient(
+    to right,
+    transparent,
+    var(--cin-accent),
+    transparent
+  );
+  transform-origin: center;
+  box-shadow: 0 0 14px var(--cin-glow);
+}
+
+/* Corner accents */
+.cin-corner {
+  position: absolute;
+  z-index: 6;
+  width: 44px;
+  height: 44px;
+  pointer-events: none;
+  border-style: solid;
+  border-color: var(--cin-accent);
+  border-width: 0;
+  opacity: 0.6;
+}
+.cin-corner--tl {
+  top: 28px;
+  left: 28px;
+  border-top-width: 2px;
+  border-left-width: 2px;
+  border-radius: 2px 0 0 0;
+}
+.cin-corner--br {
+  bottom: 28px;
+  right: 28px;
+  border-bottom-width: 2px;
+  border-right-width: 2px;
+  border-radius: 0 0 2px 0;
+}
+
+@media (max-width: 480px) {
+  .cin-title-char {
+    font-size: clamp(50px, 17vw, 76px);
+    letter-spacing: 3px;
+  }
+  .cin-corner {
+    width: 28px;
+    height: 28px;
+  }
+  .cin-burst {
+    width: 220px;
+    height: 220px;
+  }
+}

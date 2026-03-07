@@ -5,7 +5,7 @@ import {
   useState,
   useCallback,
 } from "react";
-import { motion, useInView } from "framer-motion";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
 import { useNavigate } from "react-router-dom";
 import { useDeviceCapabilities } from "../hooks/useDeviceCapabilities";
@@ -42,6 +42,112 @@ const MARQUEE_ITEMS = [
   "HXH",
 ];
 
+// ═══════════════════════════════════════════════════════
+//  CINEMATIC OVERLAY
+// ═══════════════════════════════════════════════════════
+function CinematicOverlay({ payload, onDone }) {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      navigate(`/collections/${payload.tag}`);
+      setTimeout(onDone, 400);
+    }, 1800);
+    return () => clearTimeout(t);
+  }, []);
+
+  return (
+    <motion.div
+      className="cin-overlay"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.18 }}
+      style={{
+        "--cin-accent": payload.accentColor,
+        "--cin-glow": payload.glowColor,
+      }}
+    >
+      {/* Radial color burst */}
+      <motion.div
+        className="cin-burst"
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 6, opacity: 1 }}
+        transition={{ duration: 0.82, ease: [0.16, 1, 0.3, 1] }}
+      />
+
+      {/* Collection bg art — blurs into focus */}
+      {payload.bgImage && (
+        <motion.div
+          className="cin-bg-img"
+          style={{ backgroundImage: `url(${payload.bgImage})` }}
+          initial={{ scale: 1.22, filter: "blur(30px)", opacity: 0 }}
+          animate={{ scale: 1.04, filter: "blur(0px)", opacity: 0.28 }}
+          transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
+        />
+      )}
+
+      <div className="cin-scanlines" />
+      <div className="cin-vignette" />
+
+      {/* Tag line */}
+      <motion.div
+        className="cin-tag"
+        initial={{ opacity: 0, y: -14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.38, delay: 0.22 }}
+      >
+        <span className="cin-tag-dot" />
+        {payload.tagLine}
+      </motion.div>
+
+      {/* Title — each letter slams in with 3D flip */}
+      <div className="cin-title-wrap">
+        {payload.title.split("").map((char, i) => (
+          <motion.span
+            key={i}
+            className="cin-title-char"
+            initial={{ opacity: 0, y: 75, rotateX: -90 }}
+            animate={{ opacity: 1, y: 0, rotateX: 0 }}
+            transition={{
+              duration: 0.44,
+              delay: 0.26 + i * 0.036,
+              ease: [0.16, 1, 0.3, 1],
+            }}
+          >
+            {char === " " ? "\u00A0" : char}
+          </motion.span>
+        ))}
+      </div>
+
+      {/* Rule line sweeps in */}
+      <motion.div
+        className="cin-rule"
+        initial={{ scaleX: 0, opacity: 0 }}
+        animate={{ scaleX: 1, opacity: 1 }}
+        transition={{ duration: 0.55, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+      />
+
+      {/* Corner accents */}
+      <motion.div
+        className="cin-corner cin-corner--tl"
+        initial={{ opacity: 0, scale: 0.3 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3, delay: 0.14 }}
+      />
+      <motion.div
+        className="cin-corner cin-corner--br"
+        initial={{ opacity: 0, scale: 0.3 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.3, delay: 0.22 }}
+      />
+    </motion.div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════
+//  SILK RIBBON
+// ═══════════════════════════════════════════════════════
 function SilkRibbon({
   direction = 1,
   speed = 28,
@@ -151,11 +257,14 @@ function SilkMarqueeSection({ accentColor, accentGlow }) {
   );
 }
 
+// ═══════════════════════════════════════════════════════
+//  COLLECTION CARD
+// ═══════════════════════════════════════════════════════
 function CollectionCard({ collection, index }) {
   const cardRef = useRef(null);
   const [hovered, setHovered] = useState(false);
+  const [showCinematic, setShowCinematic] = useState(false);
   const { isLowEnd, prefersReducedMotion } = useDeviceCapabilities();
-  const navigate = useNavigate();
 
   const handleMouseMove = useCallback(
     (e) => {
@@ -198,90 +307,110 @@ function CollectionCard({ collection, index }) {
       ? `₹${collection.priceMin} – ₹${collection.priceMax}`
       : "No products yet";
 
-  const scaleStr =
-    collection.scaleFrom && collection.scaleTo
-      ? `${collection.scaleFrom}–${collection.scaleTo}`
-      : collection.scaleFrom || "Various";
-
   return (
-    <motion.div
-      className={`col-card ${hovered ? "col-card--hovered" : ""}`}
-      ref={cardRef}
-      custom={index}
-      variants={cardVariants}
-      initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: "-60px" }}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onClick={() => navigate(`/collections/${collection.tag}`)}
-      style={{
-        "--card-accent": collection.accentColor || "#7c5cff",
-        "--card-glow": collection.glowColor || "rgba(124,92,255,0.4)",
-        "--mouse-x": "50%",
-        "--mouse-y": "50%",
-      }}
-    >
-      {collection.bgImage && (
-        <div
-          className="col-card-bg-img"
-          style={{ backgroundImage: `url(${collection.bgImage})` }}
-        />
-      )}
-      <div className="col-card-spotlight" />
-      <div className="col-card-badge">{collection.badge}</div>
+    <>
+      {/* Cinematic overlay — position:fixed so covers full viewport */}
+      <AnimatePresence>
+        {showCinematic && (
+          <CinematicOverlay
+            payload={{
+              tag: collection.tag,
+              title: collection.title,
+              tagLine: collection.tagLine || "",
+              accentColor: collection.accentColor || "#ff8c00",
+              glowColor: collection.glowColor || "rgba(255,140,0,0.4)",
+              bgImage: collection.bgImage || null,
+            }}
+            onDone={() => setShowCinematic(false)}
+          />
+        )}
+      </AnimatePresence>
 
-      <div className="col-card-body-top">
-        <div className="col-card-number">{collection.label || "01"}</div>
-        <div className="col-card-tag">
-          <span className="col-card-tag-dot" />
-          {collection.tagLine}
-        </div>
-        <h3 className="col-card-title">{collection.title}</h3>
-        <div className="col-card-rule">
-          <div className="col-rule-line" />
-          <div className="col-rule-diamond" />
-        </div>
-        <p className="col-card-desc">{collection.description}</p>
-      </div>
+      <motion.div
+        className={`col-card ${hovered ? "col-card--hovered" : ""}`}
+        ref={cardRef}
+        custom={index}
+        variants={cardVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: "-60px" }}
+        onMouseMove={handleMouseMove}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+        onClick={() => setShowCinematic(true)}
+        style={{
+          "--card-accent": collection.accentColor || "#7c5cff",
+          "--card-glow": collection.glowColor || "rgba(124,92,255,0.4)",
+          "--mouse-x": "50%",
+          "--mouse-y": "50%",
+        }}
+      >
+        {collection.bgImage && (
+          <div
+            className="col-card-bg-img"
+            style={{ backgroundImage: `url(${collection.bgImage})` }}
+          />
+        )}
+        <div className="col-card-spotlight" />
+        <div className="col-card-badge">{collection.badge}</div>
 
-      <div className="col-card-featured">
-        {(collection.points || []).filter(Boolean).map((item, i) => (
-          <div key={i} className="col-card-featured-item">
-            <span className="col-card-featured-dot">◆</span> {item}
+        <div className="col-card-body-top">
+          <div className="col-card-number">{collection.label || "01"}</div>
+          <div className="col-card-tag">
+            <span className="col-card-tag-dot" />
+            {collection.tagLine}
           </div>
-        ))}
-      </div>
+          <h3 className="col-card-title">{collection.title}</h3>
+          <div className="col-card-rule">
+            <div className="col-rule-line" />
+            <div className="col-rule-diamond" />
+          </div>
+          <p className="col-card-desc">{collection.description}</p>
+        </div>
 
-      <div className="col-card-stats">
-        <div className="col-stat">
-          <span className="col-stat-val">5</span>
-          <span className="col-stat-lbl">PIECES</span>
+        <div className="col-card-featured">
+          {(collection.points || []).filter(Boolean).map((item, i) => (
+            <div key={i} className="col-card-featured-item">
+              <span className="col-card-featured-dot">◆</span> {item}
+            </div>
+          ))}
         </div>
-        <div className="col-stat-div" />
-        <div className="col-stat">
-          <span className="col-stat-val--sm">PREMIUM STEEL</span>
-          <span className="col-stat-lbl">MATERIAL</span>
-        </div>
-        <div className="col-stat-div" />
-        <div className="col-stat">
-          <span className="col-stat-val">1/6-1/50</span>
-          <span className="col-stat-lbl">SCALE</span>
-        </div>
-      </div>
 
-      <div className="col-card-footer">
-        <div className="col-card-price">
-          <span className="col-card-price-label">FROM</span>
-          <span className="col-card-price-val">{priceRange}</span>
+        <div className="col-card-stats">
+          <div className="col-stat">
+            <span className="col-stat-val">5</span>
+            <span className="col-stat-lbl">PIECES</span>
+          </div>
+          <div className="col-stat-div" />
+          <div className="col-stat">
+            <span className="col-stat-val--sm">PREMIUM STEEL</span>
+            <span className="col-stat-lbl">MATERIAL</span>
+          </div>
+          <div className="col-stat-div" />
+          <div className="col-stat">
+            <span className="col-stat-val">1/6-1/50</span>
+            <span className="col-stat-lbl">SCALE</span>
+          </div>
         </div>
-        <button className="col-card-cta">
-          <span>EXPLORE</span>
-          <span className="col-card-cta-arrow">→</span>
-        </button>
-      </div>
-    </motion.div>
+
+        <div className="col-card-footer">
+          <div className="col-card-price">
+            <span className="col-card-price-label">FROM</span>
+            <span className="col-card-price-val">{priceRange}</span>
+          </div>
+          <button
+            className="col-card-cta"
+            onClick={(e) => {
+              e.stopPropagation();
+              setShowCinematic(true);
+            }}
+          >
+            <span>EXPLORE</span>
+            <span className="col-card-cta-arrow">→</span>
+          </button>
+        </div>
+      </motion.div>
+    </>
   );
 }
 
@@ -296,6 +425,9 @@ function CardSkeleton() {
   );
 }
 
+// ═══════════════════════════════════════════════════════
+//  MAIN EXPORT
+// ═══════════════════════════════════════════════════════
 export default function Collections({
   accentColor = "#ff8c00",
   accentGlow = "rgba(255,140,0,0.3)",
@@ -307,7 +439,6 @@ export default function Collections({
   const wrapRef = useRef(null);
   const isInView = useInView(sectionRef, { once: true, margin: "-80px" });
   const { isLowEnd, prefersReducedMotion } = useDeviceCapabilities();
-  const navigate = useNavigate();
 
   const [collections, setCollections] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -380,7 +511,6 @@ export default function Collections({
         <div className="col-vignette" />
       </div>
 
-      {/* 🔥 Fire Background Layer */}
       <div className="col-fire-base" />
       <div className="col-fire-heat" />
       <div className="col-fire-embers" aria-hidden="true">

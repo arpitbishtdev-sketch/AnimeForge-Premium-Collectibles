@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from "react";
 import { gsap } from "gsap";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useParams } from "react-router-dom"; // ← useParams added
 import { motion } from "framer-motion";
 import { useCollections } from "../hooks/useData";
 import ProductCard from "../components/collection/ProductCard";
@@ -34,12 +34,15 @@ export default function Collections() {
   const accentColor = activeCharacter.gradient.accent;
   const accentGlow = activeCharacter.gradient.glow;
 
+  const { tag } = useParams(); // ← NEW: reads /collections/jjk
   const [searchParams] = useSearchParams();
   const searchQuery = searchParams.get("search") || "";
 
   const { products, loading, error } = useCollections({
     search: searchQuery,
+    tag: tag || "", // ← NEW: pass tag to hook
   });
+
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [sort, setSort] = useState("default");
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -48,6 +51,12 @@ export default function Collections() {
   const headerRef = useRef(null);
   const gridRef = useRef(null);
   const pageRef = useRef(null);
+
+  // Reset filters when tag changes (navigating between collections)
+  useEffect(() => {
+    setFilters(DEFAULT_FILTERS);
+    setSort("default");
+  }, [tag]);
 
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 1024);
@@ -71,18 +80,16 @@ export default function Collections() {
 
   useEffect(() => {
     if (!pageRef.current) return;
-
     gsap.to(pageRef.current, {
       "--collection-accent": accentColor,
       duration: 0.6,
       ease: "power2.out",
     });
-
     pageRef.current.style.setProperty("--collection-accent", accentColor);
     pageRef.current.style.setProperty("--collection-glow", accentGlow);
   }, [accentColor, accentGlow]);
 
-  // Derive meta (categories, tags, price bounds) from full product list
+  // Derive meta from full product list
   const meta = useMemo(() => {
     const cats = new Set();
     const tags = new Set();
@@ -166,19 +173,20 @@ export default function Collections() {
     <div
       className="collection-page"
       ref={pageRef}
-      style={{
-        "--accent": accentColor,
-        "--accent-glow": accentGlow,
-      }}
+      style={{ "--accent": accentColor, "--accent-glow": accentGlow }}
     >
       <div className="grain-overlay" />
 
-      {/* Header */}
+      {/* Header — shows collection name if tag present */}
       <header className="collection-header" ref={headerRef}>
         <div className="collection-header__inner">
           <div className="collection-header__text">
-            <span className="collection-header__eyebrow">Limited Edition</span>
-            <h1 className="collection-header__title">Collections</h1>
+            <span className="collection-header__eyebrow">
+              {tag ? `${tag.toUpperCase()} UNIVERSE` : "Limited Edition"}
+            </span>
+            <h1 className="collection-header__title">
+              {tag ? tag.toUpperCase().replace(/-/g, " ") : "Collections"}
+            </h1>
             <p className="collection-header__sub">
               Premium anime collectibles, meticulously crafted for true fans.
             </p>
@@ -218,11 +226,9 @@ export default function Collections() {
                 )}
               </button>
             )}
-
             <span className="toolbar-count">
               {loading ? "—" : `${filtered.length} items`}
             </span>
-
             <div className="toolbar-sort">
               <label className="toolbar-sort__label" htmlFor="sort-select">
                 Sort
