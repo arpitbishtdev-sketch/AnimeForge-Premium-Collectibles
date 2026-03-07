@@ -154,10 +154,35 @@ export default function Store({
 
   // ── Status colors on mount + on admin save ────────────────────────────
   useEffect(() => {
+    const fetchStatusMap = async () => {
+      try {
+        const res = await fetch("/api/status");
+        if (!res.ok) throw new Error("status fetch failed");
+        const data = await res.json();
+        const map = {};
+        data.forEach((s) => {
+          map[s.status.toLowerCase()] = s.color;
+        });
+        setStatusMap(map);
+        console.log("✅ Status colors loaded:", map);
+      } catch (err) {
+        console.warn("⚠️ Could not load status colors:", err.message);
+        // Fallback colors
+        setStatusMap({
+          featured: "#22C55E",
+          bestseller: "#F59E0B",
+          popular: "#A855F7",
+          rare: "#EF4444",
+          "ultra-rare": "#FF007F",
+          new: "#00C8FF",
+        });
+      }
+    };
+
     fetchStatusMap();
     window.addEventListener("statusUpdated", fetchStatusMap);
     return () => window.removeEventListener("statusUpdated", fetchStatusMap);
-  }, [fetchStatusMap]);
+  }, []);
 
   // ── Smooth accent transition ──────────────────────────────────────────
   useEffect(() => {
