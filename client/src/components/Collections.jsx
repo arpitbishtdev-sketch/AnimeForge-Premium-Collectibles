@@ -630,7 +630,7 @@ export default function Collections({
           Array.from({ length: 3 }).map((_, i) => <CardSkeleton key={i} />)
         ) : collections.length === 0 ? (
           <div className="col-empty">
-            <p>No collections yet. Add them in the admin panel.</p>
+            <p>No collections yet.</p>
           </div>
         ) : (
           collections.map((col, i) => (
