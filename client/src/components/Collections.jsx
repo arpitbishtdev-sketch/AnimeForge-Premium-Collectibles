@@ -44,15 +44,21 @@ const MARQUEE_ITEMS = [
 
 // ═══════════════════════════════════════════════════════
 //  CINEMATIC OVERLAY
+//  — Low-end / reduced-motion: skips overlay entirely
+//  — Mid-end: no blur, no scanlines, faster timing
+//  — High-end: full experience
 // ═══════════════════════════════════════════════════════
-function CinematicOverlay({ payload, onDone }) {
+function CinematicOverlay({ payload, onDone, tier }) {
   const navigate = useNavigate();
+
+  // Mid-tier gets a shorter hold so it feels snappy
+  const holdMs = tier === "high" ? 1800 : 1100;
 
   useEffect(() => {
     const t = setTimeout(() => {
       navigate(`/collections/${payload.tag}`);
-      setTimeout(onDone, 400);
-    }, 1800);
+      setTimeout(onDone, 300);
+    }, holdMs);
     return () => clearTimeout(t);
   }, []);
 
@@ -62,32 +68,48 @@ function CinematicOverlay({ payload, onDone }) {
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      transition={{ duration: 0.18 }}
+      transition={{ duration: tier === "high" ? 0.18 : 0.12 }}
       style={{
         "--cin-accent": payload.accentColor,
         "--cin-glow": payload.glowColor,
       }}
     >
-      {/* Radial color burst */}
+      {/* Radial color burst — always shown, cheap */}
       <motion.div
         className="cin-burst"
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 6, opacity: 1 }}
-        transition={{ duration: 0.82, ease: [0.16, 1, 0.3, 1] }}
+        transition={{
+          duration: tier === "high" ? 0.82 : 0.55,
+          ease: [0.16, 1, 0.3, 1],
+        }}
       />
 
-      {/* Collection bg art — blurs into focus */}
+      {/* BG image — skip blur on mid (blur is GPU heavy) */}
       {payload.bgImage && (
         <motion.div
           className="cin-bg-img"
           style={{ backgroundImage: `url(${payload.bgImage})` }}
-          initial={{ scale: 1.22, filter: "blur(30px)", opacity: 0 }}
-          animate={{ scale: 1.04, filter: "blur(0px)", opacity: 0.28 }}
-          transition={{ duration: 0.85, ease: [0.22, 1, 0.36, 1] }}
+          initial={{
+            scale: tier === "high" ? 1.22 : 1,
+            filter: tier === "high" ? "blur(30px)" : "blur(0px)",
+            opacity: 0,
+          }}
+          animate={{
+            scale: tier === "high" ? 1.04 : 1,
+            filter: "blur(0px)",
+            opacity: 0.28,
+          }}
+          transition={{
+            duration: tier === "high" ? 0.85 : 0.4,
+            ease: [0.22, 1, 0.36, 1],
+          }}
         />
       )}
 
-      <div className="cin-scanlines" />
+      {/* Scanlines — skip on mid (extra paint layer) */}
+      {tier === "high" && <div className="cin-scanlines" />}
+
       <div className="cin-vignette" />
 
       {/* Tag line */}
@@ -95,52 +117,78 @@ function CinematicOverlay({ payload, onDone }) {
         className="cin-tag"
         initial={{ opacity: 0, y: -14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.38, delay: 0.22 }}
+        transition={{ duration: 0.32, delay: tier === "high" ? 0.22 : 0.1 }}
       >
         <span className="cin-tag-dot" />
         {payload.tagLine}
       </motion.div>
 
-      {/* Title — each letter slams in with 3D flip */}
+      {/* Title letters
+          High  → full 3D flip per letter
+          Mid   → simple fade+y, all letters same delay (no stagger overhead)  */}
       <div className="cin-title-wrap">
-        {payload.title.split("").map((char, i) => (
+        {tier === "high" ? (
+          payload.title.split("").map((char, i) => (
+            <motion.span
+              key={i}
+              className="cin-title-char"
+              initial={{ opacity: 0, y: 75, rotateX: -90 }}
+              animate={{ opacity: 1, y: 0, rotateX: 0 }}
+              transition={{
+                duration: 0.44,
+                delay: 0.26 + i * 0.036,
+                ease: [0.16, 1, 0.3, 1],
+              }}
+            >
+              {char === " " ? "\u00A0" : char}
+            </motion.span>
+          ))
+        ) : (
+          // Mid: whole word fades in at once — zero per-letter overhead
           <motion.span
-            key={i}
             className="cin-title-char"
-            initial={{ opacity: 0, y: 75, rotateX: -90 }}
-            animate={{ opacity: 1, y: 0, rotateX: 0 }}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
             transition={{
-              duration: 0.44,
-              delay: 0.26 + i * 0.036,
-              ease: [0.16, 1, 0.3, 1],
+              duration: 0.35,
+              delay: 0.18,
+              ease: [0.22, 1, 0.36, 1],
             }}
           >
-            {char === " " ? "\u00A0" : char}
+            {payload.title}
           </motion.span>
-        ))}
+        )}
       </div>
 
-      {/* Rule line sweeps in */}
+      {/* Rule */}
       <motion.div
         className="cin-rule"
         initial={{ scaleX: 0, opacity: 0 }}
         animate={{ scaleX: 1, opacity: 1 }}
-        transition={{ duration: 0.55, delay: 0.5, ease: [0.22, 1, 0.36, 1] }}
+        transition={{
+          duration: tier === "high" ? 0.55 : 0.3,
+          delay: tier === "high" ? 0.5 : 0.25,
+          ease: [0.22, 1, 0.36, 1],
+        }}
       />
 
-      {/* Corner accents */}
-      <motion.div
-        className="cin-corner cin-corner--tl"
-        initial={{ opacity: 0, scale: 0.3 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3, delay: 0.14 }}
-      />
-      <motion.div
-        className="cin-corner cin-corner--br"
-        initial={{ opacity: 0, scale: 0.3 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.3, delay: 0.22 }}
-      />
+      {/* Corners — high only */}
+      {tier === "high" && (
+        <>
+          <motion.div
+            className="cin-corner cin-corner--tl"
+            initial={{ opacity: 0, scale: 0.3 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, delay: 0.14 }}
+          />
+          <motion.div
+            className="cin-corner cin-corner--br"
+            initial={{ opacity: 0, scale: 0.3 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.3, delay: 0.22 }}
+          />
+        </>
+      )}
     </motion.div>
   );
 }
@@ -265,6 +313,19 @@ function CollectionCard({ collection, index }) {
   const [hovered, setHovered] = useState(false);
   const [showCinematic, setShowCinematic] = useState(false);
   const { isLowEnd, prefersReducedMotion } = useDeviceCapabilities();
+  const navigate = useNavigate();
+
+  // low  → skip cinematic entirely, direct navigate (zero Framer overhead)
+  // high → full 3D letter-slam experience
+  const tier = isLowEnd || prefersReducedMotion ? "low" : "high";
+
+  const handleExplore = useCallback(() => {
+    if (tier === "low") {
+      navigate(`/collections/${collection.tag}`);
+    } else {
+      setShowCinematic(true);
+    }
+  }, [tier, collection.tag, navigate]);
 
   const handleMouseMove = useCallback(
     (e) => {
@@ -309,7 +370,7 @@ function CollectionCard({ collection, index }) {
 
   return (
     <>
-      {/* Cinematic overlay — position:fixed so covers full viewport */}
+      {/* Cinematic overlay — position:fixed, skipped entirely on low-end */}
       <AnimatePresence>
         {showCinematic && (
           <CinematicOverlay
@@ -322,6 +383,7 @@ function CollectionCard({ collection, index }) {
               bgImage: collection.bgImage || null,
             }}
             onDone={() => setShowCinematic(false)}
+            tier={tier}
           />
         )}
       </AnimatePresence>
@@ -337,7 +399,7 @@ function CollectionCard({ collection, index }) {
         onMouseMove={handleMouseMove}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
-        onClick={() => setShowCinematic(true)}
+        onClick={handleExplore}
         style={{
           "--card-accent": collection.accentColor || "#7c5cff",
           "--card-glow": collection.glowColor || "rgba(124,92,255,0.4)",
@@ -402,7 +464,7 @@ function CollectionCard({ collection, index }) {
             className="col-card-cta"
             onClick={(e) => {
               e.stopPropagation();
-              setShowCinematic(true);
+              handleExplore();
             }}
           >
             <span>EXPLORE</span>
