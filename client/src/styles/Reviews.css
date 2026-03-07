@@ -14,6 +14,63 @@
   --rev-glow: rgba(255, 140, 0, 0.3);
 }
 
+/* ══════════════════════════════════════════════════
+   🗡️ FLOATING KANJI BACKGROUND
+══════════════════════════════════════════════════ */
+.rev-kanji-wrap {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.rev-kanji {
+  position: absolute;
+  font-family:
+    "Hiragino Kaku Gothic Pro", "Yu Gothic", "Noto Sans JP", "MS Gothic", serif;
+  color: var(--rev-accent);
+  opacity: 0;
+  user-select: none;
+  line-height: 1;
+  font-weight: 900;
+  /* Split shorthand into separate properties so inline animationDuration/Delay work */
+  animation-name: kanji-float;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  animation-fill-mode: both;
+  will-change: transform, opacity;
+  text-shadow:
+    0 0 30px var(--rev-glow),
+    0 0 60px color-mix(in srgb, var(--rev-accent) 15%, transparent);
+  transition:
+    color 0.6s ease,
+    text-shadow 0.6s ease;
+}
+
+@keyframes kanji-float {
+  0% {
+    opacity: 0;
+    transform: translateY(0px) translateX(0px);
+  }
+  8% {
+    opacity: 0.18;
+  }
+  50% {
+    opacity: 0.12;
+    transform: translateY(calc(var(--drift) * -0.5))
+      translateX(calc(var(--drift) * 0.3));
+  }
+  88% {
+    opacity: 0.07;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(var(--drift, 20px))
+      translateX(calc(var(--drift, 20px) * -0.4));
+  }
+}
+
 /* ── Background ── */
 .rev-bg {
   position: absolute;
@@ -244,7 +301,6 @@
   position: relative;
   overflow: hidden;
 }
-
 .rev-stats-bar::before {
   content: "";
   position: absolute;
@@ -256,7 +312,6 @@
   );
   pointer-events: none;
 }
-
 .rev-stats-bar::after {
   content: "";
   position: absolute;
@@ -281,7 +336,6 @@
   position: relative;
   z-index: 1;
 }
-
 .rev-stat-val {
   font-family: "Bebas Neue", cursive;
   font-size: 28px;
@@ -359,7 +413,6 @@
   pointer-events: none;
   z-index: 0;
 }
-
 .rev-card:hover .rev-card-spotlight {
   opacity: 1;
 }
@@ -373,7 +426,6 @@
   background: rgba(255, 255, 255, 0.03);
 }
 
-/* Featured styling */
 .rev-card--featured {
   background: rgba(255, 255, 255, 0.025);
   border-color: rgba(255, 255, 255, 0.1);
@@ -424,7 +476,6 @@
   z-index: 1;
 }
 
-/* Header */
 .rev-card-header {
   display: flex;
   align-items: center;
@@ -445,7 +496,6 @@
   position: relative;
   overflow: visible;
 }
-
 .rev-avatar span {
   font-family: "Bebas Neue", cursive;
   font-size: 18px;
@@ -453,7 +503,6 @@
   position: relative;
   z-index: 1;
 }
-
 .rev-avatar-glow {
   position: absolute;
   inset: -2px;
@@ -499,7 +548,6 @@
   flex-shrink: 0;
 }
 
-/* Rating row */
 .rev-meta {
   display: flex;
   align-items: center;
@@ -531,7 +579,6 @@
   color: rgba(255, 255, 255, 0.22);
 }
 
-/* Product tag */
 .rev-product-tag {
   display: flex;
   align-items: center;
@@ -549,7 +596,6 @@
   position: relative;
   z-index: 1;
 }
-
 .rev-product-icon {
   font-size: 7px;
   color: var(--card-accent);
@@ -557,7 +603,6 @@
   flex-shrink: 0;
 }
 
-/* Review text */
 .rev-text {
   font-family: "Rajdhani", sans-serif;
   font-weight: 400;
@@ -572,7 +617,6 @@
   font-style: normal;
 }
 
-/* Footer */
 .rev-card-footer {
   display: flex;
   align-items: center;
@@ -604,7 +648,6 @@
 .rev-helpful-btn--liked {
   color: var(--card-accent);
 }
-
 .rev-helpful-icon {
   font-size: 14px;
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -624,7 +667,6 @@
   color: rgba(255, 255, 255, 0.22);
 }
 
-/* Card orb */
 .rev-card-orb {
   position: absolute;
   bottom: -60px;
@@ -681,7 +723,6 @@
   background: rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(10px);
 }
-
 .rev-trust-badge {
   display: flex;
   align-items: center;
@@ -693,7 +734,6 @@
   text-transform: uppercase;
   color: rgba(255, 255, 255, 0.28);
 }
-
 .rev-trust-check {
   font-size: 12px;
   color: var(--rev-accent);
@@ -750,6 +790,10 @@
     gap: 20px;
     padding: 16px 24px;
   }
+  /* Fewer kanji on tablet */
+  .rev-kanji:nth-child(n + 11) {
+    display: none;
+  }
 }
 
 /* ═══════════════════════════════════════════════
@@ -797,6 +841,10 @@
     opacity: 0.03;
   }
   .rev-card-spotlight {
+    display: none;
+  }
+  /* Only show 6 kanji on mobile for perf */
+  .rev-kanji:nth-child(n + 7) {
     display: none;
   }
 }

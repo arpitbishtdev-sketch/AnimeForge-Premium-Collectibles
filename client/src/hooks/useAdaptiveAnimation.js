@@ -1,24 +1,28 @@
-// src/hooks/useAdaptiveAnimation.js
 import { useMemo } from "react";
 
 /**
- * Adaptive animation strategy — mirrors what large tech companies do.
- * Returns a capability profile so components can gate expensive effects.
+ * Adaptive animation strategy.
+ *
+ * Tier breakdown:
+ *  reduced — user opted out of motion (OS setting)
+ *  low     — genuinely weak device: < 2GB RAM AND <= 2 cores
+ *  mid     — mid-range: < 4GB RAM or <= 4 cores (but not both)
+ *  high    — everything else (most modern phones + all desktops)
  */
 export function useAdaptiveAnimation() {
   return useMemo(() => {
-    // SSR guard
     if (typeof window === "undefined") {
       return {
-        tier: "reduced",
-        shouldAnimate: false,
-        blurIntensity: 0,
-        enableOrbs: false,
-        enableGrain: false,
-        durationScale: 0,
+        tier: "high",
+        shouldAnimate: true,
+        blurIntensity: 30,
+        enableOrbs: true,
+        enableGrain: true,
+        durationScale: 1,
       };
     }
 
+    // Respect OS "reduce motion" setting — this one we always honour
     const prefersReduced = window.matchMedia(
       "(prefers-reduced-motion: reduce)",
     ).matches;
@@ -33,14 +37,12 @@ export function useAdaptiveAnimation() {
       };
     }
 
-    // Device memory API (Chrome only, degrades gracefully)
-    const memory = navigator.deviceMemory ?? 4; // default 4GB if unsupported
-    const hardwareConcurrency = navigator.hardwareConcurrency ?? 4;
-    const isSmallScreen = window.innerWidth < 768;
-    const isMid = window.innerWidth < 1024;
+    const memory = navigator.deviceMemory ?? 8; // default 8GB (unknown = assume capable)
+    const cores = navigator.hardwareConcurrency ?? 8; // default 8 (unknown = assume capable)
 
-    // Low-end: < 2GB RAM or <= 2 cores or small screen
-    if (memory < 2 || hardwareConcurrency <= 2 || isSmallScreen) {
+    // Low-end: genuinely weak — needs BOTH low memory AND low cores
+    // This avoids flagging a 6-core laptop with no deviceMemory API support
+    if (memory < 2 && cores <= 2) {
       return {
         tier: "low",
         shouldAnimate: true,
@@ -51,19 +53,19 @@ export function useAdaptiveAnimation() {
       };
     }
 
-    // Mid-tier
-    if (memory < 4 || hardwareConcurrency <= 4 || isMid) {
+    // Mid-tier: old phones / budget devices — only if BOTH signals agree
+    if (memory < 3 && cores <= 4) {
       return {
         tier: "mid",
         shouldAnimate: true,
         blurIntensity: 20,
         enableOrbs: true,
         enableGrain: false,
-        durationScale: 0.8,
+        durationScale: 0.85,
       };
     }
 
-    // High-end
+    // High — everything else (modern phones, all desktops, unknowns)
     return {
       tier: "high",
       shouldAnimate: true,

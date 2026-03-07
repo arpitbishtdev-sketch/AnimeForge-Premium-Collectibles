@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAdaptiveAnimation } from "../hooks/useAdaptiveAnimation";
 import "../styles/Loader.css";
 
-// ── Character roster with per-character identity ──────────────────────────
 const CHARACTERS = [
   {
     id: "spiderman",
@@ -47,11 +47,11 @@ const CHARACTERS = [
 ];
 
 const BRAND = "ANIMEFORGE".split("");
-const TOTAL_DURATION = 3200; // ms
-const CHAR_INTERVAL = 700; // ms per character
-const SEGMENTS = 12; // energy bar segments
+const TOTAL_DURATION = 3200;
+const CHAR_INTERVAL = 700;
+const SEGMENTS = 12;
 
-// ── Framer Motion variants ────────────────────────────────────────────────
+// ── Framer variants — 100% original, untouched ────────────────────────────
 const characterVariants = {
   initial: { opacity: 0, scale: 0.88, y: 32, filter: "blur(8px)" },
   animate: {
@@ -101,23 +101,21 @@ const loaderExitVariants = {
   },
 };
 
-// ── Ambient Particles ─────────────────────────────────────────────────────
-function Particles({ accent }) {
-  const particles = useRef(
-    Array.from({ length: 18 }, (_, i) => ({
-      id: i,
-      x: Math.random() * 100,
-      y: Math.random() * 100,
-      size: Math.random() * 3 + 1.5,
-      delay: Math.random() * 4,
-      duration: Math.random() * 4 + 5,
-      opacity: Math.random() * 0.4 + 0.1,
-    })),
-  ).current;
+// ── Particles — stable data, not re-created on render ────────────────────
+const PARTICLE_DATA = Array.from({ length: 18 }, (_, i) => ({
+  id: i,
+  x: Math.random() * 100,
+  y: Math.random() * 100,
+  size: Math.random() * 3 + 1.5,
+  delay: Math.random() * 4,
+  duration: Math.random() * 4 + 5,
+  opacity: Math.random() * 0.4 + 0.1,
+}));
 
+function Particles({ accent }) {
   return (
     <div className="loader-particles">
-      {particles.map((p) => (
+      {PARTICLE_DATA.map((p) => (
         <motion.div
           key={p.id}
           className="loader-particle"
@@ -145,7 +143,7 @@ function Particles({ accent }) {
   );
 }
 
-// ── Segmented Energy Bar ──────────────────────────────────────────────────
+// ── Energy Bar — CSS transition on segments, no Framer timers ────────────
 function EnergyBar({ progress, accent }) {
   const filled = Math.round((progress / 100) * SEGMENTS);
 
@@ -153,7 +151,7 @@ function EnergyBar({ progress, accent }) {
     <div className="loader-energy-wrap">
       <div className="loader-energy-bar">
         {Array.from({ length: SEGMENTS }).map((_, i) => (
-          <motion.div
+          <div
             key={i}
             className={`loader-energy-seg ${i < filled ? "filled" : ""}`}
             style={
@@ -161,15 +159,6 @@ function EnergyBar({ progress, accent }) {
                 ? { background: accent, boxShadow: `0 0 8px ${accent}` }
                 : {}
             }
-            animate={
-              i < filled ? { opacity: [0.7, 1, 0.7] } : { opacity: 0.12 }
-            }
-            transition={{
-              duration: 1.4,
-              delay: i * 0.05,
-              repeat: Infinity,
-              ease: "easeInOut",
-            }}
           />
         ))}
       </div>
@@ -213,40 +202,33 @@ export default function Loader({ onComplete, accentColor }) {
   const [done, setDone] = useState(false);
   const [visible, setVisible] = useState(true);
 
-  const progressRef = useRef(0);
   const startTime = useRef(Date.now());
   const rafRef = useRef(null);
-  const charTimerRef = useRef(null);
-  const doneTimerRef = useRef(null);
+
+  const { tier, shouldAnimate, enableOrbs, enableGrain } =
+    useAdaptiveAnimation();
+  const isLow = tier === "low" || tier === "reduced";
 
   const char = CHARACTERS[charIndex];
   const activeAccent = accentColor || char.accent;
 
-  // ── Smooth progress via RAF ───────────────────────────────────────────
+  // Preload all 4 images immediately so character switches are instant
+  useEffect(() => {
+    CHARACTERS.forEach(({ src }) => {
+      const img = new Image();
+      img.src = src;
+    });
+  }, []);
+
+  // Smooth progress via RAF — no setInterval drift
   const tickProgress = useCallback(() => {
     const elapsed = Date.now() - startTime.current;
     const raw = Math.min((elapsed / TOTAL_DURATION) * 100, 100);
-
-    // Ease-out curve so it slows near 100%
     const eased = 100 * (1 - Math.pow(1 - raw / 100, 2.2));
-    progressRef.current = eased;
     setProgress(eased);
-
-    if (raw < 100) {
-      rafRef.current = requestAnimationFrame(tickProgress);
-    }
+    if (raw < 100) rafRef.current = requestAnimationFrame(tickProgress);
   }, []);
 
-  // ── Character rotation ────────────────────────────────────────────────
-  useEffect(() => {
-    charTimerRef.current = setInterval(() => {
-      setCharIndex((prev) => (prev + 1) % CHARACTERS.length);
-    }, CHAR_INTERVAL);
-
-    return () => clearInterval(charTimerRef.current);
-  }, []);
-
-  // ── Progress ticker ───────────────────────────────────────────────────
   useEffect(() => {
     rafRef.current = requestAnimationFrame(tickProgress);
     return () => {
@@ -254,18 +236,25 @@ export default function Loader({ onComplete, accentColor }) {
     };
   }, [tickProgress]);
 
-  // ── Completion sequence ───────────────────────────────────────────────
+  // Character rotation
   useEffect(() => {
-    doneTimerRef.current = setTimeout(() => {
+    const t = setInterval(
+      () => setCharIndex((p) => (p + 1) % CHARACTERS.length),
+      CHAR_INTERVAL,
+    );
+    return () => clearInterval(t);
+  }, []);
+
+  // Completion
+  useEffect(() => {
+    const t = setTimeout(() => {
       setDone(true);
-      // After exit animation plays, unmount + notify parent
       setTimeout(() => {
         setVisible(false);
         onComplete?.();
       }, 800);
     }, TOTAL_DURATION);
-
-    return () => clearTimeout(doneTimerRef.current);
+    return () => clearTimeout(t);
   }, [onComplete]);
 
   if (!visible) return null;
@@ -279,12 +268,9 @@ export default function Loader({ onComplete, accentColor }) {
           variants={loaderExitVariants}
           initial="initial"
           exit="exit"
-          style={{
-            "--accent": activeAccent,
-            "--char-glow": char.glow,
-          }}
+          style={{ "--accent": activeAccent, "--char-glow": char.glow }}
         >
-          {/* ── Layered background ── */}
+          {/* ── Background ── */}
           <div className="loader-bg">
             <AnimatePresence mode="wait">
               <motion.div
@@ -300,16 +286,16 @@ export default function Loader({ onComplete, accentColor }) {
             <div className="loader-bg-grid" />
             <div className="loader-bg-scanlines" />
             <div className="loader-bg-vignette" />
-            <div className="loader-bg-grain" />
+            {/* Grain is an animated SVG filter — very heavy, high-end only */}
+            {enableGrain && <div className="loader-bg-grain" />}
           </div>
 
-          {/* ── Ambient particles ── */}
-          <Particles accent={char.glow} />
+          {/* Particles — 18 Framer timers, skip on low-end */}
+          {!isLow && <Particles accent={char.glow} />}
 
-          {/* ── Corner frame accents ── */}
           <CornerAccents accent={char.accent} />
 
-          {/* ── Top label ── */}
+          {/* ── Top bar ── */}
           <div className="loader-top-bar">
             <span
               className="loader-top-dot"
@@ -326,32 +312,42 @@ export default function Loader({ onComplete, accentColor }) {
 
           {/* ── Character stage ── */}
           <div className="loader-stage">
-            {/* Glow ring behind character */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={char.id + "-ring"}
-                className="loader-char-glow-ring"
-                style={{ background: char.glow }}
-                initial={{ opacity: 0, scale: 0.6 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.8 }}
-                transition={{ duration: 0.5 }}
-              />
-            </AnimatePresence>
+            {/* Glow ring behind character — skip on low-end */}
+            {enableOrbs && (
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={char.id + "-ring"}
+                  className="loader-char-glow-ring"
+                  style={{ background: char.glow }}
+                  initial={{ opacity: 0, scale: 0.6 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.8 }}
+                  transition={{ duration: 0.5 }}
+                />
+              </AnimatePresence>
+            )}
 
-            {/* Orbit ring */}
-            <motion.div
-              className="loader-char-orbit"
-              style={{ borderColor: char.accent + "44" }}
-              animate={{ rotate: 360 }}
-              transition={{ duration: 12, repeat: Infinity, ease: "linear" }}
-            />
-            <motion.div
-              className="loader-char-orbit loader-char-orbit--inner"
-              style={{ borderColor: char.accent + "28" }}
-              animate={{ rotate: -360 }}
-              transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-            />
+            {/* Orbit rings — two continuous rotate timers, skip on low-end */}
+            {!isLow && (
+              <>
+                <motion.div
+                  className="loader-char-orbit"
+                  style={{ borderColor: char.accent + "44" }}
+                  animate={{ rotate: 360 }}
+                  transition={{
+                    duration: 12,
+                    repeat: Infinity,
+                    ease: "linear",
+                  }}
+                />
+                <motion.div
+                  className="loader-char-orbit loader-char-orbit--inner"
+                  style={{ borderColor: char.accent + "28" }}
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
+                />
+              </>
+            )}
 
             {/* Character image */}
             <AnimatePresence mode="wait">
@@ -367,17 +363,20 @@ export default function Loader({ onComplete, accentColor }) {
                   src={char.src}
                   alt={char.name}
                   className="loader-char-img"
-                  variants={floatVariants}
-                  animate="animate"
+                  // Float loop — extra RAF cost, skip on low-end
+                  variants={!isLow ? floatVariants : undefined}
+                  animate={!isLow ? "animate" : undefined}
                   style={{
-                    filter: `drop-shadow(0 0 60px ${char.glow}) drop-shadow(0 0 120px ${char.glow})`,
+                    filter: enableOrbs
+                      ? `drop-shadow(0 0 60px ${char.glow}) drop-shadow(0 0 120px ${char.glow})`
+                      : `drop-shadow(0 4px 16px ${char.glow})`,
                   }}
                   draggable={false}
                 />
               </motion.div>
             </AnimatePresence>
 
-            {/* Character name plate */}
+            {/* Name plate */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={char.id + "-name"}
@@ -405,7 +404,6 @@ export default function Loader({ onComplete, accentColor }) {
 
           {/* ── Bottom HUD ── */}
           <div className="loader-hud">
-            {/* Brand lettering */}
             <div className="loader-brand">
               <div className="loader-brand-pre" style={{ color: char.accent }}>
                 ⚡ ANIME
@@ -451,10 +449,8 @@ export default function Loader({ onComplete, accentColor }) {
               </div>
             </div>
 
-            {/* Energy bar */}
             <EnergyBar progress={progress} accent={char.accent} />
 
-            {/* Character dots indicator */}
             <div className="loader-char-dots">
               {CHARACTERS.map((c, i) => (
                 <motion.div

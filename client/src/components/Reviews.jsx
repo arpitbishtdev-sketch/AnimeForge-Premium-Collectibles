@@ -105,6 +105,49 @@ const STATS = [
   { value: "12", label: "Countries", suffix: "+" },
 ];
 
+// ── Kanji/Glyph data — anime-lore characters ──────────────────────────────
+const KANJI_GLYPHS = [
+  { char: "侍", x: 6, y: 8, size: 72, dur: 18, delay: 0, drift: 22 },
+  { char: "魂", x: 88, y: 12, size: 58, dur: 22, delay: 3, drift: -18 },
+  { char: "力", x: 14, y: 38, size: 90, dur: 26, delay: 1.5, drift: 15 },
+  { char: "剣", x: 82, y: 42, size: 64, dur: 20, delay: 5, drift: -25 },
+  { char: "炎", x: 50, y: 6, size: 54, dur: 30, delay: 8, drift: 12 },
+  { char: "忍", x: 3, y: 68, size: 80, dur: 24, delay: 2, drift: 20 },
+  { char: "闘", x: 90, y: 72, size: 68, dur: 19, delay: 6, drift: -16 },
+  { char: "無", x: 72, y: 25, size: 48, dur: 28, delay: 4, drift: 10 },
+  { char: "神", x: 22, y: 78, size: 76, dur: 23, delay: 9, drift: -22 },
+  { char: "龍", x: 60, y: 58, size: 62, dur: 32, delay: 1, drift: 18 },
+  { char: "鬼", x: 38, y: 85, size: 52, dur: 21, delay: 7, drift: -14 },
+  { char: "斬", x: 8, y: 52, size: 44, dur: 27, delay: 11, drift: 16 },
+  { char: "覇", x: 78, y: 88, size: 70, dur: 25, delay: 3.5, drift: -20 },
+  { char: "勝", x: 46, y: 32, size: 50, dur: 29, delay: 13, drift: 14 },
+  { char: "死", x: 18, y: 22, size: 42, dur: 17, delay: 0.5, drift: -12 },
+];
+
+// ── Floating Kanji Background ──────────────────────────────────────────────
+function KanjiBackground() {
+  return (
+    <div className="rev-kanji-wrap" aria-hidden="true">
+      {KANJI_GLYPHS.map((g, i) => (
+        <span
+          key={i}
+          className="rev-kanji"
+          style={{
+            left: `${g.x}%`,
+            top: `${g.y}%`,
+            fontSize: `${g.size}px`,
+            animationDuration: `${g.dur}s`,
+            animationDelay: `${g.delay}s`,
+            "--drift": `${g.drift}px`,
+          }}
+        >
+          {g.char}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 // ── Star renderer ──────────────────────────────────────────────────────────
 function Stars({ count = 5, accent = "#ff8c00" }) {
   return (
@@ -160,20 +203,13 @@ function ReviewCard({ review, index, isFeatured }) {
       }}
       onMouseMove={handleMouseMove}
     >
-      {/* Spotlight */}
       <div className="rev-card-spotlight" />
-
-      {/* Featured tag */}
       {isFeatured && (
         <div className="rev-featured-tag">
           <span>◆</span> Featured Review
         </div>
       )}
-
-      {/* Top border */}
       <div className="rev-card-top-border" />
-
-      {/* Header */}
       <div className="rev-card-header">
         <div className="rev-avatar" style={{ background: review.avatarColor }}>
           <span>{review.avatar}</span>
@@ -188,23 +224,15 @@ function ReviewCard({ review, index, isFeatured }) {
         </div>
         <div className="rev-badge">{review.badge}</div>
       </div>
-
-      {/* Rating + date */}
       <div className="rev-meta">
         <Stars count={review.rating} accent={review.avatarColor} />
         <span className="rev-date">{review.date}</span>
       </div>
-
-      {/* Product tag */}
       <div className="rev-product-tag">
         <span className="rev-product-icon">◆</span>
         {review.product}
       </div>
-
-      {/* Text */}
       <blockquote className="rev-text">"{review.text}"</blockquote>
-
-      {/* Footer */}
       <div className="rev-card-footer">
         <button
           className={`rev-helpful-btn ${liked ? "rev-helpful-btn--liked" : ""}`}
@@ -220,8 +248,6 @@ function ReviewCard({ review, index, isFeatured }) {
           </span>
         )}
       </div>
-
-      {/* Orb */}
       <div
         className="rev-card-orb"
         style={{ background: review.avatarColor }}
@@ -302,6 +328,9 @@ export default function Reviews({
         <div className="rev-vignette" />
       </div>
 
+      {/* 🗡️ Floating Kanji */}
+      <KanjiBackground />
+
       <div className="rev-deco-line rev-deco-line--left" />
       <div className="rev-deco-line rev-deco-line--right" />
 
@@ -350,7 +379,6 @@ export default function Reviews({
           says about our premium pieces.
         </motion.p>
 
-        {/* Stats bar */}
         <motion.div
           className="rev-stats-bar"
           variants={headingVariants}
