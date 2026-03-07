@@ -8,6 +8,7 @@ import {
 } from "react";
 
 const ThemeContext = createContext(null);
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 export function ThemeProvider({ children }) {
   const [activeCharacter, setActiveCharacter] = useState(null);
@@ -19,7 +20,7 @@ export function ThemeProvider({ children }) {
 
   const fetchActiveTheme = async () => {
     try {
-      const res = await fetch("/api/themes/active");
+      const res = await fetch(`${API_URL}/themes/active`);
       if (!res.ok) throw new Error("No active theme");
 
       const theme = await res.json();
@@ -82,7 +83,7 @@ export function ThemeProvider({ children }) {
 
   const setActiveId = useCallback(async (themeId) => {
     try {
-      const res = await fetch(`/api/themes/${themeId}/activate`, {
+      const res = await fetch(`${API_URL}/themes/${themeId}/activate`, {
         method: "PATCH",
       });
 
