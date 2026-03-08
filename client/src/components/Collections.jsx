@@ -394,7 +394,9 @@ function CollectionCard({ collection, index }) {
         {collection.bgImage && (
           <div
             className="col-card-bg-img"
-            style={{ backgroundImage: `url(${collection.bgImage})` }}
+            style={{
+              backgroundImage: `url(${collection.bgImage?.replace("/upload/", "/upload/w_800,q_70,f_webp/")})`,
+            }}
           />
         )}
         <div className="col-card-spotlight" />
