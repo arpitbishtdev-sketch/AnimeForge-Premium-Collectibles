@@ -695,6 +695,7 @@
   align-items: center;
   will-change: transform;
   overflow: visible;
+  white-space: nowrap;
 }
 
 .silk-ribbon::before {
@@ -761,6 +762,9 @@
   z-index: 2;
   animation: silk-scroll var(--ribbon-duration, 45s) linear infinite;
 }
+.silk-ribbon-track--reverse {
+  animation: silk-scroll-reverse var(--ribbon-duration, 45s) linear infinite;
+}
 
 @keyframes silk-scroll {
   0% {
@@ -768,6 +772,14 @@
   }
   100% {
     transform: translateX(-100%);
+  }
+}
+@keyframes silk-scroll-reverse {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(0);
   }
 }
 
@@ -784,6 +796,7 @@
     0 0 10px var(--ribbon-glow),
     0 0 22px color-mix(in srgb, var(--ribbon-glow) 40%, transparent);
   -webkit-font-smoothing: antialiased;
+  flex-shrink: 0;
 }
 
 .silk-ribbon-star {
@@ -1570,72 +1583,8 @@
 }
 
 /* ═══════════════════════════════════════════════════════════════════
-   PATCH 1 — server/controllers/productController.js
-   
-   Find line:
-     const { search, category, limit, displaySection } = req.query;
-   
-   Replace with:
-     const { search, category, limit, displaySection, tag } = req.query;
-   
-   Then find the block:
-     if (category) {
-       filter.category = category;
-     }
-   
-   Add AFTER it:
-     if (tag) {
-       filter.tags = { $in: [tag.toLowerCase()] };
-     }
-═══════════════════════════════════════════════════════════════════ */
-
-/* ═══════════════════════════════════════════════════════════════════
-   PATCH 2 — client/src/hooks/useData.js
-   
-   Find your useCollections hook signature:
-     export function useCollections({ search = "" } = {}) {
-   
-   Replace with:
-     export function useCollections({ search = "", tag = "" } = {}) {
-   
-   Then find inside the hook where URLSearchParams are built, e.g.:
-     const params = new URLSearchParams();
-     if (search) params.set("search", search);
-     params.set("displaySection", "collection");
-   
-   Add the tag line:
-     const params = new URLSearchParams();
-     if (search) params.set("search", search);
-     if (tag)    params.set("tag", tag);       // ← ADD THIS
-     params.set("displaySection", "collection");
-   
-   Also add tag to the useEffect dependency array:
-     }, [search, tag]);   // ← add tag here
-═══════════════════════════════════════════════════════════════════ */
-
-/* ═══════════════════════════════════════════════════════════════════
-   PATCH 3 — App.jsx (or wherever your routes live)
-   
-   Find:
-     <Route path="/collections" element={<CollectionsPage />} />
-   
-   Add a second route below it:
-     <Route path="/collections/:tag" element={<CollectionsPage />} />
-   
-   That's it. Both routes use the same page component.
-   The page reads `useParams().tag` — if no tag, shows all products.
-═══════════════════════════════════════════════════════════════════ */
-
-/* ═══════════════════════════════════════════════════════════════════
-   PATCH 4 — client/src/styles/Collections.css
-   
-   APPEND the CSS below to the very bottom of the file.
-   Do not replace anything — just paste at the end.
-═══════════════════════════════════════════════════════════════════ */
-
-/* ──────────────────────────────────────────────────────────────────
    CINEMATIC ENTER OVERLAY
-────────────────────────────────────────────────────────────────── */
+═══════════════════════════════════════════════════════════════════ */
 
 .cin-overlay {
   position: fixed;

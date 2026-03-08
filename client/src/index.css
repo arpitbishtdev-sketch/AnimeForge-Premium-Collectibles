@@ -137,3 +137,17 @@ ul {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ── Low-end device overrides ── */
+.low-end .grain-overlay {
+  display: none !important;
+}
+.low-end .hero-grain {
+  display: none !important;
+}
+.low-end .col-bg-scanlines {
+  display: none !important;
+}
+.low-end .hero-bg-scanlines {
+  display: none !important;
+}

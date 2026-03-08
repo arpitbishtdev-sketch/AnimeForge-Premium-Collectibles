@@ -1,5 +1,6 @@
 import { BrowserRouter, useRoutes } from "react-router-dom";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
+import { useDeviceCapabilities } from "./hooks/useDeviceCapabilities";
 import { CartProvider } from "./context/CartContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ADMIN_ROUTES } from "./admin/routes";
@@ -125,6 +126,13 @@ function AppRoutes() {
 }
 
 export default function App() {
+  const { isLowEnd } = useDeviceCapabilities();
+
+  useEffect(() => {
+    if (isLowEnd) document.body.classList.add("low-end");
+    else document.body.classList.remove("low-end");
+  }, [isLowEnd]);
+
   return (
     <BrowserRouter>
       <ThemeProvider>

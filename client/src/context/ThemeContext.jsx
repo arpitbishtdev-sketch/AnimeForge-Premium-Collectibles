@@ -48,8 +48,10 @@ export function ThemeProvider({ children }) {
 
       setActiveCharacter(mappedCharacter);
 
-      // Preload hero image for faster LCP
       if (theme.image) {
+        document
+          .querySelectorAll('link[rel="preload"][as="image"]')
+          .forEach((l) => l.remove());
         const link = document.createElement("link");
         link.rel = "preload";
         link.as = "image";

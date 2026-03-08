@@ -196,18 +196,10 @@ function CinematicOverlay({ payload, onDone, tier }) {
 // ═══════════════════════════════════════════════════════
 //  SILK RIBBON
 // ═══════════════════════════════════════════════════════
-function SilkRibbon({
-  direction = 1,
-  speed = 28,
-  color,
-  glow,
-  delay = 0,
-  top = 0,
-}) {
+function SilkRibbon({ direction = 1, speed = 2, color, glow, top = 0 }) {
   const ribbonRef = useRef(null);
   const trackRef = useRef(null);
-  const rafRef = useRef(null);
-  const xRef = useRef(0);
+  const tweenRef = useRef(null);
 
   useEffect(() => {
     const ribbon = ribbonRef.current;
@@ -220,22 +212,52 @@ function SilkRibbon({
     };
     setSize();
     window.addEventListener("resize", setSize);
-    window.addEventListener("scroll", setSize);
-    return () => {
-      window.removeEventListener("resize", setSize);
-      window.removeEventListener("scroll", setSize);
-    };
+    return () => window.removeEventListener("resize", setSize);
   }, []);
 
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
+    if (tweenRef.current) tweenRef.current.kill();
 
-    const totalW = track.scrollWidth / 3;
-    const duration = totalW / (speed * 60);
+    const raf = requestAnimationFrame(() => {
+      const setWidth = track.scrollWidth / 3;
+      if (setWidth === 0) return;
 
-    track.style.setProperty("--ribbon-duration", `${duration}s`);
-  }, [speed]);
+      if (direction === -1) {
+        // Left direction: 0 → -setWidth, then jump back to 0
+        gsap.set(track, { x: 0 });
+        tweenRef.current = gsap.fromTo(
+          track,
+          { x: 0 },
+          {
+            x: -setWidth,
+            duration: setWidth / (speed * 60),
+            ease: "none",
+            repeat: -1,
+          },
+        );
+      } else {
+        // Right direction: -setWidth → 0, then jump back to -setWidth
+        gsap.set(track, { x: -setWidth });
+        tweenRef.current = gsap.fromTo(
+          track,
+          { x: -setWidth },
+          {
+            x: 0,
+            duration: setWidth / (speed * 60),
+            ease: "none",
+            repeat: -1,
+          },
+        );
+      }
+    });
+
+    return () => {
+      cancelAnimationFrame(raf);
+      if (tweenRef.current) tweenRef.current.kill();
+    };
+  }, [speed, direction]);
 
   const tripled = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS, ...MARQUEE_ITEMS];
 
@@ -248,7 +270,7 @@ function SilkRibbon({
         "--ribbon-glow": glow,
         position: "absolute",
         top,
-        transform: `rotate(${direction === 1 ? -4 : 4}deg)`,
+        transform: `rotate(${direction === 1 ? -3 : 3}deg)`,
         transformOrigin: "center center",
       }}
     >
@@ -271,15 +293,15 @@ function SilkMarqueeSection({ accentColor, accentGlow }) {
     <div className="silk-marquee-section">
       <SilkRibbon
         direction={-1}
-        speed={55}
+        speed={2}
         color={accentColor}
         glow={accentGlow}
-        delay={0}
+        delay={300}
         top="47px"
       />
       <SilkRibbon
         direction={1}
-        speed={45}
+        speed={2}
         color={accentColor}
         glow={accentGlow}
         delay={300}

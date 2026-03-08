@@ -43,7 +43,14 @@ export default function CharacterSwitcher() {
             >
               <div className="switcher-avatar">
                 {theme.image ? (
-                  <img src={theme.image} alt={theme.name} loading="lazy" />
+                  <img
+                    src={theme.image?.replace(
+                      "/upload/",
+                      "/upload/w_80,h_80,c_fill,q_60,f_webp/",
+                    )}
+                    alt={theme.name}
+                    loading="lazy"
+                  />
                 ) : (
                   <span>{theme.name.slice(0, 2)}</span>
                 )}
