@@ -1,6 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { useRef } from "react";
+import React, { useEffect, useState, useRef, useCallback } from "react";
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
+
+const CAROUSEL_LIMIT = 4;
 
 const EMPTY_FORM = {
   name: "",
@@ -18,6 +20,7 @@ const EMPTY_FORM = {
   image: "",
   model3d: "",
 };
+
 // ─── Live Preview Card ───────────────────────────────────────────────────────
 
 const PreviewCard = ({ form }) => {
@@ -42,7 +45,6 @@ const PreviewCard = ({ form }) => {
         transition: "all 0.3s ease",
       }}
     >
-      {/* Glow orb */}
       <div
         style={{
           position: "absolute",
@@ -57,7 +59,6 @@ const PreviewCard = ({ form }) => {
           pointerEvents: "none",
         }}
       />
-
       {form.image && (
         <img
           src={form.image}
@@ -72,7 +73,6 @@ const PreviewCard = ({ form }) => {
           }}
         />
       )}
-
       <div>
         <p
           style={{
@@ -97,7 +97,6 @@ const PreviewCard = ({ form }) => {
           {form.name || "Untitled Theme"}
         </h3>
       </div>
-
       <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
         {[
           { label: "Accent", value: form.accent },
@@ -169,6 +168,64 @@ const ColorField = ({ label, name, value, onChange }) => (
   </div>
 );
 
+// ─── Drop Zone ───────────────────────────────────────────────────────────────
+
+const DropZone = ({ onFiles, accept, disabled, children, hint }) => {
+  const [dragOver, setDragOver] = useState(false);
+  const inputRef = useRef();
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (disabled) return;
+    const files = Array.from(e.dataTransfer.files).filter((f) =>
+      accept.some((a) =>
+        f.type.includes(a.replace("image/", "").replace(".", "")),
+      ),
+    );
+    if (files.length) onFiles(files);
+  };
+
+  return (
+    <div
+      onDragOver={(e) => {
+        e.preventDefault();
+        if (!disabled) setDragOver(true);
+      }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={handleDrop}
+      onClick={() => !disabled && inputRef.current?.click()}
+      style={{
+        border: `2px dashed ${dragOver ? "#6c63ff" : "#3a3a4a"}`,
+        borderRadius: "10px",
+        padding: "20px",
+        textAlign: "center",
+        cursor: disabled ? "not-allowed" : "pointer",
+        background: dragOver ? "#6c63ff11" : "#0d0d1a",
+        transition: "all 0.2s ease",
+        opacity: disabled ? 0.5 : 1,
+      }}
+    >
+      <input
+        ref={inputRef}
+        type="file"
+        accept={accept.join(",")}
+        multiple={hint?.includes("multiple")}
+        style={{ display: "none" }}
+        onChange={(e) => onFiles(Array.from(e.target.files))}
+        disabled={disabled}
+      />
+      <div style={{ fontSize: "28px", marginBottom: "6px" }}>📁</div>
+      <div style={{ fontSize: "12px", color: "#aaa" }}>{children}</div>
+      {hint && (
+        <div style={{ fontSize: "11px", color: "#555", marginTop: "4px" }}>
+          {hint}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // ─── Main Component ──────────────────────────────────────────────────────────
 
 const ThemeSettings = () => {
@@ -180,15 +237,18 @@ const ThemeSettings = () => {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-
   const [uploadingCarousel, setUploadingCarousel] = useState(false);
+  const [uploadingCharacter, setUploadingCharacter] = useState(false);
 
+  // drag refs for carousel reorder
   const dragItem = useRef();
   const dragOverItem = useRef();
 
+  // drag refs for theme list reorder
   const themeDragItem = useRef();
   const themeDragOver = useRef();
-  // ── Data fetching ──────────────────────────────────────────────────────────
+
+  // ── Data fetching ────────────────────────────────────────────────────────
 
   const loadThemes = async () => {
     try {
@@ -206,94 +266,109 @@ const ThemeSettings = () => {
     loadThemes();
   }, []);
 
-  // ── Form handlers ──────────────────────────────────────────────────────────
+  // ── Form handlers ────────────────────────────────────────────────────────
+
+  // FIX 1: Theme name — block spacebar, only allow first word
+  const handleNameChange = (e) => {
+    const val = e.target.value.replace(/\s.*/, ""); // strip everything after first space
+    setForm((prev) => ({ ...prev, name: val }));
+  };
 
   const handleChange = (e) => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-  const [uploadingCharacter, setUploadingCharacter] = useState(false);
-
-  const handleCharacterUpload = async (e) => {
-    const file = e.target.files[0];
+  // FIX 4: Character image — drag & drop
+  const handleCharacterFiles = useCallback(async (files) => {
+    const file = files[0];
     if (!file) return;
-
     setUploadingCharacter(true);
     setForm((prev) => ({ ...prev, image: "" }));
-
     try {
       const formData = new FormData();
       formData.append("file", file);
-
       const res = await fetch("/api/upload?type=character", {
         method: "POST",
         body: formData,
       });
-
       const data = await res.json();
       setForm((prev) => ({ ...prev, image: data.url }));
     } catch {
       setError("Character image upload failed.");
     } finally {
       setUploadingCharacter(false);
-      e.target.value = "";
     }
-  };
+  }, []);
 
-  // AFTER
   const handleModelUpload = async (e) => {
     const file = e.target.files[0];
     const formData = new FormData();
     formData.append("file", file);
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
-
+    const res = await fetch("/api/upload", { method: "POST", body: formData });
     const data = await res.json();
-
-    setForm((prev) => ({
-      ...prev,
-      model3d: data.url,
-    }));
+    setForm((prev) => ({ ...prev, model3d: data.url }));
   };
 
-  const handleCarouselUpload = async (e) => {
-    const files = Array.from(e.target.files);
+  // FIX 2 & 4: Carousel — drag & drop + smart 4-slot logic
+  const handleCarouselFiles = useCallback(
+    async (files) => {
+      if (!files.length) return;
 
-    if (!files.length) return;
+      const current = form.carouselImages;
+      const slots = CAROUSEL_LIMIT; // always 4 total
 
-    setUploadingCarousel(true);
+      // How many of each existing image do we need?
+      // New image fills remaining slots, existing images share the rest
+      const newCount = files.length; // typically 1
+      const existingCount = current.length;
 
-    try {
-      const uploaded = [];
+      if (existingCount === 0 && newCount === 0) return;
 
-      for (const file of files) {
-        const formData = new FormData();
-        formData.append("file", file);
+      setUploadingCarousel(true);
+      try {
+        const uploaded = [];
+        for (const file of files) {
+          const formData = new FormData();
+          formData.append("file", file);
+          const res = await fetch("/api/upload?type=hero", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await res.json();
+          uploaded.push(data.url);
+          setUploadProgress(Math.round((uploaded.length / files.length) * 100));
+        }
 
-        const res = await fetch("/api/upload?type=hero", {
-          method: "POST",
-          body: formData,
+        setForm((prev) => {
+          const existing = prev.carouselImages;
+          const combined = [...existing, ...uploaded];
+
+          // Build a balanced 4-slot array
+          // Distribute slots: new images get 1 slot each, existing share rest
+          const totalUnique = combined.length;
+          if (totalUnique === 0) return prev;
+
+          // Each unique image gets Math.floor(4/totalUnique) slots minimum
+          // Remainder goes to first images
+          const base = Math.floor(slots / totalUnique);
+          const remainder = slots % totalUnique;
+
+          const result = [];
+          combined.forEach((img, idx) => {
+            const count = base + (idx < remainder ? 1 : 0);
+            for (let i = 0; i < count; i++) result.push(img);
+          });
+
+          // Trim/pad to exactly 4
+          return { ...prev, carouselImages: result.slice(0, slots) };
         });
-
-        const data = await res.json();
-        uploaded.push(data.url);
-
-        // update progress
-        setUploadProgress(Math.round((uploaded.length / files.length) * 100));
+      } finally {
+        setUploadingCarousel(false);
+        setUploadProgress(0);
       }
-
-      setForm((prev) => ({
-        ...prev,
-        carouselImages: [...prev.carouselImages, ...uploaded],
-      }));
-    } finally {
-      setUploadingCarousel(false);
-      setUploadProgress(0);
-      e.target.value = "";
-    }
-  };
+    },
+    [form.carouselImages],
+  );
 
   const resetForm = () => {
     setForm(EMPTY_FORM);
@@ -331,7 +406,6 @@ const ThemeSettings = () => {
     setSaving(true);
     setError("");
     setSuccess("");
-
     try {
       const url = editingId ? `/api/themes/${editingId}` : "/api/themes";
       const method = editingId ? "PUT" : "POST";
@@ -392,29 +466,38 @@ const ThemeSettings = () => {
       themeDragOver.current === undefined
     )
       return;
-
     const copy = [...themes];
-
     const dragged = copy.splice(themeDragItem.current, 1)[0];
     copy.splice(themeDragOver.current, 0, dragged);
-
     setThemes(copy);
-
     try {
       await fetch("/api/themes/reorder", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          order: copy.map((t) => t._id),
-        }),
+        body: JSON.stringify({ order: copy.map((t) => t._id) }),
       });
     } catch (err) {
       console.error(err);
     }
-
     themeDragItem.current = null;
     themeDragOver.current = null;
   };
+
+  // FIX 3: Remove one instance of an image from carousel (reduces its count)
+  const removeCarouselInstance = (idx) => {
+    setForm((prev) => ({
+      ...prev,
+      carouselImages: prev.carouselImages.filter((_, i) => i !== idx),
+    }));
+  };
+
+  // Get unique images with counts for display
+  const carouselSummary = form.carouselImages.reduce((acc, url) => {
+    const existing = acc.find((x) => x.url === url);
+    if (existing) existing.count++;
+    else acc.push({ url, count: 1 });
+    return acc;
+  }, []);
 
   // ── Render ─────────────────────────────────────────────────────────────────
 
@@ -438,17 +521,23 @@ const ThemeSettings = () => {
           {success && <div style={styles.alert("success")}>{success}</div>}
 
           <form onSubmit={handleSubmit} style={styles.form}>
-            {/* Name */}
+            {/* FIX 1: Name — no spaces allowed */}
             <div style={styles.field}>
               <label style={styles.label}>Theme Name *</label>
               <input
                 type="text"
                 name="name"
                 value={form.name}
-                onChange={handleChange}
+                onChange={handleNameChange}
+                onKeyDown={(e) => {
+                  if (e.key === " ") e.preventDefault();
+                }}
                 style={styles.input}
                 placeholder="e.g. Naruto, Gojo, Levi"
               />
+              <span style={{ fontSize: "11px", color: "#555" }}>
+                Single word only — spaces are disabled
+              </span>
             </div>
 
             {/* Status */}
@@ -520,7 +609,7 @@ const ThemeSettings = () => {
               />
             </div>
 
-            {/* Color pickers */}
+            {/* Colors */}
             <div style={styles.twoCol}>
               <ColorField
                 label="Accent Color"
@@ -568,60 +657,52 @@ const ThemeSettings = () => {
               />
             </div>
 
-            {/* Character Image Upload */}
-
+            {/* FIX 4: Character Image — drag & drop */}
             <div style={styles.field}>
               <label style={styles.label}>Character Image</label>
-              <input
-                type="file"
-                accept="image/png,image/webp,image/jpeg"
-                onChange={handleCharacterUpload}
-                style={styles.input}
+              <DropZone
+                onFiles={handleCharacterFiles}
+                accept={["image/png", "image/webp", "image/jpeg"]}
                 disabled={uploadingCharacter}
-              />
-              {uploadingCharacter && (
+              >
+                {uploadingCharacter
+                  ? "Uploading…"
+                  : "Drag & drop or click to upload"}
+              </DropZone>
+              {form.image && !uploadingCharacter && (
                 <div
                   style={{
                     display: "flex",
                     alignItems: "center",
-                    gap: "8px",
-                    marginTop: "6px",
+                    gap: "10px",
+                    marginTop: "8px",
                   }}
                 >
-                  <div
+                  <img
+                    src={form.image}
+                    alt="character preview"
                     style={{
-                      width: "16px",
-                      height: "16px",
-                      borderRadius: "50%",
-                      border: "2px solid #6c63ff",
-                      borderTopColor: "transparent",
-                      animation: "spin 0.7s linear infinite",
+                      width: "80px",
+                      height: "80px",
+                      objectFit: "cover",
+                      borderRadius: "8px",
+                      border: "1px solid #333",
                     }}
                   />
-                  <span style={{ fontSize: "12px", color: "#aaa" }}>
-                    Uploading…
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setForm((p) => ({ ...p, image: "" }))}
+                    style={{ ...styles.btnSmall("delete"), fontSize: "11px" }}
+                  >
+                    Remove
+                  </button>
                 </div>
-              )}
-              {form.image && !uploadingCharacter && (
-                <img
-                  src={form.image}
-                  alt="character preview"
-                  style={{
-                    marginTop: "10px",
-                    width: "80px",
-                    height: "80px",
-                    objectFit: "cover",
-                    borderRadius: "8px",
-                    border: "1px solid #333",
-                  }}
-                />
               )}
             </div>
 
+            {/* 3D Model */}
             <div style={styles.field}>
               <label style={styles.label}>3D Model (GLB)</label>
-
               <input
                 type="file"
                 accept=".glb"
@@ -630,23 +711,47 @@ const ThemeSettings = () => {
               />
             </div>
 
-            {/* Carousel Images Upload */}
+            {/* FIX 2, 3, 4: Carousel — drag & drop + smart slots + reorder */}
             <div style={styles.field}>
-              <label style={styles.label}>Hero Carousel Images</label>
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <label style={styles.label}>Hero Carousel Images</label>
+                <span
+                  style={{
+                    fontSize: "11px",
+                    color:
+                      form.carouselImages.length >= CAROUSEL_LIMIT
+                        ? "#e74c3c"
+                        : "#6c63ff",
+                    fontWeight: 600,
+                  }}
+                >
+                  {form.carouselImages.length} / {CAROUSEL_LIMIT} slots
+                </span>
+              </div>
 
-              <input
-                type="file"
-                multiple
-                accept="image/png,image/webp"
-                onChange={handleCarouselUpload}
-                style={styles.input}
+              <DropZone
+                onFiles={handleCarouselFiles}
+                accept={["image/png", "image/webp"]}
                 disabled={uploadingCarousel}
-              />
+                hint="hint:multiple"
+              >
+                {uploadingCarousel
+                  ? `Uploading… ${uploadProgress}%`
+                  : form.carouselImages.length >= CAROUSEL_LIMIT
+                    ? `4/4 slots full — add new image to replace existing`
+                    : "Drag & drop or click to upload carousel images"}
+              </DropZone>
 
               {uploadingCarousel && (
                 <div
                   style={{
-                    height: "6px",
+                    height: "4px",
                     width: "100%",
                     background: "#222",
                     borderRadius: "4px",
@@ -665,78 +770,247 @@ const ThemeSettings = () => {
                 </div>
               )}
 
-              {form.carouselImages.length > 0 && (
-                <div
-                  style={{
-                    display: "flex",
-                    gap: "8px",
-                    flexWrap: "wrap",
-                    marginTop: "8px",
-                  }}
-                >
-                  {form.carouselImages.map((img, i) => (
-                    <div
-                      key={i}
-                      draggable
-                      onDragStart={() => (dragItem.current = i)}
-                      onDragEnter={() => (dragOverItem.current = i)}
-                      onDragEnd={() => {
-                        const copy = [...form.carouselImages];
-                        const dragged = copy.splice(dragItem.current, 1)[0];
-                        copy.splice(dragOverItem.current, 0, dragged);
-
-                        setForm((prev) => ({
-                          ...prev,
-                          carouselImages: copy,
-                        }));
-                      }}
-                      style={{
-                        position: "relative",
-                        width: "50px",
-                        height: "50px",
-                        cursor: "grab",
-                      }}
-                    >
-                      <img
-                        src={img}
-                        alt="carousel preview"
+              {/* Unique image summary with counts */}
+              {carouselSummary.length > 0 && (
+                <div style={{ marginTop: "10px" }}>
+                  <p
+                    style={{
+                      fontSize: "11px",
+                      color: "#555",
+                      margin: "0 0 8px",
+                    }}
+                  >
+                    Drag thumbnails to reorder • Each image shows how many slots
+                    it occupies
+                  </p>
+                  <div
+                    style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}
+                  >
+                    {carouselSummary.map((item, si) => (
+                      <div
+                        key={item.url}
                         style={{
-                          width: "50px",
-                          height: "50px",
-                          objectFit: "cover",
-                          borderRadius: "6px",
-                          border: "1px solid #333",
-                        }}
-                      />
-
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setForm((prev) => ({
-                            ...prev,
-                            carouselImages: prev.carouselImages.filter(
-                              (_, idx) => idx !== i,
-                            ),
-                          }))
-                        }
-                        style={{
-                          position: "absolute",
-                          top: "-6px",
-                          right: "-6px",
-                          width: "18px",
-                          height: "18px",
-                          borderRadius: "50%",
-                          border: "none",
-                          background: "#e74c3c",
-                          color: "#fff",
-                          fontSize: "10px",
-                          cursor: "pointer",
+                          display: "flex",
+                          flexDirection: "column",
+                          alignItems: "center",
+                          gap: "4px",
                         }}
                       >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
+                        <div
+                          draggable
+                          onDragStart={() => (dragItem.current = si)}
+                          onDragEnter={() => (dragOverItem.current = si)}
+                          onDragEnd={() => {
+                            // Reorder unique images, rebuild the full 4-slot array
+                            const reordered = [...carouselSummary];
+                            const dragged = reordered.splice(
+                              dragItem.current,
+                              1,
+                            )[0];
+                            reordered.splice(dragOverItem.current, 0, dragged);
+
+                            // Redistribute slots proportionally
+                            const total = reordered.reduce(
+                              (s, x) => s + x.count,
+                              0,
+                            );
+                            const result = [];
+                            reordered.forEach((item) => {
+                              for (let i = 0; i < item.count; i++)
+                                result.push(item.url);
+                            });
+                            setForm((prev) => ({
+                              ...prev,
+                              carouselImages: result.slice(0, CAROUSEL_LIMIT),
+                            }));
+                            dragItem.current = null;
+                            dragOverItem.current = null;
+                          }}
+                          style={{ position: "relative", cursor: "grab" }}
+                        >
+                          <img
+                            src={item.url}
+                            alt={`carousel-${si}`}
+                            style={{
+                              width: "64px",
+                              height: "64px",
+                              objectFit: "cover",
+                              borderRadius: "8px",
+                              border: "2px solid #3a3a4a",
+                            }}
+                          />
+                          {/* Count badge */}
+                          <div
+                            style={{
+                              position: "absolute",
+                              top: "-6px",
+                              left: "-6px",
+                              width: "20px",
+                              height: "20px",
+                              borderRadius: "50%",
+                              background: "#6c63ff",
+                              color: "#fff",
+                              fontSize: "11px",
+                              fontWeight: 700,
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                            }}
+                          >
+                            {item.count}
+                          </div>
+                          {/* Remove one slot button */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              // Remove last occurrence of this image
+                              const imgs = [...form.carouselImages];
+                              const lastIdx = imgs.lastIndexOf(item.url);
+                              if (lastIdx !== -1) imgs.splice(lastIdx, 1);
+                              setForm((prev) => ({
+                                ...prev,
+                                carouselImages: imgs,
+                              }));
+                            }}
+                            style={{
+                              position: "absolute",
+                              top: "-6px",
+                              right: "-6px",
+                              width: "20px",
+                              height: "20px",
+                              borderRadius: "50%",
+                              border: "none",
+                              background: "#e74c3c",
+                              color: "#fff",
+                              fontSize: "10px",
+                              cursor: "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              lineHeight: 1,
+                            }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                        {/* Slot controls */}
+                        <div style={{ display: "flex", gap: "4px" }}>
+                          <button
+                            type="button"
+                            disabled={
+                              form.carouselImages.length >= CAROUSEL_LIMIT
+                            }
+                            onClick={() => {
+                              if (form.carouselImages.length < CAROUSEL_LIMIT) {
+                                setForm((prev) => ({
+                                  ...prev,
+                                  carouselImages: [
+                                    ...prev.carouselImages,
+                                    item.url,
+                                  ],
+                                }));
+                              }
+                            }}
+                            style={{
+                              width: "20px",
+                              height: "20px",
+                              borderRadius: "4px",
+                              background:
+                                form.carouselImages.length >= CAROUSEL_LIMIT
+                                  ? "#222"
+                                  : "#1a2d1a",
+                              color:
+                                form.carouselImages.length >= CAROUSEL_LIMIT
+                                  ? "#444"
+                                  : "#2ecc71",
+                              border: "1px solid #2a2a3a",
+                              fontSize: "14px",
+                              cursor:
+                                form.carouselImages.length >= CAROUSEL_LIMIT
+                                  ? "not-allowed"
+                                  : "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              lineHeight: 1,
+                            }}
+                            title="Add one more slot"
+                          >
+                            +
+                          </button>
+                          <button
+                            type="button"
+                            disabled={item.count <= 1}
+                            onClick={() => {
+                              const imgs = [...form.carouselImages];
+                              const lastIdx = imgs.lastIndexOf(item.url);
+                              if (lastIdx !== -1) imgs.splice(lastIdx, 1);
+                              setForm((prev) => ({
+                                ...prev,
+                                carouselImages: imgs,
+                              }));
+                            }}
+                            style={{
+                              width: "20px",
+                              height: "20px",
+                              borderRadius: "4px",
+                              background: item.count <= 1 ? "#222" : "#2d1a1a",
+                              color: item.count <= 1 ? "#444" : "#e74c3c",
+                              border: "1px solid #2a2a3a",
+                              fontSize: "14px",
+                              cursor:
+                                item.count <= 1 ? "not-allowed" : "pointer",
+                              display: "flex",
+                              alignItems: "center",
+                              justifyContent: "center",
+                              lineHeight: 1,
+                            }}
+                            title="Remove one slot"
+                          >
+                            −
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Slot visualization */}
+                  <div
+                    style={{ display: "flex", gap: "6px", marginTop: "12px" }}
+                  >
+                    {Array.from({ length: CAROUSEL_LIMIT }).map((_, i) => {
+                      const img = form.carouselImages[i];
+                      return (
+                        <div
+                          key={i}
+                          style={{
+                            width: "40px",
+                            height: "8px",
+                            borderRadius: "4px",
+                            background: img ? "#6c63ff" : "#2a2a3a",
+                            transition: "background 0.2s",
+                          }}
+                          title={
+                            img
+                              ? `Slot ${i + 1}: occupied`
+                              : `Slot ${i + 1}: empty`
+                          }
+                        />
+                      );
+                    })}
+                    <span
+                      style={{
+                        fontSize: "10px",
+                        color: "#555",
+                        marginLeft: "4px",
+                        lineHeight: "8px",
+                      }}
+                    >
+                      {form.carouselImages.length === CAROUSEL_LIMIT
+                        ? "✓ Full"
+                        : `${CAROUSEL_LIMIT - form.carouselImages.length} empty`}
+                    </span>
+                  </div>
                 </div>
               )}
             </div>
@@ -796,7 +1070,6 @@ const ThemeSettings = () => {
                       : "none",
                   }}
                 >
-                  {/* Color swatch + name */}
                   <div
                     style={{
                       display: "flex",
@@ -841,8 +1114,6 @@ const ThemeSettings = () => {
                     </div>
                     {theme.active && <span style={styles.badge}>Active</span>}
                   </div>
-
-                  {/* Actions */}
                   <div
                     style={{
                       display: "flex",
@@ -894,20 +1165,14 @@ const styles = {
     color: "#eee",
     fontFamily: "'Segoe UI', system-ui, sans-serif",
   },
-  header: {
-    marginBottom: "32px",
-  },
+  header: { marginBottom: "32px" },
   title: {
     fontSize: "1.8rem",
     fontWeight: 700,
     color: "#fff",
     margin: "0 0 8px",
   },
-  subtitle: {
-    color: "#888",
-    margin: 0,
-    fontSize: "0.9rem",
-  },
+  subtitle: { color: "#888", margin: 0, fontSize: "0.9rem" },
   grid: {
     display: "grid",
     gridTemplateColumns: "1fr 1fr",
@@ -928,21 +1193,9 @@ const styles = {
     paddingBottom: "12px",
     borderBottom: "1px solid #2a2a3a",
   },
-  form: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "18px",
-  },
-  field: {
-    display: "flex",
-    flexDirection: "column",
-    gap: "6px",
-  },
-  twoCol: {
-    display: "grid",
-    gridTemplateColumns: "1fr 1fr",
-    gap: "16px",
-  },
+  form: { display: "flex", flexDirection: "column", gap: "18px" },
+  field: { display: "flex", flexDirection: "column", gap: "6px" },
+  twoCol: { display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" },
   label: {
     fontSize: "12px",
     fontWeight: 600,
@@ -971,11 +1224,7 @@ const styles = {
     border: `1px solid ${type === "error" ? "#c0392b55" : "#27ae6055"}`,
     color: type === "error" ? "#e74c3c" : "#2ecc71",
   }),
-  buttonRow: {
-    display: "flex",
-    gap: "12px",
-    marginTop: "4px",
-  },
+  buttonRow: { display: "flex", gap: "12px", marginTop: "4px" },
   btnPrimary: {
     background: "linear-gradient(135deg, #6c63ff, #a78bfa)",
     color: "#fff",
@@ -1030,13 +1279,7 @@ const styles = {
         : variant === "edit"
           ? "#a78bfa"
           : "#e74c3c",
-    border: `1px solid ${
-      variant === "activate"
-        ? "#2ecc7144"
-        : variant === "edit"
-          ? "#a78bfa44"
-          : "#e74c3c44"
-    }`,
+    border: `1px solid ${variant === "activate" ? "#2ecc7144" : variant === "edit" ? "#a78bfa44" : "#e74c3c44"}`,
     borderRadius: "6px",
     padding: "5px 12px",
     fontSize: "12px",

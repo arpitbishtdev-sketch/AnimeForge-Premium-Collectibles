@@ -609,7 +609,7 @@ export default function Collections({
       <div className="col-fire-base" />
       <div className="col-fire-heat" />
       <div className="col-fire-embers" aria-hidden="true">
-        {Array.from({ length: isLowEnd ? 0 : isMobile ? 15 : 40 }).map(
+        {Array.from({ length: isLowEnd ? 0 : isMobile ? 6 : 20 }).map(
           (_, i) => (
             <div key={i} className={`col-ember col-ember-${i % 15}`} />
           ),

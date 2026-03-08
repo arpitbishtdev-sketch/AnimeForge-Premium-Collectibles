@@ -1,12 +1,3 @@
-/* ═══════════════════════════════════════════════════════════════
-   OPTIMIZED HERO CSS
-   ✅ Removed: Grid, Scanlines, Grain (saves 21KB)
-   ✅ Reduced: Animations on mobile/low-end
-   ✅ Added: Mobile-first approach
-═══════════════════════════════════════════════════════════════ */
-
-@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;1,700&display=swap");
-
 /* ═══════════════════════════════════════════
    HERO WRAPPER
 ═══════════════════════════════════════════ */

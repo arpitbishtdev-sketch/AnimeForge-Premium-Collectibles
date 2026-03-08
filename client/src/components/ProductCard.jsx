@@ -25,7 +25,7 @@ export default function ProductCard({ product, accentColor, accentGlow }) {
   /* ── GSAP 3D tilt + magnetic glow ── */
   const handleMouseMove = (e) => {
     const card = cardRef.current;
-    if (!card) return;
+    if (!card || window.matchMedia("(pointer: coarse)").matches) return;
     const { left, top, width, height } = card.getBoundingClientRect();
     const nx = (e.clientX - left) / width - 0.5;
     const ny = (e.clientY - top) / height - 0.5;

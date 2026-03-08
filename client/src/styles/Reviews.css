@@ -1,5 +1,3 @@
-@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;1,700&display=swap");
-
 /* ═══════════════════════════════════════════════
    REVIEWS SECTION
 ═══════════════════════════════════════════════ */
@@ -721,7 +719,7 @@
   border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 4px;
   background: rgba(0, 0, 0, 0.25);
-  backdrop-filter: blur(10px);
+  backdrop-filter: blur(4px);
 }
 .rev-trust-badge {
   display: flex;
@@ -844,7 +842,7 @@
     display: none;
   }
   /* Only show 6 kanji on mobile for perf */
-  .rev-kanji:nth-child(n + 7) {
+  .rev-kanji:nth-child(n + 5) {
     display: none;
   }
 }
