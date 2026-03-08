@@ -212,31 +212,39 @@ const ThemeSettings = () => {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
+  const [uploadingCharacter, setUploadingCharacter] = useState(false);
+
   const handleCharacterUpload = async (e) => {
     const file = e.target.files[0];
+    if (!file) return;
 
-    const formData = new FormData();
-    formData.append("file", file);
+    setUploadingCharacter(true);
+    setForm((prev) => ({ ...prev, image: "" }));
 
-    const res = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
 
-    const data = await res.json();
+      const res = await fetch("/api/upload?type=character", {
+        method: "POST",
+        body: formData,
+      });
 
-    setForm((prev) => ({
-      ...prev,
-      image: data.url,
-    }));
+      const data = await res.json();
+      setForm((prev) => ({ ...prev, image: data.url }));
+    } catch {
+      setError("Character image upload failed.");
+    } finally {
+      setUploadingCharacter(false);
+      e.target.value = "";
+    }
   };
 
+  // AFTER
   const handleModelUpload = async (e) => {
     const file = e.target.files[0];
-
     const formData = new FormData();
     formData.append("file", file);
-
     const res = await fetch("/api/upload", {
       method: "POST",
       body: formData,
@@ -264,7 +272,7 @@ const ThemeSettings = () => {
         const formData = new FormData();
         formData.append("file", file);
 
-        const res = await fetch("/api/upload", {
+        const res = await fetch("/api/upload?type=hero", {
           method: "POST",
           body: formData,
         });
@@ -561,17 +569,41 @@ const ThemeSettings = () => {
             </div>
 
             {/* Character Image Upload */}
+
             <div style={styles.field}>
               <label style={styles.label}>Character Image</label>
-
               <input
                 type="file"
                 accept="image/png,image/webp,image/jpeg"
                 onChange={handleCharacterUpload}
                 style={styles.input}
+                disabled={uploadingCharacter}
               />
-
-              {form.image && (
+              {uploadingCharacter && (
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: "8px",
+                    marginTop: "6px",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "16px",
+                      height: "16px",
+                      borderRadius: "50%",
+                      border: "2px solid #6c63ff",
+                      borderTopColor: "transparent",
+                      animation: "spin 0.7s linear infinite",
+                    }}
+                  />
+                  <span style={{ fontSize: "12px", color: "#aaa" }}>
+                    Uploading…
+                  </span>
+                </div>
+              )}
+              {form.image && !uploadingCharacter && (
                 <img
                   src={form.image}
                   alt="character preview"
@@ -794,7 +826,7 @@ const ThemeSettings = () => {
                           fontSize: "0.95rem",
                         }}
                       >
-                        {theme.name}
+                        {theme.name.split(" ")[0]}
                       </p>
                       <p
                         style={{

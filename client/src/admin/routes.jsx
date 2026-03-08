@@ -8,6 +8,7 @@ import ThemeSettings from "./pages/ThemeSetting";
 import EditProduct from "../pages/EditProduct";
 import StatusSettings from "./pages/StatusSettings";
 import AdminCollections from "./pages/AdminCollections";
+import AdminAnnouncements from "./pages/AdminAnnouncements";
 
 export const ADMIN_ROUTES = [
   {
@@ -29,6 +30,7 @@ export const ADMIN_ROUTES = [
       { path: "themes", element: <ThemeSettings /> },
       { path: "status", element: <StatusSettings /> },
       { path: "collections", element: <AdminCollections /> },
+      { path: "announcements", element: <AdminAnnouncements /> },
     ],
   },
 ];

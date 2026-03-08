@@ -5,22 +5,21 @@ import { CartProvider } from "./context/CartContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ADMIN_ROUTES } from "./admin/routes";
 import MainLayout from "./layouts/MainLayout";
-import HomeLayout from "./layouts/HomeLayout"; //   NOT lazy (LCP critical)
+import HomeLayout from "./layouts/HomeLayout";
 
 import { ErrorBoundary } from "./components/shared/ErrorBoundary";
+import ScrollToTop from "./components/shared/ScrollToTop";
 import {
   ProductDetailSkeleton,
   CollectionsSkeleton,
 } from "./components/shared/Skeleton";
 
-//   Lazy-loaded pages (non-critical routes)
 const Cart = lazy(() => import("./pages/Cart"));
 const User = lazy(() => import("./pages/User"));
 const Collections = lazy(() => import("./pages/Collections"));
 const ProductDetail = lazy(() => import("./pages/Productdetailpage"));
 const Checkout = lazy(() => import("./pages/Checkout"));
 
-// Simple fallback loader
 function PageLoader() {
   return (
     <div
@@ -41,12 +40,9 @@ function PageLoader() {
 function AppRoutes() {
   const routes = [
     {
-      element: <MainLayout />, //   Navbar layout
+      element: <MainLayout />,
       children: [
-        //   Landing Page (NOT lazy)
         { path: "/", element: <HomeLayout /> },
-
-        //   Cart
         {
           path: "/cart",
           element: (
@@ -57,8 +53,6 @@ function AppRoutes() {
             </ErrorBoundary>
           ),
         },
-
-        //   User
         {
           path: "/user",
           element: (
@@ -69,8 +63,6 @@ function AppRoutes() {
             </ErrorBoundary>
           ),
         },
-
-        //    Product Detail
         {
           path: "/product/:slug",
           element: (
@@ -81,8 +73,6 @@ function AppRoutes() {
             </ErrorBoundary>
           ),
         },
-
-        //   Collections
         {
           path: "/collections",
           element: (
@@ -93,7 +83,6 @@ function AppRoutes() {
             </ErrorBoundary>
           ),
         },
-
         {
           path: "/collections/:tag",
           element: (
@@ -104,7 +93,6 @@ function AppRoutes() {
             </ErrorBoundary>
           ),
         },
-
         {
           path: "/checkout",
           element: (
@@ -117,12 +105,15 @@ function AppRoutes() {
         },
       ],
     },
-
-    //   Admin routes (already structured separately)
     ...ADMIN_ROUTES,
   ];
 
-  return useRoutes(routes);
+  return (
+    <>
+      <ScrollToTop />
+      {useRoutes(routes)}
+    </>
+  );
 }
 
 export default function App() {

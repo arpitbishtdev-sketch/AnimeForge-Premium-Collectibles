@@ -25,6 +25,10 @@ const NAV_ITEMS = [
     ],
   },
   {
+    section: "Marketing", // ← add this whole block
+    items: [{ to: "/admin/announcements", icon: "📢", label: "Announcements" }],
+  },
+  {
     section: "System",
     items: [
       { to: "/admin/analytics", icon: "▣", label: "Analytics" },

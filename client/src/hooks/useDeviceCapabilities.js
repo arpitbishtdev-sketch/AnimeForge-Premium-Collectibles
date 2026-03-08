@@ -1,8 +1,3 @@
-/**
- * Single source of truth for device/environment detection.
- * Used to gate animation intensity, orb rendering, image quality.
- * Returns stable memoised object — only re-renders when isMobile changes.
- */
 import { useState, useEffect, useMemo } from "react";
 
 function detectStatic() {

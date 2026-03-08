@@ -29,6 +29,8 @@
 
 .apf-form-card {
   padding: 32px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .apf-preview-card {
@@ -38,8 +40,11 @@
 }
 
 /* ---- Section Labels ---- */
+
 .apf-section {
   margin-bottom: 28px;
+  min-width: 0;
+  overflow: hidden;
 }
 
 .apf-section-title {
@@ -124,9 +129,15 @@
 }
 
 .apf-textarea {
-  resize: vertical;
-  min-height: 100px;
+  resize: none;
+  min-height: 120px;
+  max-height: 200px;
   line-height: 1.6;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .apf-select {

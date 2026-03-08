@@ -439,10 +439,14 @@ function CollectionForm({
                         try {
                           const fd = new FormData();
                           fd.append("file", file);
-                          const res = await fetch("/api/upload", {
-                            method: "POST",
-                            body: fd,
-                          });
+                          // AFTER
+                          const res = await fetch(
+                            "/api/upload?type=collection",
+                            {
+                              method: "POST",
+                              body: fd,
+                            },
+                          );
                           const data = await res.json();
                           const url =
                             data.url || data.secure_url || data.imageUrl;

@@ -459,15 +459,6 @@ export default function AddProductForm() {
               <FieldError error={errors.status} />
             </section>
 
-            {/* Actions */}
-            <pre style={{ color: "white", fontSize: 12 }}>
-              {JSON.stringify(form, null, 2)}
-            </pre>
-
-            <pre style={{ color: "cyan", fontSize: 12 }}>
-              {JSON.stringify(imageFiles.length, null, 2)}
-            </pre>
-
             <div className="apf-actions">
               <button
                 type="submit"

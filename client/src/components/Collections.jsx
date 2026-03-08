@@ -201,64 +201,89 @@ function SilkRibbon({ direction = 1, speed = 2, color, glow, top = 0 }) {
   const trackRef = useRef(null);
   const tweenRef = useRef(null);
 
+  // ── Resize: make ribbon full-viewport-width regardless of parent offset ──
   useEffect(() => {
     const ribbon = ribbonRef.current;
     if (!ribbon) return;
+
     const setSize = () => {
       const section = ribbon.closest(".collections");
       const sectionLeft = section ? section.getBoundingClientRect().left : 0;
       ribbon.style.width = window.innerWidth + "px";
-      ribbon.style.left = -sectionLeft + "px";
+      ribbon.style.left = `-${sectionLeft}px`;
     };
+
     setSize();
     window.addEventListener("resize", setSize);
     return () => window.removeEventListener("resize", setSize);
   }, []);
 
+  // ── GSAP infinite scroll ──
   useEffect(() => {
     const track = trackRef.current;
     if (!track) return;
-    if (tweenRef.current) tweenRef.current.kill();
 
+    // Kill any existing tween before re-initializing
+    if (tweenRef.current) {
+      tweenRef.current.kill();
+      tweenRef.current = null;
+    }
+
+    // Wait one frame so the DOM has painted and scrollWidth is stable
     const raf = requestAnimationFrame(() => {
-      const setWidth = track.scrollWidth / 3;
-      if (setWidth === 0) return;
+      if (!track) return;
 
-      if (direction === -1) {
-        // Left direction: 0 → -setWidth, then jump back to 0
-        gsap.set(track, { x: 0 });
-        tweenRef.current = gsap.fromTo(
-          track,
-          { x: 0 },
-          {
-            x: -setWidth,
-            duration: setWidth / (speed * 60),
-            ease: "none",
-            repeat: -1,
-          },
-        );
-      } else {
-        // Right direction: -setWidth → 0, then jump back to -setWidth
-        gsap.set(track, { x: -setWidth });
-        tweenRef.current = gsap.fromTo(
-          track,
-          { x: -setWidth },
-          {
-            x: 0,
-            duration: setWidth / (speed * 60),
-            ease: "none",
-            repeat: -1,
-          },
-        );
-      }
+      // We tripled the items, so one "loop unit" is exactly 1/3 of total width.
+      // Use Math.round to eliminate sub-pixel rounding drift.
+      const oneSetWidth = Math.round(track.scrollWidth / 3);
+
+      if (oneSetWidth <= 0) return;
+
+      const duration = oneSetWidth / (speed * 40);
+
+      /*
+       * KEY INSIGHT — make both directions use the same pattern:
+       *
+       *   Left  (direction = -1):
+       *     Start at x=0, end at x=-oneSetWidth → GSAP resets to 0.
+       *     Reset is invisible because 0 is the natural start.
+       *
+       *   Right (direction = +1):
+       *     Start at x=-oneSetWidth, end at x=0 → GSAP resets to -oneSetWidth.
+       *     Reset is invisible because we're moving rightward INTO the reset point.
+       *
+       * Both directions now reset at a point that is visually identical to
+       * the start — the content tiles seamlessly because it's tripled.
+       */
+      const fromX = direction === -1 ? 0 : -oneSetWidth;
+      const toX = direction === -1 ? -oneSetWidth : 0;
+
+      // Set starting position immediately (no flash)
+      gsap.set(track, { x: fromX });
+
+      tweenRef.current = gsap.to(track, {
+        x: toX,
+        duration,
+        ease: "none",
+        repeat: -1,
+        // onRepeat fires exactly at the loop point — use it to hard-reset
+        // the x value to prevent floating-point drift accumulating over time
+        onRepeat() {
+          gsap.set(track, { x: fromX });
+        },
+      });
     });
 
     return () => {
       cancelAnimationFrame(raf);
-      if (tweenRef.current) tweenRef.current.kill();
+      if (tweenRef.current) {
+        tweenRef.current.kill();
+        tweenRef.current = null;
+      }
     };
   }, [speed, direction]);
 
+  // Triple the items so the seam is always off-screen in both directions
   const tripled = [...MARQUEE_ITEMS, ...MARQUEE_ITEMS, ...MARQUEE_ITEMS];
 
   return (
@@ -270,7 +295,7 @@ function SilkRibbon({ direction = 1, speed = 2, color, glow, top = 0 }) {
         "--ribbon-glow": glow,
         position: "absolute",
         top,
-        transform: `rotate(${direction === 1 ? -3 : 3}deg)`,
+        transform: `rotate(${direction === 1 ? -6 : 6}deg)`,
         transformOrigin: "center center",
       }}
     >

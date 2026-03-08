@@ -151,3 +151,9 @@ ul {
 .low-end .hero-bg-scanlines {
   display: none !important;
 }
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
