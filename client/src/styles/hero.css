@@ -863,9 +863,9 @@ model-viewer.hero-character-img {
   }
 
   .hero-mobile-card-inner {
-    background: rgba(4, 4, 14, 0.82);
-    backdrop-filter: blur(30px) saturate(160%);
-    -webkit-backdrop-filter: blur(30px) saturate(160%);
+    background: rgba(4, 4, 14, 0.92);
+    backdrop-filter: blur(12px) saturate(130%);
+    -webkit-backdrop-filter: blur(12px) saturate(130%);
     border-top: 1px solid var(--accent, rgba(255, 140, 0, 0.3));
     border-radius: 24px 24px 0 0;
     padding: 22px 24px 36px;

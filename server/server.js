@@ -38,6 +38,8 @@ app.use(
   }),
 );
 
+const compression = require("compression");
+app.use(compression());
 app.use(express.json());
 
 /* ===============================

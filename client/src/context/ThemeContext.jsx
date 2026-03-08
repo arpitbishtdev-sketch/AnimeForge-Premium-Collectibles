@@ -20,6 +20,13 @@ export function ThemeProvider({ children }) {
 
   const fetchActiveTheme = async () => {
     try {
+      const cached = sessionStorage.getItem("activeTheme");
+      if (cached) {
+        setActiveCharacter(JSON.parse(cached));
+        setLoading(false);
+        return;
+      }
+
       const res = await fetch(`${API_URL}/themes/active`);
       if (!res.ok) throw new Error("No active theme");
 
@@ -47,6 +54,7 @@ export function ThemeProvider({ children }) {
       };
 
       setActiveCharacter(mappedCharacter);
+      sessionStorage.setItem("activeTheme", JSON.stringify(mappedCharacter));
 
       if (theme.image) {
         document

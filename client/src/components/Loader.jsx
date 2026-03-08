@@ -227,7 +227,7 @@ export default function Loader({ onComplete, accentColor }) {
   useEffect(() => {
     CHARACTERS.forEach(({ src }) => {
       const img = new Image();
-      img.src = src;
+      img.src = src.replace("/upload/", "/upload/w_400,q_60,f_webp/");
     });
   }, []);
 

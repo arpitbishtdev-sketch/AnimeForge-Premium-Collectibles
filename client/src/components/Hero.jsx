@@ -92,7 +92,10 @@ function CarouselTrack({ images, speed = 0.45 }) {
     );
   }
 
-  const tripled = [...images, ...images, ...images];
+  const tripled = isMobile
+    ? [...images, ...images]
+    : [...images, ...images, ...images];
+
   return (
     <div className="hero-carousel-track" ref={trackRef}>
       {tripled.map((src, i) => (

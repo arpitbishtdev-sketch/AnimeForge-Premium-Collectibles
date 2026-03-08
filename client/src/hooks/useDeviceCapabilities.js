@@ -22,10 +22,12 @@ function detectStatic() {
   const isSlowNetwork = conn
     ? conn.saveData || ["slow-2g", "2g", "3g"].includes(conn.effectiveType)
     : false;
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
   const isLowEnd =
     prefersReducedMotion ||
     (lowMemory && lowCPU) ||
-    (lowMemory && isSlowNetwork);
+    (lowMemory && isSlowNetwork) ||
+    (isIOS && window.screen.width <= 390); // iPhone mini/SE
 
   return {
     prefersReducedMotion,
