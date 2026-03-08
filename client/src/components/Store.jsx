@@ -116,20 +116,20 @@ export default function Store({
   const [statusMap, setStatusMap] = useState({});
 
   // ── Fetch status colors (live from admin) ─────────────────────────────
-  const fetchStatusMap = useCallback(async () => {
-    try {
-      const res = await fetch("/api/status");
-      if (!res.ok) throw new Error("status fetch failed");
-      const data = await res.json();
-      const map = {};
-      data.forEach((s) => {
-        map[s.status.toLowerCase()] = s.color;
-      });
-      setStatusMap(map);
-    } catch (err) {
-      console.warn("Could not load status colors:", err.message);
-    }
-  }, []);
+  // const fetchStatusMap = useCallback(async () => {
+  //   try {
+  //     const res = await fetch("/api/status");
+  //     if (!res.ok) throw new Error("status fetch failed");
+  //     const data = await res.json();
+  //     const map = {};
+  //     data.forEach((s) => {
+  //       map[s.status.toLowerCase()] = s.color;
+  //     });
+  //     setStatusMap(map);
+  //   } catch (err) {
+  //     console.warn("Could not load status colors:", err.message);
+  //   }
+  // }, []);
 
   // ── Fetch products ────────────────────────────────────────────────────
   useEffect(() => {

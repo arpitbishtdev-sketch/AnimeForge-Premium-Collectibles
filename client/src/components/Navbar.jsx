@@ -206,11 +206,11 @@ export default function Navbar({ accentColor, accentGlow }) {
     // blur: 0→30px
     backdropFilter:
       glassAlpha > 0
-        ? `blur(${(glassAlpha * 30).toFixed(1)}px) saturate(${(1 + glassAlpha * 0.8).toFixed(2)}) brightness(${(1 - glassAlpha * 0.08).toFixed(2)})`
+        ? `blur(${(glassAlpha * 16).toFixed(1)}px) saturate(${(1 + glassAlpha * 0.5).toFixed(2)})`
         : "none",
     WebkitBackdropFilter:
       glassAlpha > 0
-        ? `blur(${(glassAlpha * 30).toFixed(1)}px) saturate(${(1 + glassAlpha * 0.8).toFixed(2)}) brightness(${(1 - glassAlpha * 0.08).toFixed(2)})`
+        ? `blur(${(glassAlpha * 16).toFixed(1)}px) saturate(${(1 + glassAlpha * 0.5).toFixed(2)})`
         : "none",
     boxShadow:
       glassAlpha > 0.05

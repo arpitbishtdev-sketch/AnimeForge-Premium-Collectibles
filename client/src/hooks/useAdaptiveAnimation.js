@@ -37,8 +37,10 @@ export function useAdaptiveAnimation() {
       };
     }
 
-    const memory = navigator.deviceMemory ?? 8; // default 8GB (unknown = assume capable)
-    const cores = navigator.hardwareConcurrency ?? 8; // default 8 (unknown = assume capable)
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isSmallIOS = isIOS && window.screen.width <= 390;
+    const memory = navigator.deviceMemory ?? (isSmallIOS ? 2 : 8);
+    const cores = navigator.hardwareConcurrency ?? (isSmallIOS ? 2 : 8);
 
     // Low-end: genuinely weak — needs BOTH low memory AND low cores
     // This avoids flagging a 6-core laptop with no deviceMemory API support
