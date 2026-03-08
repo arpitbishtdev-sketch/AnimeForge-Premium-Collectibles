@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
 import { useDeviceCapabilities } from "../hooks/useDeviceCapabilities";
 import "../styles/hero.css";
-import "@google/model-viewer";
+const loadModelViewer = () => import("@google/model-viewer");
 
 const FADE_COLORS = {
   naruto: "rgba(10,4,0,1)",

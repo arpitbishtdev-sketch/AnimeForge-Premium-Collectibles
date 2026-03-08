@@ -24,7 +24,9 @@ const headingVariants = {
 
 const gridVariants = {
   hidden: {},
-  visible: { transition: { staggerChildren: 0.12, delayChildren: 0.15 } },
+  visible: {
+    transition: { staggerChildren: 0.06, delayChildren: 0.1 },
+  },
 };
 
 // Each card: fade up + slight scale on scroll reveal
@@ -259,7 +261,7 @@ export default function Store({
      * no more disappearing at top.
      * life 0 = just spawned at bottom, life 1 = reached top → reset.
      */
-    const particleCount = isLowEnd ? 0 : isMobile ? 20 : 100;
+    const particleCount = isLowEnd ? 0 : isMobile ? 0 : 40;
 
     const particles = Array.from({ length: particleCount }, () => ({
       x: Math.random() * W,

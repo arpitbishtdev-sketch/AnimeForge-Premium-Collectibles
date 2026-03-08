@@ -1,6 +1,6 @@
 // src/layouts/HomeLayout.jsx
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import Navbar from "../components/Navbar";
 import Hero from "../components/Hero";
 import CharacterSwitcher from "../components/Characterswitcher";
@@ -9,10 +9,10 @@ import Store from "../components/Store";
 
 import { useTheme } from "../context/ThemeContext";
 
-import Collections from "../components/Collections";
-import Reviews from "../components/Reviews";
-import Contact from "../components/Contact";
-import Footer from "../components/Footer";
+const Collections = lazy(() => import("../components/Collections"));
+const Reviews = lazy(() => import("../components/Reviews"));
+const Contact = lazy(() => import("../components/Contact"));
+const Footer = lazy(() => import("../components/Footer"));
 
 export default function HomeLayout() {
   const { activeCharacter, activeId, setActiveId } = useTheme();
@@ -53,18 +53,16 @@ export default function HomeLayout() {
             {/* ── Shop / Store ── */}
             <Store accentColor={accentColor} accentGlow={accentGlow} />
 
-            {/* ── Collections ── */}
-            <Collections accentColor={accentColor} accentGlow={accentGlow} />
-
-            {/* ── Reviews ── */}
-            <Reviews accentColor={accentColor} accentGlow={accentGlow} />
-
-            {/* ── Contact ── */}
-            <Contact accentColor={accentColor} accentGlow={accentGlow} />
+            <Suspense fallback={null}>
+              <Collections accentColor={accentColor} accentGlow={accentGlow} />
+              <Reviews accentColor={accentColor} accentGlow={accentGlow} />
+              <Contact accentColor={accentColor} accentGlow={accentGlow} />
+            </Suspense>
           </main>
 
-          {/* ── Footer (outside <main> intentionally) ── */}
-          <Footer accentColor={accentColor} accentGlow={accentGlow} />
+          <Suspense fallback={null}>
+            <Footer accentColor={accentColor} accentGlow={accentGlow} />
+          </Suspense>
         </div>
       )}
     </>

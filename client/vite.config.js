@@ -28,7 +28,10 @@ export default defineConfig(({ mode }) => ({
           "vendor-gsap": ["gsap"],
           "vendor-react": ["react", "react-dom"],
           "vendor-router": ["react-router-dom"],
+          "vendor-three": ["three"],
+          "vendor-modelviewer": ["@google/model-viewer"],
         },
+        chunkFileNames: "assets/[name]-[hash].js",
       },
     },
 

@@ -48,6 +48,15 @@ export function ThemeProvider({ children }) {
 
       setActiveCharacter(mappedCharacter);
 
+      // Preload hero image for faster LCP
+      if (theme.image) {
+        const link = document.createElement("link");
+        link.rel = "preload";
+        link.as = "image";
+        link.href = theme.image;
+        document.head.appendChild(link);
+      }
+
       document.documentElement.style.setProperty("--accent", theme.accent);
       document.documentElement.style.setProperty("--accent-glow", theme.glow);
       document.documentElement.style.setProperty("--particle", theme.particle);
