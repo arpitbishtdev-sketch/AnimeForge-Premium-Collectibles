@@ -98,11 +98,11 @@ function CarouselTrack({ images, speed = 0.45 }) {
       {tripled.map((src, i) => (
         <div className="hero-carousel-item" key={i}>
           <img
-            src={src}
+            src={src.replace("/upload/", "/upload/w_300,q_60,f_webp/")}
             alt=""
             draggable={false}
             loading="lazy"
-            decoding="async" // ← DON'T block page rendering
+            decoding="async"
           />
         </div>
       ))}
@@ -339,7 +339,10 @@ export default function Hero({ character }) {
             ) : (
               <motion.img
                 className="hero-character-img"
-                src={character.mainImage || "/placeholder.png"}
+                src={(character.mainImage || "/placeholder.png").replace(
+                  "/upload/",
+                  "/upload/w_800,q_80,f_webp/",
+                )}
                 alt={character.name}
                 draggable={false}
                 loading="eager"

@@ -82,7 +82,10 @@ export default function ProductCard({ product, accentColor, accentGlow }) {
       {/* ── Image area ── */}
       <div className="pc-image-wrap">
         <img
-          src={product.images?.[0]?.url || "/placeholder.webp"}
+          src={(product.images?.[0]?.url || "/placeholder.webp").replace(
+            "/upload/",
+            "/upload/w_600,q_70,f_webp/",
+          )}
           alt={product.name}
           className="pc-image"
           loading="lazy"
