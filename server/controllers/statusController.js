@@ -17,11 +17,8 @@ function buildAccentPalette(hex) {
 // GET all statuses
 exports.getStatuses = async (req, res) => {
   try {
-    console.log("🔵 getStatuses called!"); // ← ADD YEH
-
     const statuses = await StatusConfig.find().sort({ status: 1 });
 
-    console.log("✅ Statuses found:", statuses); // ← ADD YEH
     res.status(200).json(statuses);
   } catch (error) {
     console.error("❌ Error in getStatuses:", error); // ← ADD YEH

@@ -1,6 +1,7 @@
 const Product = require("../models/Product");
 const cloudinary = require("../config/cloudinary");
 const StatusConfig = require("../models/StatusConfig");
+const { optimizeImage } = require("../middleware/imageOptimizer");
 
 // GET all products
 exports.getAllProducts = async (req, res) => {
@@ -101,14 +102,22 @@ exports.createProduct = async (req, res) => {
       }
     }
 
-    console.log("REQ BODY:", req.body);
-    console.log("REQ FILES:", req.files);
-
     if (Array.isArray(req.files) && req.files.length > 0) {
       for (const file of req.files) {
-        const base64 = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
-        const result = await cloudinary.uploader.upload(base64, {
-          folder: "animeforge_products",
+        const optimised = await optimizeImage(
+          file.buffer,
+          "product",
+          file.mimetype,
+        );
+        const result = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: "animeforge_products", format: "webp" },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            },
+          );
+          stream.end(optimised);
         });
         uploadedImages.push({
           url: result.secure_url,
@@ -192,10 +201,22 @@ exports.updateProduct = async (req, res) => {
 
     // ── Upload NEW images to Cloudinary ──
     if (Array.isArray(req.files) && req.files.length > 0) {
+      // AFTER
       for (const file of req.files) {
-        const base64 = `data:${file.mimetype};base64,${file.buffer.toString("base64")}`;
-        const result = await cloudinary.uploader.upload(base64, {
-          folder: "animeforge_products",
+        const optimised = await optimizeImage(
+          file.buffer,
+          "product",
+          file.mimetype,
+        );
+        const result = await new Promise((resolve, reject) => {
+          const stream = cloudinary.uploader.upload_stream(
+            { folder: "animeforge_products", format: "webp" },
+            (error, result) => {
+              if (error) reject(error);
+              else resolve(result);
+            },
+          );
+          stream.end(optimised);
         });
         newUploadedImages.push({
           url: result.secure_url,
@@ -239,13 +260,6 @@ exports.updateProduct = async (req, res) => {
 
     // Final merged list: ordered saved images + newly uploaded images
     product.images = [...savedImages, ...newUploadedImages];
-
-    console.log("REQ BODY:", req.body);
-    console.log("REQ FILES:", req.files);
-    console.log(
-      "FINAL IMAGES:",
-      product.images.map((i) => i.public_id),
-    );
 
     // Update fields
     product.name = req.body.name ?? product.name;

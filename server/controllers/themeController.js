@@ -15,9 +15,17 @@ const getAllThemes = async (req, res) => {
 // GET /api/themes/active — get currently active theme
 const getActiveTheme = async (req, res) => {
   try {
-    const theme = await Theme.findOne({ active: true });
-    if (!theme)
-      return res.status(404).json({ message: "No active theme found" });
+    let theme = await Theme.findOne({ active: true });
+
+    // Fallback: if no theme is marked active, return the first one
+    if (!theme) {
+      theme = await Theme.findOne().sort({ order: 1 });
+    }
+
+    if (!theme) {
+      return res.status(404).json({ message: "No themes found" });
+    }
+
     res.json(theme);
   } catch (err) {
     res
