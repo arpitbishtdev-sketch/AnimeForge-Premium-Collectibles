@@ -1,24 +1,3 @@
-/**
- * imageOptimizer.js
- * ─────────────────────────────────────────────────────────────────
- * Drop-in Sharp middleware for the AnimeForge upload pipeline.
- *
- * Usage:
- *   const { optimizeImage, PROFILES } = require("./imageOptimizer");
- *
- *   // In a route, after multer has parsed req.file:
- *   req.file.buffer = await optimizeImage(req.file.buffer, "product");
- *
- * Profiles map to upload contexts:
- *   "hero"        → homepage / theme hero banners
- *   "product"     → product main images
- *   "thumbnail"   → product thumbnails (auto-generated from product)
- *   "collection"  → collection / category background images
- *   "character"   → theme character images (same as hero)
- *   "general"     → any other image (safe fallback)
- * ─────────────────────────────────────────────────────────────────
- */
-
 const sharp = require("sharp");
 
 // ── Profile definitions ───────────────────────────────────────────

@@ -54,12 +54,23 @@ function CinematicOverlay({ payload, onDone, tier }) {
   // Mid-tier gets a shorter hold so it feels snappy
   const holdMs = tier === "high" ? 1800 : 1100;
 
+  // REPLACE the existing useEffect in CinematicOverlay:
   useEffect(() => {
+    // Lock scroll when cinematic is active
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
     const t = setTimeout(() => {
       navigate(`/collections/${payload.tag}`);
       setTimeout(onDone, 300);
     }, holdMs);
-    return () => clearTimeout(t);
+
+    return () => {
+      clearTimeout(t);
+      // Restore scroll on unmount
+      document.body.style.overflow = "";
+      document.documentElement.style.overflow = "";
+    };
   }, []);
 
   return (
@@ -473,17 +484,23 @@ function CollectionCard({ collection, index }) {
 
         <div className="col-card-stats">
           <div className="col-stat">
-            <span className="col-stat-val">5</span>
+            <span className="col-stat-val">{collection.itemCount ?? 0}</span>
             <span className="col-stat-lbl">PIECES</span>
           </div>
           <div className="col-stat-div" />
           <div className="col-stat">
-            <span className="col-stat-val--sm">PREMIUM STEEL</span>
+            <span className="col-stat-val--sm">
+              {collection.material || "—"}
+            </span>
             <span className="col-stat-lbl">MATERIAL</span>
           </div>
           <div className="col-stat-div" />
           <div className="col-stat">
-            <span className="col-stat-val">1/6-1/50</span>
+            <span className="col-stat-val">
+              {collection.scaleFrom && collection.scaleTo
+                ? `${collection.scaleFrom} – ${collection.scaleTo}`
+                : collection.scaleFrom || collection.scaleTo || "—"}
+            </span>
             <span className="col-stat-lbl">SCALE</span>
           </div>
         </div>

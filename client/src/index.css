@@ -1,8 +1,5 @@
 @import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;1,700&family=DM+Sans:wght@400;500;600&display=swap");
 
-/* ═══════════════════════════════════════════════
-   CSS TOKENS / VARIABLES
-═══════════════════════════════════════════════ */
 :root {
   --bg-0: #060608;
   --bg-1: #0c0c10;
@@ -44,9 +41,6 @@
   --navbar-h: 72px;
 }
 
-/* ═══════════════════════════════════════════════
-   RESET
-═══════════════════════════════════════════════ */
 *,
 *::before,
 *::after {
@@ -97,9 +91,6 @@ ul {
   list-style: none;
 }
 
-/* ═══════════════════════════════════════════════
-   SCROLLBAR
-═══════════════════════════════════════════════ */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -115,9 +106,6 @@ ul {
   background: rgba(255, 255, 255, 0.15);
 }
 
-/* ═══════════════════════════════════════════════
-   GRAIN OVERLAY
-═══════════════════════════════════════════════ */
 .grain-overlay {
   position: fixed;
   inset: 0;
@@ -128,9 +116,6 @@ ul {
   background-size: 200px 200px;
 }
 
-/* ═══════════════════════════════════════════════
-   REDUCED MOTION
-═══════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -140,7 +125,6 @@ ul {
   }
 }
 
-/* ── Low-end device overrides ── */
 .low-end .grain-overlay {
   display: none !important;
 }

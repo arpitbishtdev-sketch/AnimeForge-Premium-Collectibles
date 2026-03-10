@@ -3,53 +3,99 @@ const cloudinary = require("../config/cloudinary");
 const StatusConfig = require("../models/StatusConfig");
 const { optimizeImage } = require("../middleware/imageOptimizer");
 
+// ─────────────────────────────────────────────────────
+// Helper: upload a buffer to Cloudinary
+// ─────────────────────────────────────────────────────
+async function uploadToCloudinary(buffer, mimetype, folder) {
+  const optimised = await optimizeImage(buffer, "product", mimetype);
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(
+      { folder, format: "webp" },
+      (error, result) => (error ? reject(error) : resolve(result)),
+    );
+    stream.end(optimised);
+  });
+}
+
+// ─────────────────────────────────────────────────────
+// Helper: upload all images for a single variant
+// ─────────────────────────────────────────────────────
+async function uploadVariantImages(files, variantIndex) {
+  const variantFiles = files
+    .filter(
+      (f) =>
+        f.fieldname === `variantImage_${variantIndex}` ||
+        f.fieldname.startsWith(`variantImage_${variantIndex}_`),
+    )
+    .sort(
+      (a, b) =>
+        parseInt(a.fieldname.split("_")[2] || 0) -
+        parseInt(b.fieldname.split("_")[2] || 0),
+    );
+
+  if (!variantFiles.length) return null;
+
+  const uploaded = [];
+  for (const f of variantFiles) {
+    const result = await uploadToCloudinary(
+      f.buffer,
+      f.mimetype,
+      "animeforge_products/variants",
+    );
+    uploaded.push({ url: result.secure_url, public_id: result.public_id });
+  }
+  return uploaded;
+}
+
+// ─────────────────────────────────────────────────────
+// Helper: safely parse JSON string or return fallback
+// ─────────────────────────────────────────────────────
+function safeParseJSON(value, fallback) {
+  if (!value) return fallback;
+  if (typeof value !== "string") return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
+// ─────────────────────────────────────────────────────
 // GET all products
+// ─────────────────────────────────────────────────────
 exports.getAllProducts = async (req, res) => {
   try {
     const { search, category, limit, displaySection, tag } = req.query;
-
     const filter = {};
-
-    if (displaySection) {
-      filter.displaySection = displaySection;
-    }
-
-    if (category) {
-      filter.category = category;
-    }
-    if (tag) {
-      filter.tags = { $in: [tag.toLowerCase()] };
-    }
-
+    if (displaySection) filter.displaySection = displaySection;
+    if (category) filter.category = category;
+    if (tag) filter.tags = { $in: [tag.toLowerCase()] };
     if (search && search.trim()) {
-      const trimmed = search.trim();
+      const t = search.trim();
       filter.$or = [
-        { name: { $regex: trimmed, $options: "i" } },
-        { tags: { $regex: trimmed, $options: "i" } },
+        { name: { $regex: t, $options: "i" } },
+        { tags: { $regex: t, $options: "i" } },
       ];
     }
 
     let query = Product.find(filter).sort({ createdAt: -1 });
-
-    if (limit && !isNaN(parseInt(limit))) {
+    if (limit && !isNaN(parseInt(limit)))
       query = query.limit(Math.min(parseInt(limit), 50));
-    }
 
-    const products = await query;
-    const statuses = await StatusConfig.find();
+    const [products, statuses] = await Promise.all([
+      query,
+      StatusConfig.find(),
+    ]);
 
     const formatted = products.map((p) => {
-      const obj = p.toObject ? p.toObject() : p;
-
-      const statusConfig = statuses.find((s) => {
-        if (!s.status || !obj.status) return false;
-        return s.status.toLowerCase() === obj.status.toLowerCase();
-      });
-
+      const obj = p.toObject();
+      const sc = statuses.find(
+        (s) => s.status?.toLowerCase() === obj.status?.toLowerCase(),
+      );
       return {
         ...obj,
         image: obj.images?.[0]?.url || null,
-        themeColor: statusConfig?.color || null,
+        themeColor: sc?.color || obj.themeColor || null,
       };
     });
 
@@ -60,280 +106,74 @@ exports.getAllProducts = async (req, res) => {
   }
 };
 
-// GET single product
-exports.getSingleProduct = async (req, res, next) => {
+// ─────────────────────────────────────────────────────
+// GET single product by ID
+// ─────────────────────────────────────────────────────
+exports.getSingleProduct = async (req, res) => {
   try {
     const product = await Product.findById(req.params.id);
-
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
+    if (!product) return res.status(404).json({ message: "Product not found" });
     res.status(200).json(product);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// CREATE product
-exports.createProduct = async (req, res) => {
-  let uploadedImages = [];
-
+// ─────────────────────────────────────────────────────
+// GET product by slug
+// Also returns sibling products that share the same variantGroup
+// ─────────────────────────────────────────────────────
+exports.getProductBySlug = async (req, res) => {
   try {
-    let tags = [];
-    if (req.body && req.body.tags) {
-      try {
-        tags =
-          typeof req.body.tags === "string"
-            ? JSON.parse(req.body.tags)
-            : req.body.tags;
-      } catch (err) {
-        console.log("Tag parse error:", err);
-        tags = [];
-      }
-    }
+    const product = await Product.findOne({ slug: req.params.slug });
+    if (!product) return res.status(404).json({ message: "Product not found" });
 
-    if (req.body.displaySection === "shop") {
-      const count = await Product.countDocuments({ displaySection: "shop" });
-      if (count >= 6) {
-        return res.status(400).json({
-          message: "Shop already has 6 products. Remove one first.",
-        });
-      }
-    }
+    const statusConfig = await StatusConfig.findOne({ status: product.status });
+    const obj = product.toObject();
 
-    if (Array.isArray(req.files) && req.files.length > 0) {
-      for (const file of req.files) {
-        const optimised = await optimizeImage(
-          file.buffer,
-          "product",
-          file.mimetype,
-        );
-        const result = await new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            { folder: "animeforge_products", format: "webp" },
-            (error, result) => {
-              if (error) reject(error);
-              else resolve(result);
-            },
-          );
-          stream.end(optimised);
-        });
-        uploadedImages.push({
-          url: result.secure_url,
-          public_id: result.public_id,
-        });
-      }
-    }
+    // Fetch sibling products that share the same variantGroup
+    let siblings = [];
+    if (obj.variantGroup) {
+      const siblingDocs = await Product.find({
+        variantGroup: obj.variantGroup,
+        _id: { $ne: obj._id }, // exclude self
+      }).select("name slug images basePrice status themeColor variantGroup");
 
-    const product = await Product.create({
-      ...req.body,
-      tags,
-      images: uploadedImages,
-    });
-
-    res.status(201).json(product);
-  } catch (error) {
-    console.error("CREATE PRODUCT ERROR:", error);
-
-    if (uploadedImages.length > 0) {
-      for (const img of uploadedImages) {
-        await cloudinary.uploader.destroy(img.public_id);
-      }
-    }
-
-    if (error.code === 11000) {
-      return res.status(400).json({
-        message: "Slug already exists. Please use a different slug.",
+      siblings = siblingDocs.map((s) => {
+        const sObj = s.toObject();
+        return {
+          ...sObj,
+          image: sObj.images?.[0]?.url || null,
+        };
       });
     }
 
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// UPDATE product
-exports.updateProduct = async (req, res) => {
-  let newUploadedImages = [];
-
-  try {
-    const product = await Product.findById(req.params.id);
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
-    // Parse tags
-    let tags = [];
-    if (req.body && req.body.tags) {
-      try {
-        tags =
-          typeof req.body.tags === "string"
-            ? JSON.parse(req.body.tags)
-            : req.body.tags;
-      } catch (err) {
-        console.log("Tag parse error:", err);
-        tags = [];
-      }
-    }
-
-    // Delete removed images from Cloudinary
-    if (
-      req.body &&
-      req.body.deletedImages &&
-      req.body.deletedImages !== "undefined"
-    ) {
-      const deletedImages =
-        typeof req.body.deletedImages === "string"
-          ? JSON.parse(req.body.deletedImages)
-          : req.body.deletedImages;
-
-      for (const imgId of deletedImages) {
-        const image = product.images.find((i) => i.public_id === imgId);
-        if (image) {
-          await cloudinary.uploader.destroy(imgId);
-        }
-      }
-
-      product.images = product.images.filter(
-        (img) => !deletedImages.includes(img.public_id),
-      );
-    }
-
-    // ── Upload NEW images to Cloudinary ──
-    if (Array.isArray(req.files) && req.files.length > 0) {
-      // AFTER
-      for (const file of req.files) {
-        const optimised = await optimizeImage(
-          file.buffer,
-          "product",
-          file.mimetype,
-        );
-        const result = await new Promise((resolve, reject) => {
-          const stream = cloudinary.uploader.upload_stream(
-            { folder: "animeforge_products", format: "webp" },
-            (error, result) => {
-              if (error) reject(error);
-              else resolve(result);
-            },
-          );
-          stream.end(optimised);
-        });
-        newUploadedImages.push({
-          url: result.secure_url,
-          public_id: result.public_id,
-        });
-      }
-    }
-
-    // ── Re-order saved images per imageOrder, then APPEND new uploads ──
-    // imageOrder contains public_ids of SAVED images only (in desired order).
-    // New uploads are always appended AFTER saved images in the order
-    // they appeared in allImages on the frontend.
-    let savedImages = [...product.images];
-
-    if (
-      req.body &&
-      req.body.imageOrder &&
-      req.body.imageOrder !== "undefined"
-    ) {
-      try {
-        const order =
-          typeof req.body.imageOrder === "string"
-            ? JSON.parse(req.body.imageOrder)
-            : req.body.imageOrder;
-
-        // Re-order existing saved images according to the frontend order
-        const orderedSaved = order
-          .map((id) => savedImages.find((img) => img.public_id === id))
-          .filter(Boolean);
-
-        // Any saved images not in order (safety net) go at the end
-        const unordered = savedImages.filter(
-          (img) => !order.includes(img.public_id),
-        );
-
-        savedImages = [...orderedSaved, ...unordered];
-      } catch (err) {
-        console.error("Image order parse error:", err);
-      }
-    }
-
-    // Final merged list: ordered saved images + newly uploaded images
-    product.images = [...savedImages, ...newUploadedImages];
-
-    // Update fields
-    product.name = req.body.name ?? product.name;
-    product.slug = req.body.slug ?? product.slug;
-    product.category = req.body.category ?? product.category;
-
-    if (req.body.basePrice !== undefined) {
-      product.basePrice = Number(req.body.basePrice);
-    }
-
-    if (req.body.originalPrice !== undefined && req.body.originalPrice !== "") {
-      product.originalPrice = Number(req.body.originalPrice);
-    }
-
-    if (req.body.stock !== undefined) {
-      product.stock = Number(req.body.stock);
-    }
-
-    product.description = req.body.description ?? product.description;
-    product.status = req.body.status ?? product.status;
-    product.themeColor = req.body.themeColor ?? product.themeColor;
-    product.tags = tags.length > 0 ? tags : product.tags;
-
-    await product.save();
-
-    res.status(200).json(product);
+    res.status(200).json({
+      ...obj,
+      image: obj.images?.[0]?.url || null,
+      themeColor: statusConfig?.color || obj.themeColor || null,
+      siblings, // [] if no variantGroup, otherwise the linked products
+    });
   } catch (error) {
-    console.error("UPDATE PRODUCT ERROR:", error);
-
-    // Cleanup any newly uploaded images if save failed
-    if (newUploadedImages.length > 0) {
-      for (const img of newUploadedImages) {
-        await cloudinary.uploader.destroy(img.public_id).catch(() => {});
-      }
-    }
-
     res.status(500).json({ message: error.message });
   }
 };
 
-// DELETE product
-exports.deleteProduct = async (req, res) => {
-  try {
-    const product = await Product.findById(req.params.id);
-
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
-    for (const img of product.images) {
-      if (img.public_id) {
-        await cloudinary.uploader.destroy(img.public_id);
-      }
-    }
-    await product.deleteOne();
-
-    res.status(200).json({ message: "Product deleted successfully" });
-  } catch (error) {
-    console.log("DELETE ERROR:", error);
-    res.status(500).json({ message: error.message });
-  }
-};
-
-// GET Shop products
+// ─────────────────────────────────────────────────────
+// GET shop products
+// ─────────────────────────────────────────────────────
 exports.getShopProducts = async (req, res) => {
   try {
-    const products = await Product.find({ displaySection: "collection" });
+    const products = await Product.find({ displaySection: "shop" });
     res.status(200).json(products);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// GET Collection products
+// ─────────────────────────────────────────────────────
+// GET collection products
+// ─────────────────────────────────────────────────────
 exports.getCollectionProducts = async (req, res) => {
   try {
     const products = await Product.find({ displaySection: "collection" });
@@ -343,27 +183,345 @@ exports.getCollectionProducts = async (req, res) => {
   }
 };
 
-// GET product by SLUG
-exports.getProductBySlug = async (req, res) => {
-  try {
-    const product = await Product.findOne({ slug: req.params.slug });
+// ─────────────────────────────────────────────────────
+// CREATE product
+// ─────────────────────────────────────────────────────
+exports.createProduct = async (req, res) => {
+  let uploadedImages = [];
 
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
+  try {
+    const tags = safeParseJSON(req.body.tags, []);
+    let variants = safeParseJSON(req.body.variants, []);
+
+    // ── Shop section limit check ──
+    if (req.body.displaySection === "shop") {
+      const count = await Product.countDocuments({ displaySection: "shop" });
+      if (count >= 6) {
+        return res.status(400).json({
+          message:
+            "Shop already has 6 products. Remove one before adding another.",
+        });
+      }
     }
 
-    const statusConfig = await StatusConfig.findOne({
-      status: product.status,
+    // ── Upload main product images ──
+    if (Array.isArray(req.files)) {
+      for (const file of req.files) {
+        if (file.fieldname === "images") {
+          const result = await uploadToCloudinary(
+            file.buffer,
+            file.mimetype,
+            "animeforge_products",
+          );
+          uploadedImages.push({
+            url: result.secure_url,
+            public_id: result.public_id,
+          });
+        }
+      }
+
+      // ── Upload variant images ──
+      for (let i = 0; i < variants.length; i++) {
+        const uploaded = await uploadVariantImages(req.files, i);
+        if (uploaded) {
+          variants[i].image = uploaded[0];
+          variants[i].images = uploaded;
+        }
+      }
+    }
+
+    // ── Normalise variantGroup ──
+    const variantGroup = req.body.variantGroup
+      ? req.body.variantGroup.trim().toLowerCase().replace(/\s+/g, "-")
+      : undefined;
+
+    const product = await Product.create({
+      name: req.body.name,
+      slug: req.body.slug,
+      description: req.body.description || "",
+      category: req.body.category,
+      basePrice: Number(req.body.basePrice),
+      originalPrice: req.body.originalPrice
+        ? Number(req.body.originalPrice)
+        : undefined,
+      stock: Number(req.body.stock) || 0,
+      status: req.body.status || "new",
+      displaySection: req.body.displaySection || "collection",
+      themeColor: req.body.themeColor || undefined,
+      variantGroup: variantGroup || undefined,
+      tags,
+      variants,
+      images: uploadedImages,
     });
 
-    const obj = product.toObject();
+    res.status(201).json(product);
+  } catch (error) {
+    console.error("CREATE PRODUCT ERROR:", error);
 
-    res.status(200).json({
-      ...obj,
-      image: obj.images?.[0]?.url || null,
-      themeColor: statusConfig?.color || null,
+    for (const img of uploadedImages) {
+      await cloudinary.uploader.destroy(img.public_id).catch(() => {});
+    }
+
+    if (error.code === 11000)
+      return res.status(400).json({
+        message: "Slug already exists. Use a different product name.",
+      });
+
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors)
+        .map((e) => e.message)
+        .join(", ");
+      return res.status(400).json({ message: messages });
+    }
+
+    res.status(500).json({ message: error.message || "Server error" });
+  }
+};
+
+// ─────────────────────────────────────────────────────
+// UPDATE product
+// ─────────────────────────────────────────────────────
+exports.updateProduct = async (req, res) => {
+  let newUploadedImages = [];
+
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    // ── Shop limit check on section change ──
+    if (
+      req.body.displaySection === "shop" &&
+      product.displaySection !== "shop"
+    ) {
+      const count = await Product.countDocuments({ displaySection: "shop" });
+      if (count >= 6) {
+        return res.status(400).json({
+          message:
+            "Shop already has 6 products. Remove one before moving here.",
+        });
+      }
+    }
+
+    const tags = safeParseJSON(req.body.tags, null);
+
+    // ── Handle variants ──
+    if (req.body.variants !== undefined) {
+      let variants = safeParseJSON(req.body.variants, product.variants);
+
+      if (Array.isArray(req.files)) {
+        for (let i = 0; i < variants.length; i++) {
+          const uploaded = await uploadVariantImages(req.files, i);
+          if (uploaded) {
+            const oldImgs = variants[i]?.images?.length
+              ? variants[i].images
+              : variants[i]?.image
+                ? [variants[i].image]
+                : [];
+            for (const old of oldImgs) {
+              if (old?.public_id)
+                await cloudinary.uploader
+                  .destroy(old.public_id)
+                  .catch(() => {});
+            }
+            variants[i].image = uploaded[0];
+            variants[i].images = uploaded;
+          }
+        }
+      }
+
+      product.variants = variants;
+    }
+
+    // ── Handle deleted main images ──
+    if (req.body.deletedImages && req.body.deletedImages !== "undefined") {
+      const deletedIds = safeParseJSON(req.body.deletedImages, []);
+      for (const imgId of deletedIds) {
+        if (product.images.find((i) => i.public_id === imgId)) {
+          await cloudinary.uploader.destroy(imgId).catch(() => {});
+        }
+      }
+      product.images = product.images.filter(
+        (img) => !deletedIds.includes(img.public_id),
+      );
+    }
+
+    // ── Upload new main product images ──
+    if (Array.isArray(req.files)) {
+      for (const file of req.files) {
+        if (file.fieldname === "images") {
+          const result = await uploadToCloudinary(
+            file.buffer,
+            file.mimetype,
+            "animeforge_products",
+          );
+          newUploadedImages.push({
+            url: result.secure_url,
+            public_id: result.public_id,
+          });
+        }
+      }
+    }
+
+    // ── Re-order saved images ──
+    let savedImages = [...product.images];
+    if (req.body.imageOrder && req.body.imageOrder !== "undefined") {
+      const order = safeParseJSON(req.body.imageOrder, []);
+      if (order.length) {
+        const orderedSaved = order
+          .map((id) => savedImages.find((img) => img.public_id === id))
+          .filter(Boolean);
+        const unordered = savedImages.filter(
+          (img) => !order.includes(img.public_id),
+        );
+        savedImages = [...orderedSaved, ...unordered];
+      }
+    }
+    product.images = [...savedImages, ...newUploadedImages];
+
+    // ── Update scalar fields ──
+    if (req.body.name !== undefined) product.name = req.body.name;
+    if (req.body.slug !== undefined) product.slug = req.body.slug;
+    if (req.body.category !== undefined) product.category = req.body.category;
+    if (req.body.description !== undefined)
+      product.description = req.body.description;
+    if (req.body.status !== undefined) product.status = req.body.status;
+    if (req.body.themeColor !== undefined)
+      product.themeColor = req.body.themeColor;
+    if (req.body.displaySection !== undefined)
+      product.displaySection = req.body.displaySection;
+    if (req.body.basePrice !== undefined)
+      product.basePrice = Number(req.body.basePrice);
+    if (req.body.stock !== undefined) product.stock = Number(req.body.stock);
+    if (req.body.originalPrice !== undefined && req.body.originalPrice !== "")
+      product.originalPrice = Number(req.body.originalPrice);
+    if (tags !== null && tags.length > 0) product.tags = tags;
+
+    // ── Update variantGroup ──
+    if (req.body.variantGroup !== undefined) {
+      const vg = req.body.variantGroup
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, "-");
+      product.variantGroup = vg || undefined;
+    }
+
+    await product.save();
+    res.status(200).json(product);
+  } catch (error) {
+    console.error("UPDATE PRODUCT ERROR:", error);
+    for (const img of newUploadedImages) {
+      await cloudinary.uploader.destroy(img.public_id).catch(() => {});
+    }
+
+    if (error.name === "ValidationError") {
+      const messages = Object.values(error.errors)
+        .map((e) => e.message)
+        .join(", ");
+      return res.status(400).json({ message: messages });
+    }
+
+    res.status(500).json({ message: error.message || "Server error" });
+  }
+};
+
+// ─────────────────────────────────────────────────────
+// DELETE product
+// ─────────────────────────────────────────────────────
+exports.deleteProduct = async (req, res) => {
+  try {
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    for (const img of product.images) {
+      if (img.public_id)
+        await cloudinary.uploader.destroy(img.public_id).catch(() => {});
+    }
+
+    for (const v of product.variants || []) {
+      const imgs = v.images?.length ? v.images : v.image ? [v.image] : [];
+      for (const img of imgs) {
+        if (img?.public_id)
+          await cloudinary.uploader.destroy(img.public_id).catch(() => {});
+      }
+    }
+
+    await product.deleteOne();
+    res.status(200).json({ message: "Product deleted successfully" });
+  } catch (error) {
+    console.error("DELETE ERROR:", error);
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// ─────────────────────────────────────────────────────
+// PROMOTE variant to its own independent product
+// ─────────────────────────────────────────────────────
+exports.promoteVariant = async (req, res) => {
+  try {
+    const { id, variantIndex } = req.params;
+    const product = await Product.findById(id);
+    if (!product) return res.status(404).json({ message: "Product not found" });
+
+    const vi = parseInt(variantIndex);
+    const variant = product.variants[vi];
+    if (!variant) return res.status(404).json({ message: "Variant not found" });
+
+    // Build slug from parent name + variant value
+    const slugBase = `${product.slug}-${variant.value}`
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-");
+
+    // Check slug uniqueness, append -2/-3 if taken
+    let slug = slugBase;
+    let suffix = 2;
+    while (await Product.findOne({ slug })) {
+      slug = `${slugBase}-${suffix++}`;
+    }
+
+    // New product inherits parent data, overrides with variant data
+    const newProduct = await Product.create({
+      name: variant.title?.trim() || `${product.name} — ${variant.value}`,
+      slug,
+      description: variant.description?.trim() || product.description || "",
+      category: variant.category || product.category,
+      basePrice: product.basePrice + Number(variant.priceModifier || 0),
+      stock: Number(variant.stock) || 0,
+      status: variant.status || product.status,
+      themeColor: product.themeColor,
+      displaySection: product.displaySection,
+      // Same variantGroup so it shows as sibling automatically
+      variantGroup: product.variantGroup || product.slug,
+      tags: variant.tags?.length ? variant.tags : product.tags,
+      images: variant.images?.length
+        ? variant.images
+        : variant.image?.url
+          ? [variant.image]
+          : product.images,
+      variants: [],
+    });
+
+    // Also set variantGroup on parent if it didn't have one
+    if (!product.variantGroup) {
+      product.variantGroup = product.slug;
+      await product.save();
+    }
+
+    // Auto-delete the promoted variant from parent
+    product.variants.splice(vi, 1);
+    await product.save();
+
+    res.status(201).json({
+      message: "Variant promoted to product successfully",
+      product: newProduct,
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("PROMOTE VARIANT ERROR:", error);
+    if (error.code === 11000)
+      return res
+        .status(400)
+        .json({ message: "A product with this slug already exists." });
+    res.status(500).json({ message: error.message || "Server error" });
   }
 };

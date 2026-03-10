@@ -138,7 +138,7 @@ export default function Store({
       try {
         const data = await api.getCollections({ displaySection: "shop" });
         if (!cancelled) {
-          setProducts(Array.isArray(data) ? data : []);
+          setProducts(Array.isArray(data) ? data.slice(0, 6) : []);
           setLoading(false);
         }
       } catch (err) {

@@ -1611,7 +1611,7 @@
 
 .cin-overlay {
   position: fixed;
-  top: 72px;
+  top: 0;
   left: 0;
   right: 0;
   bottom: 0;
@@ -1643,12 +1643,26 @@
   z-index: 0;
 }
 
+.cin-bg-blur {
+  position: absolute;
+  inset: -40px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  filter: blur(40px) brightness(0.6);
+  transform: scale(1.1);
+  z-index: 1; /* blur = behind */
+  pointer-events: none;
+}
+
 .cin-bg-img {
   position: absolute;
   inset: 0;
+  top: 85px;
   background-size: cover;
-  background-position: center top;
-  z-index: 1;
+  background-position: center center;
+  background-repeat: no-repeat;
+  z-index: 2; /* sharp = in front of blur */
   pointer-events: none;
 }
 
