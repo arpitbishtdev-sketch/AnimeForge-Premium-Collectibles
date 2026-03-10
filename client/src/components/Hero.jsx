@@ -1,10 +1,10 @@
-import { useEffect, useRef, useCallback, useMemo } from "react";
+import { useEffect, useRef, useCallback, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
 import { useDeviceCapabilities } from "../hooks/useDeviceCapabilities";
 import "../styles/hero.css";
-// const loadModelViewer = () => import("@google/model-viewer");
 
+// ─── Fade colors per character (your theme system) ───────────────────────────
 const FADE_COLORS = {
   naruto: "rgba(10,4,0,1)",
   spiderman: "rgba(10,0,0,1)",
@@ -12,6 +12,7 @@ const FADE_COLORS = {
   luffy: "rgba(0,4,14,1)",
 };
 
+// ─── Animation variants ───────────────────────────────────────────────────────
 const characterEnterVariants = {
   initial: { opacity: 0, scale: 0.9, y: 40 },
   animate: {
@@ -35,8 +36,77 @@ const textEnterVariants = {
     x: 0,
     transition: { duration: 0.6, delay: i * 0.12, ease: [0.22, 1, 0.36, 1] },
   }),
-  exit: { opacity: 0, x: -25, transition: { duration: 0.25, ease: "easeIn" } },
+  exit: {
+    opacity: 0,
+    x: -25,
+    transition: { duration: 0.25, ease: "easeIn" },
+  },
 };
+
+// ════════════════════════════════════════════════════════════════
+// CINEMATIC OVERLAY
+// ════════════════════════════════════════════════════════════════
+function CinematicOverlay({ onComplete }) {
+  const overlayRef = useRef(null);
+  const topBarRef = useRef(null);
+  const bottomBarRef = useRef(null);
+  const lineRef = useRef(null);
+
+  useEffect(() => {
+    const tl = gsap.timeline({ onComplete });
+
+    // Phase 1: Gold line appears and expands horizontally
+    tl.fromTo(
+      lineRef.current,
+      { width: 0, opacity: 0 },
+      { width: "80%", opacity: 1, duration: 0.8, ease: "power2.out" },
+    )
+      // Phase 2: Line pulses with accent glow
+      .to(lineRef.current, {
+        boxShadow:
+          "0 0 60px 10px rgba(255,140,0,0.5), 0 0 120px 20px rgba(255,140,0,0.2)",
+        duration: 0.3,
+        ease: "power2.in",
+      })
+      // Phase 3: Bars split apart
+      .to(
+        topBarRef.current,
+        { yPercent: -100, duration: 1, ease: "power3.inOut" },
+        "-=0.1",
+      )
+      .to(
+        bottomBarRef.current,
+        { yPercent: 100, duration: 1, ease: "power3.inOut" },
+        "<",
+      )
+      // Phase 4: Line fades
+      .to(
+        lineRef.current,
+        { opacity: 0, duration: 0.4, ease: "power2.in" },
+        "-=0.5",
+      )
+      // Phase 5: Overlay disappears
+      .set(overlayRef.current, { display: "none" });
+
+    return () => {
+      tl.kill();
+    };
+  }, [onComplete]);
+
+  return (
+    <div ref={overlayRef} className="hero-cinematic-overlay">
+      <div
+        ref={topBarRef}
+        className="hero-cinematic-overlay__bar hero-cinematic-overlay__bar--top"
+      />
+      <div
+        ref={bottomBarRef}
+        className="hero-cinematic-overlay__bar hero-cinematic-overlay__bar--bottom"
+      />
+      <div ref={lineRef} className="hero-cinematic-overlay__line" />
+    </div>
+  );
+}
 
 // ════════════════════════════════════════════════════════════════
 // CAROUSEL — hooks always called, conditional render inside return
@@ -47,9 +117,8 @@ function CarouselTrack({ images, speed = 0.45 }) {
   const rafRef = useRef(null);
   const { isLowEnd, isMobile } = useDeviceCapabilities();
 
-  // FIX 2: hooks BEFORE any conditional return
   useEffect(() => {
-    if (isLowEnd) return; // low-end: no animation
+    if (isLowEnd) return;
     const track = trackRef.current;
     if (!track || !images.length) return;
     if (tweenRef.current) tweenRef.current.kill();
@@ -82,9 +151,9 @@ function CarouselTrack({ images, speed = 0.45 }) {
 
   if (isLowEnd) {
     return (
-      <div className="hero-carousel-track">
+      <div className="hero-carousel-track hero-carousel-track--static">
         {images.slice(0, 2).map((src, i) => (
-          <div className="hero-carousel-item" key={i}>
+          <div key={i} className="hero-carousel-item">
             <img src={src} alt="" draggable={false} loading="lazy" />
           </div>
         ))}
@@ -99,7 +168,7 @@ function CarouselTrack({ images, speed = 0.45 }) {
   return (
     <div className="hero-carousel-track" ref={trackRef}>
       {tripled.map((src, i) => (
-        <div className="hero-carousel-item" key={i}>
+        <div key={i} className="hero-carousel-item">
           <img
             src={src.replace("/upload/", "/upload/w_300,q_60,f_webp/")}
             alt=""
@@ -124,17 +193,19 @@ export default function Hero({ character }) {
   const orb1Ref = useRef(null);
   const orb2Ref = useRef(null);
   const orb3Ref = useRef(null);
-  // FIX 1: store parallax tween ref to kill before creating new
   const parallaxTweenRef = useRef(null);
+  const [cinematicDone, setCinematicDone] = useState(false);
+
   const { prefersReducedMotion, isLowEnd, isMobile } = useDeviceCapabilities();
 
+  // Lazy-load model-viewer on capable devices
   useEffect(() => {
     if (!isLowEnd && !isMobile) {
       import("@google/model-viewer");
     }
   }, [isLowEnd, isMobile]);
 
-  // hooks always before conditional return
+  // Always call hooks before conditional return
   const gradient = character?.gradient || {};
 
   const floatVariants = useMemo(
@@ -155,7 +226,7 @@ export default function Hero({ character }) {
     [prefersReducedMotion, isLowEnd, isMobile],
   );
 
-  // FIX 3: capture refs at effect time so onComplete uses correct snapshot
+  // Background gradient transition on character switch (your theme system)
   useEffect(() => {
     if (!character) return;
     const radial = bgRadialRef.current;
@@ -174,9 +245,9 @@ export default function Hero({ character }) {
       return;
     }
 
-    const targets = [radial, linear, orb1, orb2, orb3].filter(Boolean);
-    // snapshot gradient values NOW before async onComplete fires
+    // Snapshot gradient values NOW before async onComplete fires
     const snap = { ...gradient };
+    const targets = [radial, linear, orb1, orb2, orb3].filter(Boolean);
 
     const tl = gsap.timeline();
     tl.to(targets, {
@@ -184,7 +255,6 @@ export default function Hero({ character }) {
       duration: 0.3,
       ease: "power2.in",
       onComplete: () => {
-        // FIX 3: use snapshotted refs + values, not live refs
         if (radial) radial.style.background = snap.radial;
         if (linear) linear.style.background = snap.linear;
         if (orb1) orb1.style.background = snap.accent;
@@ -198,6 +268,7 @@ export default function Hero({ character }) {
     };
   }, [character?.id, isLowEnd, prefersReducedMotion]);
 
+  // Mouse parallax on character
   const handleMouseMove = useCallback(
     (e) => {
       if (isLowEnd || isMobile || prefersReducedMotion) return;
@@ -209,7 +280,6 @@ export default function Hero({ character }) {
       const nx = (clientX - left) / width - 0.5;
       const ny = (clientY - top) / height - 0.5;
 
-      // FIX 1: kill previous tween before new one
       if (parallaxTweenRef.current) parallaxTweenRef.current.kill();
       parallaxTweenRef.current = gsap.to(el, {
         rotateY: nx * 10,
@@ -238,7 +308,7 @@ export default function Hero({ character }) {
     });
   }, []);
 
-  // cleanup all tweens on unmount
+  // Cleanup all tweens on unmount
   useEffect(() => {
     return () => {
       if (parallaxTweenRef.current) parallaxTweenRef.current.kill();
@@ -246,9 +316,18 @@ export default function Hero({ character }) {
     };
   }, []);
 
+  const handleShopClick = useCallback(() => {
+    const s = document.getElementById("shop");
+    s
+      ? s.scrollIntoView({ behavior: "smooth" })
+      : window.scrollTo({ top: window.innerHeight, behavior: "smooth" });
+  }, []);
+
   if (!character) return null;
 
   const btnGradient = `linear-gradient(135deg, ${gradient.accent}, ${gradient.particle})`;
+  const fadeColor = FADE_COLORS[character.id] || "rgba(0,0,0,1)";
+  const characterImage = character.mainImage || character.image;
 
   return (
     <section
@@ -258,13 +337,18 @@ export default function Hero({ character }) {
       onMouseMove={handleMouseMove}
       onMouseLeave={handleMouseLeave}
       style={{
-        "--content-accent": gradient.accent,
-        "--content-glow": gradient.glow,
+        "--accent": gradient.accent,
+        "--accent-glow": gradient.glow,
+        "--hero-fade-color": fadeColor,
         "--btn-gradient": btnGradient,
-        "--hero-fade-color": FADE_COLORS[character.id] || "rgba(0,0,0,1)",
-        "--char-glow": gradient.glow,
       }}
     >
+      {/* ── Cinematic Opening ── */}
+      {!cinematicDone && (
+        <CinematicOverlay onComplete={() => setCinematicDone(true)} />
+      )}
+
+      {/* ── Background Layers ── */}
       <div className="hero-bg">
         <div
           className="hero-bg-radial"
@@ -295,16 +379,11 @@ export default function Hero({ character }) {
             />
           </>
         )}
-        {!isLowEnd && <div className="hero-bg-grid" />}
-        {!isLowEnd && <div className="hero-bg-scanlines" />}
       </div>
+
       <div className="hero-vignette" />
-      {!isLowEnd && <div className="hero-grain" />}
 
-      <div className="hero-carousel-layer">
-        <CarouselTrack images={character.carouselImages || []} />
-      </div>
-
+      {/* ── Decorative Lines (desktop only) ── */}
       {!isMobile && (
         <div className="hero-deco-lines">
           <div className="hero-deco-line" />
@@ -313,6 +392,12 @@ export default function Hero({ character }) {
         </div>
       )}
 
+      {/* ── Carousel ── */}
+      <div className="hero-carousel-layer">
+        <CarouselTrack images={character.carouselImages || []} />
+      </div>
+
+      {/* ── Character Monument ── */}
       <div className="hero-character-wrap">
         <div className="hero-character-ring ring-outer" />
         <div className="hero-character-ring ring-mid" />
@@ -320,11 +405,12 @@ export default function Hero({ character }) {
         <AnimatePresence mode="wait">
           <motion.div
             key={character.id + "-char"}
+            className="hero-character-inner"
+            ref={characterRef}
             variants={characterEnterVariants}
             initial="initial"
             animate="animate"
             exit="exit"
-            ref={characterRef}
             style={{ transformStyle: "preserve-3d" }}
           >
             {character.model3d && !isMobile && !isLowEnd ? (
@@ -341,7 +427,7 @@ export default function Hero({ character }) {
             ) : (
               <motion.img
                 className="hero-character-img"
-                src={(character.mainImage || "/placeholder.png").replace(
+                src={(characterImage || "/placeholder.png").replace(
                   "/upload/",
                   "/upload/w_800,q_80,f_webp/",
                 )}
@@ -364,91 +450,95 @@ export default function Hero({ character }) {
         </AnimatePresence>
       </div>
 
+      {/* ═══ DESKTOP CONTENT ═══ */}
       <div className="hero-content">
         <AnimatePresence mode="wait">
           <motion.div
             key={character.id + "-text"}
             style={{ display: "contents" }}
           >
-            {[
-              {
-                className: "hero-tag",
-                custom: 0,
-                content: (
-                  <>
-                    <span className="hero-tag-dot" />
-                    {character.status}
-                  </>
-                ),
-              },
-              {
-                className: "hero-edition",
-                custom: 1,
-                tag: "p",
-                content: character.edition,
-              },
-            ].map(({ className, custom, tag: Tag = "div", content }) => (
-              <motion.div
-                key={className}
-                className={className}
-                custom={custom}
-                variants={textEnterVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-              >
-                {content}
-              </motion.div>
-            ))}
+            {/* Tag / Status badge */}
+            <motion.div
+              className="hero-tag"
+              custom={0}
+              variants={textEnterVariants}
+              initial="initial"
+              animate={cinematicDone ? "animate" : "initial"}
+              exit="exit"
+            >
+              <span className="hero-tag-dot" />
+              {character.status}
+            </motion.div>
 
+            {/* Edition */}
+            <motion.div
+              className="hero-edition"
+              custom={1}
+              variants={textEnterVariants}
+              initial="initial"
+              animate={cinematicDone ? "animate" : "initial"}
+              exit="exit"
+            >
+              {character.edition}
+            </motion.div>
+
+            {/* Character Name */}
             <motion.h1
               className="hero-title"
               custom={2}
               variants={textEnterVariants}
               initial="initial"
-              animate="animate"
+              animate={cinematicDone ? "animate" : "initial"}
               exit="exit"
             >
               {character.name}
             </motion.h1>
+
+            {/* Decorative rule */}
             <motion.div
               className="hero-title-rule"
               custom={2.5}
               variants={textEnterVariants}
               initial="initial"
-              animate="animate"
+              animate={cinematicDone ? "animate" : "initial"}
               exit="exit"
             >
               <div className="rule-line" />
               <div className="rule-diamond" />
               <div className="rule-line rule-line--short" />
             </motion.div>
-            <motion.p
+
+            {/* Subtitle */}
+            <motion.h2
               className="hero-subtitle"
               custom={3}
               variants={textEnterVariants}
               initial="initial"
-              animate="animate"
+              animate={cinematicDone ? "animate" : "initial"}
               exit="exit"
             >
               {character.subtitle}
-            </motion.p>
+            </motion.h2>
+
+            {/* Description */}
             <motion.p
               className="hero-description"
               custom={4}
               variants={textEnterVariants}
               initial="initial"
-              animate="animate"
+              animate={cinematicDone ? "animate" : "initial"}
               exit="exit"
             >
               {character.description}
             </motion.p>
+
+            {/* Price */}
             <motion.div
               className="hero-price-row"
               custom={5}
               variants={textEnterVariants}
               initial="initial"
-              animate="animate"
+              animate={cinematicDone ? "animate" : "initial"}
               exit="exit"
             >
               <div className="hero-price-inner">
@@ -464,25 +554,19 @@ export default function Hero({ character }) {
                 </span>
               </div>
             </motion.div>
+
+            {/* CTAs */}
             <motion.div
               className="hero-cta-row"
               custom={6}
               variants={textEnterVariants}
               initial="initial"
-              animate="animate"
+              animate={cinematicDone ? "animate" : "initial"}
               exit="exit"
             >
               <button
                 className="btn-shop-now"
-                onClick={() => {
-                  const s = document.getElementById("shop");
-                  s
-                    ? s.scrollIntoView({ behavior: "smooth" })
-                    : window.scrollTo({
-                        top: window.innerHeight,
-                        behavior: "smooth",
-                      });
-                }}
+                onClick={handleShopClick}
                 style={{ background: btnGradient }}
               >
                 <span className="btn-shop-now-text">Shop Now</span>
@@ -493,12 +577,14 @@ export default function Hero({ character }) {
                 <span>Wishlist</span>
               </button>
             </motion.div>
+
+            {/* Stats */}
             <motion.div
               className="hero-stats"
               custom={7}
               variants={textEnterVariants}
               initial="initial"
-              animate="animate"
+              animate={cinematicDone ? "animate" : "initial"}
               exit="exit"
             >
               <div className="hero-stat">
@@ -520,12 +606,20 @@ export default function Hero({ character }) {
         </AnimatePresence>
       </div>
 
+      {/* ── Scroll Hint (desktop only) ── */}
       {!isMobile && (
-        <div className="hero-scroll-hint">
+        <motion.div
+          className="hero-scroll-hint"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: cinematicDone ? 1 : 0 }}
+          transition={{ delay: 1.5, duration: 1 }}
+        >
           <div className="hero-scroll-line" />
           <span className="hero-scroll-text">Scroll to explore</span>
-        </div>
+        </motion.div>
       )}
+
+      {/* ── Corner Accents (desktop only) ── */}
       {!isMobile && (
         <>
           <div className="hero-corner-accent top-left" />
@@ -533,6 +627,7 @@ export default function Hero({ character }) {
         </>
       )}
 
+      {/* ═══ MOBILE CARD ═══ */}
       <div className="hero-mobile-card">
         <AnimatePresence mode="wait">
           <motion.div
@@ -550,13 +645,17 @@ export default function Hero({ character }) {
               </div>
               <span className="mob-card-edition">{character.edition}</span>
             </div>
+
             <h1 className="mob-card-title">{character.name}</h1>
+
             <div className="mob-card-rule">
               <div className="rule-line" style={{ width: 40 }} />
               <div className="rule-diamond" />
               <div className="rule-line" style={{ width: 16 }} />
             </div>
+
             <p className="mob-card-subtitle">{character.subtitle}</p>
+
             <div className="mob-card-price-row">
               <div className="mob-card-price">
                 <span className="hero-price-currency">$</span>
@@ -567,15 +666,7 @@ export default function Hero({ character }) {
               <div className="mob-card-btns">
                 <button
                   className="btn-shop-now mob-shop-btn"
-                  onClick={() => {
-                    const s = document.getElementById("shop");
-                    s
-                      ? s.scrollIntoView({ behavior: "smooth" })
-                      : window.scrollTo({
-                          top: window.innerHeight,
-                          behavior: "smooth",
-                        });
-                  }}
+                  onClick={handleShopClick}
                   style={{ background: btnGradient }}
                 >
                   Shop Now <span className="btn-shop-now-icon">→</span>
@@ -583,6 +674,7 @@ export default function Hero({ character }) {
                 <button className="btn-wishlist mob-wish-btn">♡</button>
               </div>
             </div>
+
             <div className="mob-card-stats">
               <div className="hero-stat">
                 <span className="hero-stat-value">2.4k+</span>

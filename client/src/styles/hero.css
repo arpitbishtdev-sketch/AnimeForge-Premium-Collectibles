@@ -1,3 +1,5 @@
+@import url("https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Rajdhani:wght@400;500;600;700&family=Barlow+Condensed:wght@400;600;700&display=swap");
+
 /* ═══════════════════════════════════════════
    HERO WRAPPER
 ═══════════════════════════════════════════ */
@@ -11,6 +13,45 @@
   align-items: center;
   isolation: isolate;
   z-index: 1;
+}
+
+/* ═══════════════════════════════════════════
+   CINEMATIC OVERLAY
+═══════════════════════════════════════════ */
+.hero-cinematic-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.hero-cinematic-overlay__bar {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: #050505;
+  will-change: transform;
+}
+.hero-cinematic-overlay__bar--top {
+  top: 0;
+}
+.hero-cinematic-overlay__bar--bottom {
+  bottom: 0;
+}
+
+.hero-cinematic-overlay__line {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 0;
+  height: 1px;
+  background: var(--accent, #ff8c00);
+  box-shadow:
+    0 0 30px 4px var(--accent, rgba(255, 140, 0, 0.4)),
+    0 0 80px 8px rgba(255, 140, 0, 0.15);
+  z-index: 2;
 }
 
 /* ═══════════════════════════════════════════
@@ -36,14 +77,12 @@
   opacity: 0.6;
 }
 
-/* REMOVED .hero-bg-grid - saves 21KB */
-/* REMOVED .hero-bg-scanlines - saves 4KB */
-
 .hero-bg-animated-orb {
   position: absolute;
   border-radius: 50%;
   filter: blur(100px);
   pointer-events: none;
+  will-change: transform;
 }
 
 .orb-1 {
@@ -113,8 +152,6 @@
     );
 }
 
-/* REMOVED .hero-grain - saves 8KB */
-
 /* ═══════════════════════════════════════════
    DECORATIVE LINES
 ═══════════════════════════════════════════ */
@@ -176,7 +213,7 @@
   background: linear-gradient(
     to right,
     var(--hero-fade-color, rgba(0, 0, 0, 1)) 0%,
-    var(--hero-fade-color) 20%,
+    var(--hero-fade-color, rgba(0, 0, 0, 1)) 20%,
     transparent 100%
   );
 }
@@ -185,7 +222,7 @@
   background: linear-gradient(
     to left,
     var(--hero-fade-color, rgba(0, 0, 0, 1)) 0%,
-    var(--hero-fade-color) 20%,
+    var(--hero-fade-color, rgba(0, 0, 0, 1)) 20%,
     transparent 100%
   );
 }
@@ -197,6 +234,11 @@
   will-change: transform;
   flex-shrink: 0;
   white-space: nowrap;
+}
+
+.hero-carousel-track--static {
+  justify-content: center;
+  height: 100%;
 }
 
 .hero-carousel-item {
@@ -232,6 +274,13 @@
   align-items: flex-end;
   justify-content: center;
   pointer-events: none;
+}
+
+.hero-character-inner {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  will-change: transform;
 }
 
 .hero-character-ring {
@@ -313,6 +362,7 @@ model-viewer.hero-character-img {
   pointer-events: none;
 }
 
+/* Tag / Status badge */
 .hero-tag {
   display: inline-flex;
   align-items: center;
@@ -424,6 +474,7 @@ model-viewer.hero-character-img {
   padding-left: 16px;
 }
 
+/* Price row */
 .hero-price-row {
   display: flex;
   align-items: center;
@@ -471,6 +522,7 @@ model-viewer.hero-character-img {
   text-transform: uppercase;
 }
 
+/* CTA row */
 .hero-cta-row {
   display: flex;
   align-items: center;
@@ -499,7 +551,7 @@ model-viewer.hero-character-img {
     transform 0.25s ease,
     box-shadow 0.25s ease;
   box-shadow: 0 6px 30px var(--accent-glow, rgba(255, 140, 0, 0.35));
-  touch-action: manipulation; /* ← Remove 300ms tap delay */
+  touch-action: manipulation;
 }
 .btn-shop-now::before {
   content: "";
@@ -563,8 +615,8 @@ model-viewer.hero-character-img {
   gap: 8px;
   transition: all 0.25s ease;
   backdrop-filter: blur(10px);
-  touch-action: manipulation; /* ← Remove 300ms tap delay */
-  min-height: 48px; /* Mobile tap target */
+  touch-action: manipulation;
+  min-height: 48px;
   min-width: 48px;
 }
 .btn-wishlist:hover {
@@ -732,7 +784,6 @@ model-viewer.hero-character-img {
   .hero-price {
     font-size: 44px;
   }
-
   .btn-shop-now {
     padding: 13px 30px;
     font-size: 14px;
@@ -740,11 +791,9 @@ model-viewer.hero-character-img {
   .btn-wishlist {
     padding: 12px 18px;
   }
-
   .hero-cta-row {
     margin-bottom: 28px;
   }
-
   .hero-scroll-hint {
     bottom: 70px;
   }
@@ -844,6 +893,7 @@ model-viewer.hero-character-img {
     height: 28px;
   }
 
+  /* Mobile card */
   .hero-mobile-card {
     display: block;
     position: absolute;
@@ -974,8 +1024,8 @@ model-viewer.hero-character-img {
     transition:
       transform 0.2s ease,
       box-shadow 0.2s ease;
-    touch-action: manipulation; /* ← Remove tap delay */
-    min-height: 48px; /* Mobile standard */
+    touch-action: manipulation;
+    min-height: 48px;
   }
   .mob-shop-btn::before {
     content: "";
@@ -997,7 +1047,7 @@ model-viewer.hero-character-img {
     color: rgba(255, 255, 255, 0.6);
     background: rgba(255, 255, 255, 0.05);
     border: 1px solid rgba(255, 255, 255, 0.12);
-    width: 48px; /* Mobile standard tap size */
+    width: 48px;
     height: 48px;
     border-radius: 3px;
     cursor: pointer;
