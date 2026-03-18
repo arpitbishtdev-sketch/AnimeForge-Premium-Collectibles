@@ -1214,3 +1214,204 @@
     max-width: 100%;
   }
 }
+
+/* ──────────────────────────────────────────
+   AUTH FORM (Login / Register)
+──────────────────────────────────────────*/
+.auth-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+  background: linear-gradient(
+    135deg,
+    rgba(20, 15, 40, 0.9),
+    rgba(25, 20, 45, 0.9)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  backdrop-filter: blur(30px);
+  box-shadow: 0 0 60px rgba(255, 140, 0, 0.1);
+  animation: card-fade-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.auth-logo {
+  font-size: 48px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.auth-title {
+  font-family: "Bebas Neue", cursive;
+  font-size: 32px;
+  letter-spacing: 3px;
+  color: #fff;
+  text-align: center;
+  margin: 0 0 8px 0;
+}
+
+.auth-subtitle {
+  font-family: "Rajdhani", sans-serif;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: center;
+  margin: 0 0 28px 0;
+  letter-spacing: 1px;
+}
+
+.auth-error {
+  background: rgba(255, 100, 100, 0.1);
+  border: 1px solid rgba(255, 100, 100, 0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #ff8888;
+  font-family: "Rajdhani", sans-serif;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.auth-success {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  border-radius: 8px;
+  padding: 10px 14px;
+  color: #22c55e;
+  font-family: "Rajdhani", sans-serif;
+  font-size: 13px;
+  margin-bottom: 16px;
+}
+
+.auth-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.auth-label {
+  font-family: "Rajdhani", sans-serif;
+  font-size: 11px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 700;
+}
+
+.auth-input {
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: #fff;
+  font-family: "Rajdhani", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  outline: none;
+  transition:
+    border-color 0.25s ease,
+    background 0.25s ease;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.auth-input:focus {
+  border-color: var(--accent-color, #ff8c00);
+  background: rgba(255, 255, 255, 0.07);
+}
+
+.auth-input::placeholder {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.auth-pass-wrap {
+  position: relative;
+}
+
+.auth-pass-wrap .auth-input {
+  padding-right: 44px;
+}
+
+.auth-eye {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  padding: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+}
+
+.auth-eye:hover {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.auth-submit {
+  width: 100%;
+  margin-top: 24px;
+  padding: 14px;
+  border: none;
+  border-radius: 10px;
+  color: #000;
+  font-family: "Rajdhani", sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 4px 20px rgba(255, 140, 0, 0.3);
+}
+
+.auth-submit:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-2px);
+}
+
+.auth-submit:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.auth-toggle {
+  width: 100%;
+  margin-top: 16px;
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-family: "Rajdhani", sans-serif;
+  font-size: 12px;
+  cursor: pointer;
+  text-align: center;
+  transition: color 0.2s ease;
+  letter-spacing: 0.5px;
+}
+
+.auth-toggle:hover {
+  color: var(--accent-color, #ff8c00);
+}
+
+/* order status cancelled */
+.order-status.cancelled {
+  background: rgba(255, 100, 100, 0.15);
+  color: #ff6464;
+  border: 1px solid rgba(255, 100, 100, 0.3);
+}

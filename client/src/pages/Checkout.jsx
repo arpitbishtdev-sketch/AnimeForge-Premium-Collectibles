@@ -3,6 +3,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import { gsap } from "gsap";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTheme } from "../context/ThemeContext";
+import { useAuth } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
+import { orderApi, addressApi } from "../utils/api";
 import "../styles/Checkout.css";
 
 // ─── Animation variants ───────────────────────────────────────────────────
@@ -175,7 +178,7 @@ function CartRow({ item, accent, onRemove, onQty }) {
           </button>
         </div>
         <div className="ck-cart-row__price" style={{ color: accent }}>
-          ${((item.price || 0) * item.qty).toFixed(2)}
+          ₹{((item.price || 0) * item.qty).toFixed(2)}
         </div>
         <button
           className="ck-cart-row__remove"
@@ -191,7 +194,7 @@ function CartRow({ item, accent, onRemove, onQty }) {
 // ─── Order summary sidebar ────────────────────────────────────────────────
 function Summary({ items, accent, promo }) {
   const sub = items.reduce((s, i) => s + (i.price || 0) * i.qty, 0);
-  const shipping = sub >= 200 ? 0 : 12.99;
+  const shipping = sub >= 999 ? 0 : sub > 0 ? 99 : 0;
   const discount = promo ? sub * 0.1 : 0;
   const total = sub + shipping - discount;
   return (
@@ -208,39 +211,39 @@ function Summary({ items, accent, promo }) {
             <span className="ck-summary__item-name">
               {i.name} <em>×{i.qty}</em>
             </span>
-            <span>${((i.price || 0) * i.qty).toFixed(2)}</span>
+            <span>₹{((i.price || 0) * i.qty).toFixed(2)}</span>
           </div>
         ))}
       </div>
       <div className="ck-summary__divider" />
       <div className="ck-summary__row">
         <span>Subtotal</span>
-        <span>${sub.toFixed(2)}</span>
+        <span>₹{sub.toFixed(2)}</span>
       </div>
       <div className="ck-summary__row">
         <span>Shipping</span>
         <span className={shipping === 0 ? "ck-free" : ""}>
-          {shipping === 0 ? "FREE" : `$${shipping.toFixed(2)}`}
+          {shipping === 0 ? "FREE" : `₹${shipping}`}
         </span>
       </div>
       {promo && (
         <div className="ck-summary__row ck-summary__row--disc">
           <span>Discount (FORGE10)</span>
-          <span>−${discount.toFixed(2)}</span>
+          <span>−₹{discount.toFixed(2)}</span>
         </div>
       )}
       <div className="ck-summary__divider" />
       <div className="ck-summary__total">
         <span>Total</span>
-        <span style={{ color: accent }}>${total.toFixed(2)}</span>
+        <span style={{ color: accent }}>₹{total.toFixed(2)}</span>
       </div>
       {shipping > 0 && (
         <div className="ck-summary__free-note">
-          ⚡ Add ${(200 - sub).toFixed(2)} more for free shipping
+          ⚡ ₹{(999 - sub).toFixed(0)} more for free shipping
         </div>
       )}
       <div className="ck-summary__trust">
-        {["🔒 SSL Secure", "↩ Free Returns", "⭐ 4.97 Rated"].map((b) => (
+        {["🔒 SSL Secure", "↩ Easy Returns", "⭐ 4.97 Rated"].map((b) => (
           <span key={b} className="ck-summary__badge">
             {b}
           </span>
@@ -367,14 +370,23 @@ function StepCart({ items, onQty, onRemove, onNext, accent }) {
 }
 
 // ─── Step 2 — Delivery ────────────────────────────────────────────────────
-function StepDelivery({ form, onChange, onNext, onBack, accent }) {
+function StepDelivery({
+  form,
+  onChange,
+  onNext,
+  onBack,
+  accent,
+  savedAddresses,
+  onSelectAddress,
+}) {
   const ok =
-    form.firstName &&
-    form.lastName &&
-    form.email &&
-    form.address &&
+    form.fullName &&
+    form.phone &&
+    form.addressLine1 &&
     form.city &&
-    form.zip;
+    form.state &&
+    form.pincode;
+
   return (
     <div className="ck-layout ck-layout--single">
       <div className="ck-layout__full">
@@ -387,6 +399,48 @@ function StepDelivery({ form, onChange, onNext, onBack, accent }) {
         >
           Shipping Address
         </motion.p>
+
+        {/* Saved addresses */}
+        {savedAddresses.length > 0 && (
+          <motion.div
+            variants={fadeUp}
+            custom={0.5}
+            initial="hidden"
+            animate="visible"
+            style={{ marginBottom: 24 }}
+          >
+            <p className="ck-section-label" style={{ marginBottom: 12 }}>
+              Saved Addresses
+            </p>
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {savedAddresses.map((addr) => (
+                <button
+                  key={addr._id}
+                  onClick={() => onSelectAddress(addr)}
+                  style={{
+                    textAlign: "left",
+                    padding: "12px 16px",
+                    background: "rgba(255,255,255,0.03)",
+                    border: `1px solid color-mix(in srgb,${accent} 30%,transparent)`,
+                    borderRadius: 4,
+                    color: "rgba(255,255,255,0.7)",
+                    fontFamily: "Rajdhani,sans-serif",
+                    fontSize: 13,
+                    cursor: "pointer",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  <strong style={{ color: accent }}>
+                    {addr.label?.toUpperCase() || "ADDRESS"}
+                  </strong>{" "}
+                  — {addr.fullName}, {addr.addressLine1}, {addr.city},{" "}
+                  {addr.state} {addr.pincode}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+
         <motion.div
           className="ck-form-grid"
           variants={fadeUp}
@@ -395,22 +449,21 @@ function StepDelivery({ form, onChange, onNext, onBack, accent }) {
           animate="visible"
         >
           <Field
-            label="First Name"
-            name="firstName"
-            value={form.firstName}
+            label="Full Name"
+            name="fullName"
+            value={form.fullName}
             onChange={onChange}
-            placeholder="Naruto"
-            half
+            placeholder="Arpit Sharma"
             accent={accent}
             req
           />
           <Field
-            label="Last Name"
-            name="lastName"
-            value={form.lastName}
+            label="Phone"
+            name="phone"
+            value={form.phone}
             onChange={onChange}
-            placeholder="Uzumaki"
-            half
+            placeholder="+91 98765 43210"
+            type="tel"
             accent={accent}
             req
           />
@@ -425,29 +478,20 @@ function StepDelivery({ form, onChange, onNext, onBack, accent }) {
             req
           />
           <Field
-            label="Phone"
-            name="phone"
-            value={form.phone}
-            onChange={onChange}
-            placeholder="+1 555 000 0000"
-            type="tel"
-            accent={accent}
-          />
-          <Field
             label="Street Address"
-            name="address"
-            value={form.address}
+            name="addressLine1"
+            value={form.addressLine1}
             onChange={onChange}
-            placeholder="123 Hidden Leaf Ave"
+            placeholder="123 MG Road"
             accent={accent}
             req
           />
           <Field
-            label="Apt / Suite"
-            name="apt"
-            value={form.apt}
+            label="Landmark / Apt"
+            name="addressLine2"
+            value={form.addressLine2}
             onChange={onChange}
-            placeholder="Apt 7"
+            placeholder="Near Metro Station"
             half
             accent={accent}
           />
@@ -456,7 +500,7 @@ function StepDelivery({ form, onChange, onNext, onBack, accent }) {
             name="city"
             value={form.city}
             onChange={onChange}
-            placeholder="Konohagakure"
+            placeholder="Mumbai"
             half
             accent={accent}
             req
@@ -466,98 +510,23 @@ function StepDelivery({ form, onChange, onNext, onBack, accent }) {
             name="state"
             value={form.state}
             onChange={onChange}
-            placeholder="Fire Country"
+            placeholder="Maharashtra"
             half
             accent={accent}
+            req
           />
           <Field
-            label="ZIP"
-            name="zip"
-            value={form.zip}
+            label="Pincode"
+            name="pincode"
+            value={form.pincode}
             onChange={onChange}
-            placeholder="10001"
+            placeholder="400001"
             half
             accent={accent}
             req
             inputMode="numeric"
+            maxLength={6}
           />
-          <Field
-            label="Country"
-            name="country"
-            value={form.country}
-            onChange={onChange}
-            placeholder="Japan"
-            half
-            accent={accent}
-          />
-        </motion.div>
-
-        <motion.div
-          className="ck-ship-methods"
-          variants={fadeUp}
-          custom={2}
-          initial="hidden"
-          animate="visible"
-        >
-          <p className="ck-section-label" style={{ marginBottom: 14 }}>
-            Shipping Method
-          </p>
-          {[
-            {
-              id: "standard",
-              icon: "📦",
-              label: "Standard",
-              sub: "7–14 business days",
-              price: "Free on orders $200+",
-            },
-            {
-              id: "express",
-              icon: "⚡",
-              label: "Express",
-              sub: "3–5 business days",
-              price: "$24.99",
-            },
-            {
-              id: "overnight",
-              icon: "🚀",
-              label: "Overnight",
-              sub: "Next business day",
-              price: "$49.99",
-            },
-          ].map((m) => (
-            <label
-              key={m.id}
-              className={`ck-ship-opt${form.shipping === m.id ? " is-sel" : ""}`}
-              style={
-                form.shipping === m.id
-                  ? {
-                      "--acc": accent,
-                      borderColor: accent,
-                      background: `color-mix(in srgb,${accent} 7%,transparent)`,
-                    }
-                  : { "--acc": accent }
-              }
-            >
-              <input
-                type="radio"
-                name="shipping"
-                value={m.id}
-                checked={form.shipping === m.id}
-                onChange={onChange}
-              />
-              <span className="ck-ship-opt__icon">{m.icon}</span>
-              <span className="ck-ship-opt__body">
-                <span className="ck-ship-opt__label">{m.label}</span>
-                <span className="ck-ship-opt__sub">{m.sub}</span>
-              </span>
-              <span className="ck-ship-opt__price">{m.price}</span>
-              {form.shipping === m.id && (
-                <span className="ck-ship-opt__check" style={{ color: accent }}>
-                  ✓
-                </span>
-              )}
-            </label>
-          ))}
         </motion.div>
 
         <div className="ck-nav">
@@ -581,43 +550,139 @@ function StepDelivery({ form, onChange, onNext, onBack, accent }) {
 }
 
 // ─── Step 3 — Payment ─────────────────────────────────────────────────────
-function StepPayment({ form, onChange, onNext, onBack, accent }) {
+function StepPayment({
+  form,
+  onChange,
+  onNext,
+  onBack,
+  accent,
+  items,
+  deliveryForm,
+  onOrderPlaced,
+}) {
   const [placing, setPlacing] = useState(false);
+  const [payMethod, setPayMethod] = useState("razorpay"); // "razorpay" | "cod"
   const [flipped, setFlipped] = useState(false);
+  const [error, setError] = useState("");
 
-  const fmtCard = (v) =>
-    v
-      .replace(/\D/g, "")
-      .replace(/(.{4})/g, "$1 ")
-      .trim()
-      .slice(0, 19);
-  const fmtExpiry = (v) =>
-    v
-      .replace(/\D/g, "")
-      .replace(/^(\d{2})(\d)/, "$1/$2")
-      .slice(0, 5);
+  const sub = items.reduce((s, i) => s + (i.price || 0) * i.qty, 0);
+  const shipping = sub >= 999 ? 0 : 99;
+  const totalAmount = sub + shipping;
 
-  const detectType = (n) => {
-    const d = n.replace(/\s/g, "");
-    if (/^4/.test(d)) return "VISA";
-    if (/^5[1-5]/.test(d)) return "MASTERCARD";
-    if (/^3[47]/.test(d)) return "AMEX";
-    return "";
+  // ── Load Razorpay script ─────────────────────────────────────────────
+  const loadRazorpay = () => {
+    return new Promise((resolve) => {
+      if (window.Razorpay) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement("script");
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
   };
-  const cardType = detectType(form.cardNumber || "");
 
+  // ── Place Order ──────────────────────────────────────────────────────
   const handlePlace = async () => {
+    setError("");
     setPlacing(true);
-    await new Promise((r) => setTimeout(r, 2000));
-    setPlacing(false);
-    onNext();
-  };
 
-  const valid =
-    (form.cardNumber || "").replace(/\s/g, "").length >= 15 &&
-    (form.expiry || "").length === 5 &&
-    (form.cvv || "").length >= 3 &&
-    form.cardName;
+    try {
+      const orderItems = items.map((item) => ({
+        product: item.productId || item.id,
+        name: item.name,
+        image: item.image || "",
+        price: item.price,
+        quantity: item.qty,
+        variantIndex: item.variantIndex ?? null,
+        variantValue: item.variantValue || null,
+        variantType: item.variantType || null,
+      }));
+
+      const shippingAddress = {
+        fullName: deliveryForm.fullName,
+        phone: deliveryForm.phone,
+        addressLine1: deliveryForm.addressLine1,
+        addressLine2: deliveryForm.addressLine2 || "",
+        city: deliveryForm.city,
+        state: deliveryForm.state,
+        pincode: deliveryForm.pincode,
+        country: "India",
+      };
+
+      // ── COD ──────────────────────────────────────────────────────────
+      if (payMethod === "cod") {
+        const data = await orderApi.place({
+          items: orderItems,
+          shippingAddress,
+          paymentMethod: "cod",
+          customerNote: "",
+        });
+        onOrderPlaced(data.order);
+        onNext();
+        return;
+      }
+
+      // ── Razorpay ──────────────────────────────────────────────────────
+      const loaded = await loadRazorpay();
+      if (!loaded) {
+        setError("Razorpay load nahi hua. Internet check karo.");
+        setPlacing(false);
+        return;
+      }
+
+      // 1. Create order on backend
+      const data = await orderApi.place({
+        items: orderItems,
+        shippingAddress,
+        paymentMethod: "razorpay",
+        customerNote: "",
+      });
+
+      const { order, razorpayOrderId } = data;
+
+      // 2. Open Razorpay popup
+      const options = {
+        key: import.meta.env.VITE_RAZORPAY_KEY_ID || "rzp_test_placeholder",
+        amount: totalAmount * 100, // paise
+        currency: "INR",
+        name: "AnimeForge",
+        description: `Order ${order.orderNumber}`,
+        order_id: razorpayOrderId,
+        prefill: {
+          name: deliveryForm.fullName,
+          email: deliveryForm.email,
+          contact: deliveryForm.phone,
+        },
+        theme: { color: accent },
+        handler: async (response) => {
+          // 3. Verify payment
+          await orderApi.verifyRazorpay({
+            orderId: order._id,
+            razorpayOrderId: response.razorpay_order_id,
+            razorpayPaymentId: response.razorpay_payment_id,
+            razorpaySignature: response.razorpay_signature,
+          });
+          onOrderPlaced(order);
+          onNext();
+        },
+        modal: {
+          ondismiss: () => {
+            setPlacing(false);
+            setError("Payment cancel kiya. Dobara try karo.");
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (err) {
+      setError(err.message || "Order place nahi hua. Dobara try karo.");
+      setPlacing(false);
+    }
+  };
 
   return (
     <div className="ck-layout ck-layout--single">
@@ -629,174 +694,138 @@ function StepPayment({ form, onChange, onNext, onBack, accent }) {
           initial="hidden"
           animate="visible"
         >
-          Payment Details
+          Payment Method
         </motion.p>
 
-        {/* Live card visual */}
+        {error && (
+          <div
+            style={{
+              background: "rgba(255,100,100,0.1)",
+              border: "1px solid rgba(255,100,100,0.3)",
+              borderRadius: 6,
+              padding: "12px 16px",
+              color: "#ff8888",
+              fontFamily: "Rajdhani,sans-serif",
+              fontSize: 13,
+              marginBottom: 20,
+            }}
+          >
+            {error}
+          </div>
+        )}
+
+        {/* Payment Method Selection */}
         <motion.div
-          className="ck-card-3d"
           variants={fadeUp}
           custom={1}
           initial="hidden"
           animate="visible"
+          style={{ marginBottom: 28 }}
         >
-          <div className={`ck-card-flip${flipped ? " is-flipped" : ""}`}>
-            <div
-              className="ck-card-face ck-card-face--front"
-              style={{
-                background: `linear-gradient(135deg, color-mix(in srgb,${accent} 22%,#0d0d1a) 0%, #0a0a16 60%, color-mix(in srgb,${accent} 10%,#080810) 100%)`,
-              }}
-            >
-              <div className="ck-card-face__holo" />
-              <div className="ck-card-face__chip">
-                <div className="ck-chip-lines" />
-              </div>
-              <div className="ck-card-face__type" style={{ color: accent }}>
-                {cardType || "◆◆◆◆"}
-              </div>
-              <div className="ck-card-face__num">
-                {["••••", "••••", "••••", "••••"].map((_, i) => {
-                  const parts = (form.cardNumber || "").replace(/\s/g, "");
-                  const chunk = parts.slice(i * 4, (i + 1) * 4).padEnd(4, "•");
-                  return <span key={i}>{chunk}</span>;
-                })}
-              </div>
-              <div className="ck-card-face__bottom">
-                <div>
-                  <div className="ck-card-face__sub">Card Holder</div>
-                  <div className="ck-card-face__val">
-                    {form.cardName || "YOUR NAME"}
-                  </div>
-                </div>
-                <div>
-                  <div className="ck-card-face__sub">Expires</div>
-                  <div className="ck-card-face__val">
-                    {form.expiry || "MM/YY"}
-                  </div>
-                </div>
-              </div>
-              <div
-                className="ck-card-face__glow"
-                style={{
-                  background: `radial-gradient(ellipse at 30% 40%, color-mix(in srgb,${accent} 20%,transparent), transparent 65%)`,
-                }}
-              />
-            </div>
-            <div
-              className="ck-card-face ck-card-face--back"
-              style={{
-                background: `linear-gradient(135deg, #0a0a16, color-mix(in srgb,${accent} 12%,#0d0d1a))`,
-              }}
-            >
-              <div className="ck-card-face__holo" />
-              <div className="ck-card-back__stripe" />
-              <div className="ck-card-back__cvv-wrap">
-                <div className="ck-card-back__cvv-label">CVV</div>
-                <div className="ck-card-back__cvv-box">
-                  {"•".repeat((form.cvv || "").length || 3)}
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        <motion.div
-          className="ck-form-grid"
-          variants={fadeUp}
-          custom={2}
-          initial="hidden"
-          animate="visible"
-        >
-          <Field
-            label="Card Number"
-            name="cardNumber"
-            value={form.cardNumber || ""}
-            accent={accent}
-            onChange={(e) =>
-              onChange({
-                target: { name: "cardNumber", value: fmtCard(e.target.value) },
-              })
-            }
-            placeholder="1234 5678 9012 3456"
-            inputMode="numeric"
-            maxLength={19}
-          />
-          <Field
-            label="Name on Card"
-            name="cardName"
-            value={form.cardName || ""}
-            onChange={onChange}
-            placeholder="Naruto Uzumaki"
-            accent={accent}
-          />
-          <Field
-            label="Expiry"
-            name="expiry"
-            value={form.expiry || ""}
-            half
-            accent={accent}
-            onChange={(e) =>
-              onChange({
-                target: { name: "expiry", value: fmtExpiry(e.target.value) },
-              })
-            }
-            placeholder="MM/YY"
-            inputMode="numeric"
-            maxLength={5}
-          />
-          {/* CVV — flip card on focus */}
-          <div
-            className={`ck-field ck-field--half${flipped ? " is-focused" : ""}`}
-            style={{ "--acc": accent }}
-          >
-            <label className="ck-field__label">CVV</label>
-            <input
-              className="ck-field__input"
-              type="password"
-              placeholder="•••"
-              value={form.cvv || ""}
-              onChange={(e) =>
-                onChange({
-                  target: {
-                    name: "cvv",
-                    value: e.target.value.replace(/\D/g, "").slice(0, 4),
-                  },
-                })
-              }
-              onFocus={() => setFlipped(true)}
-              onBlur={() => setFlipped(false)}
-              inputMode="numeric"
-              maxLength={4}
-              autoComplete="off"
-            />
-            <div className="ck-field__bar" />
-          </div>
-        </motion.div>
-
-        <motion.div
-          className="ck-altpay"
-          variants={fadeUp}
-          custom={3}
-          initial="hidden"
-          animate="visible"
-        >
-          <div className="ck-altpay__divider">
-            <div className="ck-altpay__line" />
-            <span>or pay with</span>
-            <div className="ck-altpay__line" />
-          </div>
-          <div className="ck-altpay__btns">
-            {["PayPal", "Apple Pay", "Google Pay"].map((p) => (
+          <div style={{ display: "flex", gap: 12, marginBottom: 24 }}>
+            {[
+              {
+                id: "razorpay",
+                label: "💳 Razorpay",
+                sub: "Cards, UPI, Net Banking",
+              },
+              {
+                id: "cod",
+                label: "💵 Cash on Delivery",
+                sub: "Pay when delivered",
+              },
+            ].map((m) => (
               <button
-                key={p}
-                className="ck-altpay__btn"
+                key={m.id}
+                onClick={() => setPayMethod(m.id)}
                 style={{
-                  borderColor: `color-mix(in srgb,${accent} 28%,transparent)`,
+                  flex: 1,
+                  padding: "14px 16px",
+                  textAlign: "left",
+                  background:
+                    payMethod === m.id
+                      ? `color-mix(in srgb,${accent} 10%,transparent)`
+                      : "rgba(255,255,255,0.02)",
+                  border: `1px solid ${payMethod === m.id ? accent : "rgba(255,255,255,0.07)"}`,
+                  borderRadius: 4,
+                  cursor: "pointer",
                 }}
               >
-                {p}
+                <div
+                  style={{
+                    fontFamily: "Bebas Neue,cursive",
+                    fontSize: 16,
+                    letterSpacing: 1.5,
+                    color: "#fff",
+                  }}
+                >
+                  {m.label}
+                </div>
+                <div
+                  style={{
+                    fontFamily: "Rajdhani,sans-serif",
+                    fontSize: 10,
+                    color: "rgba(255,255,255,0.3)",
+                    marginTop: 3,
+                  }}
+                >
+                  {m.sub}
+                </div>
               </button>
             ))}
+          </div>
+
+          {/* Order summary quick view */}
+          <div
+            style={{
+              background: "rgba(255,255,255,0.02)",
+              border: "1px solid rgba(255,255,255,0.06)",
+              borderRadius: 4,
+              padding: "16px 20px",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontFamily: "Rajdhani,sans-serif",
+                fontSize: 13,
+                color: "rgba(255,255,255,0.5)",
+                marginBottom: 8,
+              }}
+            >
+              <span>
+                Subtotal ({items.reduce((s, i) => s + i.qty, 0)} items)
+              </span>
+              <span>₹{sub.toFixed(2)}</span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontFamily: "Rajdhani,sans-serif",
+                fontSize: 13,
+                color: "rgba(255,255,255,0.5)",
+                marginBottom: 12,
+              }}
+            >
+              <span>Shipping</span>
+              <span style={{ color: shipping === 0 ? "#4ade80" : "inherit" }}>
+                {shipping === 0 ? "FREE" : `₹${shipping}`}
+              </span>
+            </div>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                fontFamily: "Bebas Neue,cursive",
+                fontSize: 22,
+                letterSpacing: 2,
+              }}
+            >
+              <span style={{ color: "#fff" }}>Total</span>
+              <span style={{ color: accent }}>₹{totalAmount.toFixed(2)}</span>
+            </div>
           </div>
         </motion.div>
 
@@ -807,7 +836,7 @@ function StepPayment({ form, onChange, onNext, onBack, accent }) {
           <motion.button
             className={`ck-btn-primary ck-btn-place${placing ? " is-placing" : ""}`}
             onClick={handlePlace}
-            disabled={!valid || placing}
+            disabled={placing}
             style={{ "--acc": accent }}
             whileTap={{ scale: 0.97 }}
           >
@@ -822,7 +851,11 @@ function StepPayment({ form, onChange, onNext, onBack, accent }) {
               </span>
             ) : (
               <>
-                <span>Place Order</span>
+                <span>
+                  {payMethod === "cod"
+                    ? "Place Order (COD)"
+                    : "Pay with Razorpay"}
+                </span>
                 <span className="ck-btn-arrow">→</span>
               </>
             )}
@@ -834,11 +867,9 @@ function StepPayment({ form, onChange, onNext, onBack, accent }) {
 }
 
 // ─── Step 4 — Confirmation ────────────────────────────────────────────────
-function StepConfirm({ form, items, accent, onHome }) {
+function StepConfirm({ deliveryForm, items, accent, onHome, placedOrder }) {
   const orderRef = useRef(null);
-  const orderNum = useRef(
-    "AF-" + Math.floor(100000 + Math.random() * 900000),
-  ).current;
+  const orderNum = placedOrder?.orderNumber || "AF-XXXXXXXX";
   const total = items.reduce((s, i) => s + (i.price || 0) * i.qty, 0);
 
   useEffect(() => {
@@ -868,7 +899,6 @@ function StepConfirm({ form, items, accent, onHome }) {
           background: `radial-gradient(circle, color-mix(in srgb,${accent} 28%,transparent), transparent 70%)`,
         }}
       />
-
       <div
         ref={orderRef}
         className="ck-confirm__check"
@@ -888,7 +918,7 @@ function StepConfirm({ form, items, accent, onHome }) {
       >
         <h2 className="ck-confirm__title">Order Placed!</h2>
         <p className="ck-confirm__sub">
-          Your figures are being forged with care
+          Your figures are being forged with care 🔥
         </p>
       </motion.div>
 
@@ -902,16 +932,12 @@ function StepConfirm({ form, items, accent, onHome }) {
       >
         {[
           ["Order #", orderNum, true],
-          ["Name", `${form.firstName} ${form.lastName}`, false],
-          ["Email", form.email, false],
-          [
-            "Ship to",
-            form.city ? `${form.city}, ${form.country || ""}` : "—",
-            false,
-          ],
+          ["Name", deliveryForm.fullName, false],
+          ["Phone", deliveryForm.phone, false],
+          ["Ship to", `${deliveryForm.city}, ${deliveryForm.state}`, false],
           ["Items", items.reduce((s, i) => s + i.qty, 0), false],
-          ["Total Paid", `$${total.toFixed(2)}`, true],
-          ["Est. Arrival", "14–21 business days", false],
+          ["Total Paid", `₹${total.toFixed(2)}`, true],
+          ["Est. Arrival", "5–10 business days", false],
         ].map(([k, v, hi]) => (
           <div key={k} className="ck-confirm__row">
             <span>{k}</span>
@@ -945,7 +971,7 @@ function StepConfirm({ form, items, accent, onHome }) {
             <span className="ck-confirm__item-name">{i.name}</span>
             <span className="ck-confirm__item-qty">×{i.qty}</span>
             <span style={{ color: accent }}>
-              ${((i.price || 0) * i.qty).toFixed(2)}
+              ₹{((i.price || 0) * i.qty).toFixed(2)}
             </span>
           </div>
         ))}
@@ -973,16 +999,14 @@ export default function Checkout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { activeCharacter } = useTheme();
+  const { user } = useAuth();
+  const { clearCart } = useCart();
 
-  // ── Theme accent: ThemeContext is primary (matches rest of site),
-  //    navigation state is the fallback for direct URL access
   const themeAccent = activeCharacter?.gradient?.accent;
   const themeGlow = activeCharacter?.gradient?.glow;
-  const passedAccent = location?.state?.accent || "#ff8c00";
-  const passedGlow = location?.state?.glow || "rgba(255,140,0,0.3)";
+  const accent = themeAccent || location?.state?.accent || "#ff8c00";
+  const glow = themeGlow || location?.state?.glow || "rgba(255,140,0,0.3)";
 
-  const accent = themeAccent || passedAccent;
-  const glow = themeGlow || passedGlow;
   const DEMO_ITEMS = [
     {
       id: 1,
@@ -1005,36 +1029,35 @@ export default function Checkout() {
   ];
 
   const resolveInitialItems = () => {
-    // Cart page sends an array
     if (
       Array.isArray(location?.state?.cartItems) &&
       location.state.cartItems.length > 0
-    ) {
+    )
       return location.state.cartItems;
-    }
-    // Buy Now sends a single product object
     if (location?.state?.product) {
       const p = location.state.product;
       return [{ ...p, id: p.id || p._id || 1, qty: p.qty || 1 }];
     }
-    // Dev / direct URL fallback
     return DEMO_ITEMS;
   };
 
   const [items, setItems] = useState(resolveInitialItems);
   const [step, setStep] = useState(1);
-  const [form, setForm] = useState({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    address: "",
-    apt: "",
+  const [placedOrder, setPlacedOrder] = useState(null);
+  const [savedAddresses, setSavedAddresses] = useState([]);
+
+  const [deliveryForm, setDeliveryForm] = useState({
+    fullName: user?.name || "",
+    phone: user?.phone || "",
+    email: user?.email || "",
+    addressLine1: "",
+    addressLine2: "",
     city: "",
     state: "",
-    zip: "",
-    country: "",
-    shipping: "standard",
+    pincode: "",
+  });
+
+  const [payForm, setPayForm] = useState({
     cardNumber: "",
     cardName: "",
     expiry: "",
@@ -1043,6 +1066,16 @@ export default function Checkout() {
 
   const orb1 = useRef(null);
   const orb2 = useRef(null);
+
+  // Load saved addresses if logged in
+  useEffect(() => {
+    if (user) {
+      addressApi
+        .getAll()
+        .then((data) => setSavedAddresses(data.addresses || []))
+        .catch(() => {});
+    }
+  }, [user]);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
@@ -1069,9 +1102,26 @@ export default function Checkout() {
     return () => ctx.revert();
   }, []);
 
-  const onChange = useCallback((e) => {
-    setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  const onDeliveryChange = useCallback((e) => {
+    setDeliveryForm((f) => ({ ...f, [e.target.name]: e.target.value }));
   }, []);
+
+  const onPayChange = useCallback((e) => {
+    setPayForm((f) => ({ ...f, [e.target.name]: e.target.value }));
+  }, []);
+
+  const onSelectAddress = (addr) => {
+    setDeliveryForm((f) => ({
+      ...f,
+      fullName: addr.fullName,
+      phone: addr.phone,
+      addressLine1: addr.addressLine1,
+      addressLine2: addr.addressLine2 || "",
+      city: addr.city,
+      state: addr.state,
+      pincode: addr.pincode,
+    }));
+  };
 
   const next = () => {
     setStep((s) => Math.min(s + 1, 4));
@@ -1090,9 +1140,13 @@ export default function Checkout() {
     );
   const onRemove = (id) => setItems((p) => p.filter((i) => i.id !== id));
 
+  const handleOrderPlaced = (order) => {
+    setPlacedOrder(order);
+    clearCart(); // Backend cart bhi clear ho jaati hai
+  };
+
   return (
     <div className="checkout" style={{ "--accent": accent, "--glow": glow }}>
-      {/* Background */}
       <div className="ck-bg">
         <div className="ck-bg__radial" />
         <div className="ck-bg__grid" />
@@ -1110,7 +1164,6 @@ export default function Checkout() {
         <div className="ck-bg__vignette" />
       </div>
 
-      {/* Accent rule */}
       <div
         className="ck-rule"
         style={{
@@ -1119,7 +1172,6 @@ export default function Checkout() {
       />
 
       <main className="ck-main">
-        {/* Page title */}
         <motion.div
           className="ck-page-title"
           variants={fadeUp}
@@ -1150,7 +1202,6 @@ export default function Checkout() {
           </div>
         </motion.div>
 
-        {/* Step bar */}
         <motion.div
           variants={fadeUp}
           custom={1}
@@ -1160,7 +1211,6 @@ export default function Checkout() {
           <StepBar step={step} accent={accent} />
         </motion.div>
 
-        {/* Step panels */}
         <AnimatePresence mode="wait">
           <motion.div
             key={step}
@@ -1180,29 +1230,34 @@ export default function Checkout() {
             )}
             {step === 2 && (
               <StepDelivery
-                form={form}
-                onChange={onChange}
+                form={deliveryForm}
+                onChange={onDeliveryChange}
                 onNext={next}
                 onBack={back}
                 accent={accent}
+                savedAddresses={savedAddresses}
+                onSelectAddress={onSelectAddress}
               />
             )}
             {step === 3 && (
               <StepPayment
-                form={form}
-                onChange={onChange}
+                form={payForm}
+                onChange={onPayChange}
                 onNext={next}
                 onBack={back}
                 accent={accent}
                 items={items}
+                deliveryForm={deliveryForm}
+                onOrderPlaced={handleOrderPlaced}
               />
             )}
             {step === 4 && (
               <StepConfirm
-                form={form}
+                deliveryForm={deliveryForm}
                 items={items}
                 accent={accent}
                 onHome={() => navigate("/")}
+                placedOrder={placedOrder}
               />
             )}
           </motion.div>

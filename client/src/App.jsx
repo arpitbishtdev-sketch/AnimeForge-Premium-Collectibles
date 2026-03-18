@@ -13,12 +13,14 @@ import {
   ProductDetailSkeleton,
   CollectionsSkeleton,
 } from "./components/shared/Skeleton";
+import { AuthProvider } from "./context/AuthContext";
 
 const Cart = lazy(() => import("./pages/Cart"));
 const User = lazy(() => import("./pages/User"));
 const Collections = lazy(() => import("./pages/Collections"));
 const ProductDetail = lazy(() => import("./pages/Productdetailpage"));
 const Checkout = lazy(() => import("./pages/Checkout"));
+const VerifyEmail = lazy(() => import("./pages/Verifyemail"));
 
 function PageLoader() {
   return (
@@ -103,6 +105,14 @@ function AppRoutes() {
             </ErrorBoundary>
           ),
         },
+        {
+  path: "/verify-email",
+  element: (
+    <Suspense fallback={<PageLoader />}>
+      <VerifyEmail />
+    </Suspense>
+  ),
+},
       ],
     },
     ...ADMIN_ROUTES,
@@ -127,9 +137,11 @@ export default function App() {
   return (
     <BrowserRouter>
       <ThemeProvider>
-        <CartProvider>
-          <AppRoutes />
-        </CartProvider>
+        <AuthProvider>
+          <CartProvider>
+            <AppRoutes />
+          </CartProvider>
+        </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>
   );

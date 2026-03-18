@@ -9,7 +9,7 @@ import EditProduct from "../pages/EditProduct";
 import StatusSettings from "./pages/StatusSettings";
 import AdminCollections from "./pages/AdminCollections";
 import AdminAnnouncements from "./pages/AdminAnnouncements";
-
+import AdminOrders from "./pages/AdminOrders";
 export const ADMIN_ROUTES = [
   {
     path: "/admin/login",
@@ -31,6 +31,7 @@ export const ADMIN_ROUTES = [
       { path: "status", element: <StatusSettings /> },
       { path: "collections", element: <AdminCollections /> },
       { path: "announcements", element: <AdminAnnouncements /> },
+      { path: "orders", element: <AdminOrders /> },
     ],
   },
 ];

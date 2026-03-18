@@ -56,6 +56,7 @@ export function ThemeProvider({ children }) {
       setActiveCharacter(mappedCharacter);
       sessionStorage.setItem("activeTheme", JSON.stringify(mappedCharacter));
 
+      // Preload hero image
       if (theme.image) {
         document
           .querySelectorAll('link[rel="preload"][as="image"]')
@@ -67,6 +68,7 @@ export function ThemeProvider({ children }) {
         document.head.appendChild(link);
       }
 
+      // Inject CSS variables globally so any component can consume them
       document.documentElement.style.setProperty("--accent", theme.accent);
       document.documentElement.style.setProperty("--accent-glow", theme.glow);
       document.documentElement.style.setProperty("--particle", theme.particle);
@@ -81,7 +83,7 @@ export function ThemeProvider({ children }) {
     } catch (err) {
       console.warn("Failed to load theme:", err.message);
 
-      // fallback theme
+      // Fallback theme
       setActiveCharacter({
         id: "default",
         name: "DEFAULT",
@@ -129,6 +131,7 @@ export function ThemeProvider({ children }) {
 
       setActiveCharacter(mappedCharacter);
 
+      // Keep global CSS variables in sync on theme switch
       document.documentElement.style.setProperty("--accent", theme.accent);
       document.documentElement.style.setProperty("--accent-glow", theme.glow);
       document.documentElement.style.setProperty("--particle", theme.particle);

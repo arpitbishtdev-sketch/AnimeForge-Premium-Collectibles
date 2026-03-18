@@ -40,7 +40,8 @@
 /* ── Mobile drawer ── */
 .filter-sidebar--drawer {
   position: fixed;
-  top: 0;
+  /* Start BELOW navbar (62px) + announcement bar (36px) = 98px */
+  top: calc(var(--navbar-h, 62px) + var(--announcement-h, 36px));
   left: 0;
   bottom: 0;
   width: min(320px, 90vw);
@@ -49,12 +50,12 @@
   backdrop-filter: blur(40px);
   -webkit-backdrop-filter: blur(40px);
   border-right: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
   overflow-y: auto;
   scrollbar-width: thin;
   scrollbar-color: color-mix(in srgb, var(--accent) 40%, transparent)
     transparent;
 
-  /* Subtle inner glow */
   box-shadow:
     inset -1px 0 0 rgba(232, 168, 56, 0.06),
     4px 0 40px rgba(0, 0, 0, 0.6);
@@ -74,6 +75,11 @@
     transparent 70%
   );
   pointer-events: none;
+}
+
+/* Also push the overlay down so it doesn't cover the navbar */
+.filter-overlay {
+  top: calc(var(--navbar-h, 62px) + var(--announcement-h, 36px));
 }
 
 /* ── Inner container ── */
@@ -373,4 +379,26 @@
   .filter-sidebar__title {
     font-size: 30px;
   }
+}
+
+/* ── Mobile dropdown under navbar ── */
+.filter-sidebar--dropdown {
+  position: fixed;
+  top: var(--navbar-h, 62px);
+  left: 0;
+  right: 0;
+  z-index: 998;
+
+  background: #0c0a0e;
+  border-bottom: 1px solid color-mix(in srgb, var(--accent) 30%, transparent);
+
+  max-height: 70vh;
+  overflow-y: auto;
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
 }

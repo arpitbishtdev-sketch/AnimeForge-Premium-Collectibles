@@ -6,6 +6,10 @@ import CartDrawer from "./cart/CartDrawer";
 import AuthDropdown from "../components/shared/AuthDropdown";
 import WishlistNavIcon from "../components/shared/WishlistNavIcon";
 import "../styles/navbar.css";
+const CLOUD_NAME = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME;
+const LOGO_PUBLIC_ID = import.meta.env.VITE_LOGO_PUBLIC_ID;
+
+const CLOUDINARY_BASE = `https://res.cloudinary.com/${CLOUD_NAME}/image/upload`;
 
 /* ── Icon Components ── */
 const SearchIcon = () => (
@@ -97,6 +101,94 @@ const NAV_LINKS = [
 
 const GLASS_START = 20;
 const GLASS_SCROLL_RANGE = 80;
+
+/* ── Black Soun Logo with 3D circular hover ── */
+const BlackSounLogo = () => {
+  const logoRef = useRef(null);
+  const animFrameRef = useRef(null);
+  const currentRotX = useRef(0);
+  const currentRotY = useRef(0);
+  const targetRotX = useRef(0);
+  const targetRotY = useRef(0);
+  const isHovering = useRef(false);
+  const angleRef = useRef(0);
+
+  useEffect(() => {
+    const el = logoRef.current;
+    if (!el) return;
+
+    const animate = () => {
+      if (isHovering.current) {
+        // Smoothly orbit in 3D: rotate Y continuously, bob X sinusoidally
+        angleRef.current += 0.03;
+        targetRotY.current = Math.sin(angleRef.current) * 35;
+        targetRotX.current = Math.cos(angleRef.current * 0.7) * 20;
+      } else {
+        // Return to flat
+        targetRotX.current = 0;
+        targetRotY.current = 0;
+      }
+
+      // Lerp toward target
+      currentRotX.current += (targetRotX.current - currentRotX.current) * 0.1;
+      currentRotY.current += (targetRotY.current - currentRotY.current) * 0.1;
+
+      el.style.transform = `perspective(300px) rotateX(${currentRotX.current}deg) rotateY(${currentRotY.current}deg)`;
+
+      animFrameRef.current = requestAnimationFrame(animate);
+    };
+
+    animFrameRef.current = requestAnimationFrame(animate);
+
+    return () => {
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current);
+    };
+  }, []);
+
+  const handleMouseEnter = () => {
+    isHovering.current = true;
+  };
+
+  const handleMouseLeave = () => {
+    isHovering.current = false;
+  };
+
+  return (
+    <div
+      ref={logoRef}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      style={{
+        width: 44,
+        height: 44,
+        borderRadius: "50%",
+        overflow: "hidden",
+        flexShrink: 0,
+        cursor: "pointer",
+        willChange: "transform",
+        transformStyle: "preserve-3d",
+        filter: "drop-shadow(0 0 8px rgba(255,140,0,0.35))",
+        transition: "filter 0.3s ease",
+        border: "1.5px solid rgba(255,255,255,0.12)",
+        background: "#fff",
+      }}
+    >
+<img
+  src={`${CLOUDINARY_BASE}/w_200,h_200,c_fill,q_auto,f_auto/${LOGO_PUBLIC_ID}.png`}
+  alt="Black Soun Collectibles"
+  style={{
+    width: "100%",
+    height: "100%",
+    objectFit: "cover",
+    display: "block",
+    pointerEvents: "none",
+    userSelect: "none",
+  }}
+  draggable={false}
+/>
+    </div>
+  );
+};
 
 export default function Navbar({ accentColor, accentGlow }) {
   // 0 = fully transparent, 1 = fully glass
@@ -196,14 +288,11 @@ export default function Navbar({ accentColor, accentGlow }) {
   const scrolled = glassAlpha > 0;
 
   // Dynamically interpolate background & blur via inline style
-  // This gives a perfectly smooth ramp with no CSS breakpoints
   const navStyle = {
     "--accent-color": accentColor,
     "--accent-glow": accentGlow,
     "--glass-alpha": glassAlpha,
-    // bg: rgba(10,10,20, 0→0.78) as user scrolls
     background: `rgba(10, 10, 20, ${(glassAlpha * 0.78).toFixed(3)})`,
-    // blur: 0→30px
     backdropFilter:
       glassAlpha > 0
         ? `blur(${(glassAlpha * 16).toFixed(1)}px) saturate(${(1 + glassAlpha * 0.5).toFixed(2)})`
@@ -235,13 +324,10 @@ export default function Navbar({ accentColor, accentGlow }) {
 
         {/* ── Logo ── */}
         <div className="navbar-logo" onClick={() => handleNavClick("home")}>
-          <div className="navbar-logo-icon">
-            <span className="logo-icon-bolt">⚡</span>
-            <div className="logo-icon-ring" />
-          </div>
+          <BlackSounLogo />
           <div className="navbar-logo-text">
-            ANIME<span>FORGE</span>
-            <div className="navbar-logo-tagline">Premium Collectibles</div>
+            BLACK <span>SOUN</span>
+            <div className="navbar-logo-tagline">Curated for Eternity</div>
           </div>
         </div>
 
@@ -318,8 +404,8 @@ export default function Navbar({ accentColor, accentGlow }) {
             </button>
           ))}
           <div className="mobile-drawer-footer">
-            <span>© 2025 AnimeForge</span>
-            <span>Premium Collectibles</span>
+            <span>© 2025 Black Soun</span>
+            <span>Curated for Eternity</span>
           </div>
         </div>
       </div>

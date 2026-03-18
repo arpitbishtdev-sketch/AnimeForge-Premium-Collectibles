@@ -1,16 +1,20 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const compression = require("compression");
 require("dotenv").config();
 
 const productRoutes = require("./routes/productRoutes");
-const authRoutes = require("./routes/authRoutes");
-const adminAuthRoutes = require("./routes/adminAuthRoutes");
+const userAuthRoutes = require("./routes/UserAuthRoutes");
 const themeRoutes = require("./routes/themeRoutes");
 const uploadRoutes = require("./routes/uploadRoutes");
 const statusRoutes = require("./routes/statusRoutes");
 const collectionRoutes = require("./routes/collectionRoutes");
 const announcementRoutes = require("./routes/announcementRoutes");
+const cartRoutes = require("./routes/cartRoutes");
+const addressRoutes = require("./routes/addressRoutes");
+const orderRoutes = require("./routes/orderRoutes");
+const reviewRoutes = require("./routes/reviewRoutes");
 
 const uploadErrorHandler = require("./middleware/uploadErrorHandler");
 const seedStatus = require("./config/seedStatus");
@@ -26,6 +30,7 @@ app.use(
     origin: function (origin, callback) {
       const allowedOrigins = [
         "http://localhost:5173",
+        "http://localhost:5174",
         "https://animeforge-premium-collectibles.onrender.com",
       ];
       if (!origin || allowedOrigins.includes(origin)) {
@@ -35,10 +40,15 @@ app.use(
       }
     },
     credentials: true,
-  }),
+  })
 );
 
-const compression = require("compression");
+// ⚠️ Stripe webhook MUST be before express.json()
+app.use(
+  "/api/orders/webhook/stripe",
+  express.raw({ type: "application/json" })
+);
+
 app.use(compression());
 app.use(express.json());
 
@@ -47,13 +57,16 @@ app.use(express.json());
 ================================= */
 
 app.use("/api/products", productRoutes);
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", userAuthRoutes);
 app.use("/api/themes", themeRoutes);
 app.use("/api/upload", uploadRoutes);
 app.use("/api/status", statusRoutes);
-app.use("/api/auth/admin", adminAuthRoutes);
 app.use("/api/collections", collectionRoutes);
 app.use("/api/announcements", announcementRoutes);
+app.use("/api/cart", cartRoutes);
+app.use("/api/addresses", addressRoutes);
+app.use("/api/orders", orderRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 app.get("/", (req, res) => {
   res.send("AnimeForge API is running 🚀");

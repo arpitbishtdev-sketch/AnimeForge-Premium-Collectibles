@@ -18,11 +18,17 @@ export default function HomeLayout() {
   const { activeCharacter, activeId, setActiveId } = useTheme();
 
   const [loaded, setLoaded] = useState(false);
+  const [cinematicDone, setCinematicDone] = useState(false);
+
+  // On returning visits: skip Loader but let Hero's cinematic run normally
+  const isReturningVisit =
+    typeof sessionStorage !== "undefined" &&
+    !!sessionStorage.getItem("homeLoaded");
 
   useEffect(() => {
-    const hasLoaded = sessionStorage.getItem("homeLoaded");
-    if (hasLoaded) {
+    if (isReturningVisit) {
       setLoaded(true);
+      // Do NOT force cinematicDone=true — Hero calls onCinematicDone itself
       return;
     }
     const timer = setTimeout(() => {
@@ -46,8 +52,11 @@ export default function HomeLayout() {
           <main>
             {/* ── Hero + Character Switcher ── */}
             <div style={{ position: "relative" }}>
-              <Hero character={activeCharacter} />
-              <CharacterSwitcher />
+              <Hero
+                character={activeCharacter}
+                onCinematicDone={() => setCinematicDone(true)} // ← NEW
+              />
+              <CharacterSwitcher cinematicDone={cinematicDone} /> {/* ← NEW */}
             </div>
 
             {/* ── Shop / Store ── */}

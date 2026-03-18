@@ -95,15 +95,27 @@ export default function Sidebar({ isOpen, onClose }) {
 
         {/* Footer */}
         <div className="glow-divider" />
-        <footer className="sidebar__footer">
-          <div className="sidebar__user">
-            <div className="sidebar__avatar">👤</div>
-            <div>
-              <p className="sidebar__user-name">Admin</p>
-              <p className="sidebar__user-role">Super Admin</p>
-            </div>
-          </div>
-        </footer>
+      <footer className="sidebar__footer">
+  <div className="sidebar__user">
+    <div className="sidebar__avatar">👤</div>
+    <div>
+      <p className="sidebar__user-name">Admin</p>
+      <p className="sidebar__user-role">Super Admin</p>
+    </div>
+  </div>
+  <button
+    className="sidebar__logout-btn"
+    onClick={() => {
+      localStorage.removeItem("adminToken");
+      localStorage.removeItem("animeforge-token");
+      localStorage.removeItem("animeforge-refresh-token");
+      localStorage.removeItem("animeforge-user");
+      window.location.href = "/admin/login";
+    }}
+  >
+    ⏻ Logout
+  </button>
+</footer>
       </aside>
     </>
   );
